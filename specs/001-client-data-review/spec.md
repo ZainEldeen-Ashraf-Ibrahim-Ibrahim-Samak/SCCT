@@ -5,6 +5,16 @@
 **Status**: Draft
 **Input**: User description: "Dynamic client data collection with admin review — variable fields, media uploads, bilingual, themed"
 
+## Clarifications
+
+### Session 2026-04-12
+
+- Q: What are the allowed submission status transitions? (Linear, flexible, or semi-flexible?) → A: Flexible — any status can transition to any other status. Admin can move Viewed → Needs Rewrite, Needs Rewrite → Viewed, etc. Resubmission by client auto-sets status to Pending.
+- Q: How does the admin communicate what needs to be fixed when marking "Needs Rewrite"? → A: Single free-text comment — admin writes one note when marking Needs Rewrite, displayed to the client on the submission detail page.
+- Q: Is there a limit on how many times a client can resubmit after "Needs Rewrite"? → A: No limit — client can resubmit as many times as needed. Full resubmission history is tracked via the audit trail.
+- Q: What is the data retention/deletion policy for submissions and uploaded media? → A: Admin-controlled — admins can manually delete individual submissions, which also removes associated media from cloud storage. No automatic expiration.
+- Q: How are clients authenticated / onboarded? → A: No registration — clients access the submission form via a unique shareable link without authentication. For rewrites, the admin sends the submission link to the client via WhatsApp.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Admin Defines Data Collection Fields (Priority: P1)
@@ -42,33 +52,38 @@ client-facing submission view.
 
 ### User Story 2 - Client Submits Data (Priority: P1)
 
-A client (end user) opens the submission form, sees all the fields the
-admin has defined, and fills them out. Text fields accept typed input;
-file/image fields allow uploading from the device. Media files are
-uploaded to a cloud storage service and a reference is stored. Upon
-submission, the data is saved and a confirmation is shown to the
-client. The client can view their past submissions and their current
-review status.
+A client receives a unique form link (e.g., shared by the admin via
+WhatsApp or any messaging channel). The client opens the link in a
+browser — no registration or login is required. The client sees all
+the fields the admin has defined and fills them out. Text fields accept
+typed input; file/image fields allow uploading from the device. Media
+files are uploaded to a cloud storage service and a reference is
+stored. Upon submission, the data is saved and a confirmation page is
+shown. The same link can later be used by the client to view their
+submission status.
 
 **Why this priority**: Data collection from clients is the core value
 proposition of the system, tied directly to field definitions (US1).
 
-**Independent Test**: A client fills out a form with mixed field types
-(text, image, number), submits, and sees a confirmation. The
-submission appears in the admin review queue.
+**Independent Test**: A client opens a unique form link, fills out a
+form with mixed field types (text, image, number), submits, and sees a
+confirmation. The submission appears in the admin review queue.
 
 **Acceptance Scenarios**:
 
-1. **Given** an admin has defined a form with text, image, and number
-   fields, **When** a client fills out all fields and submits, **Then**
-   the data is saved and the client sees a success confirmation.
+1. **Given** an admin has shared a unique form link, **When** a client
+   opens the link without logging in, **Then** the submission form
+   renders with all defined fields.
 2. **Given** a client is on the submission form, **When** the client
+   fills out all fields and submits, **Then** the data is saved and
+   the client sees a success confirmation.
+3. **Given** a client is on the submission form, **When** the client
    uploads a 5 MB image for an image field, **Then** the upload
    succeeds, a thumbnail preview is shown, and the media reference is
    stored.
-3. **Given** a client has submitted data previously, **When** the
-   client visits the "My Submissions" page, **Then** each submission
-   shows its current review status (pending, viewed, needs rewrite).
+4. **Given** a client has submitted data previously, **When** the
+   client revisits the same unique link, **Then** they see their
+   submission and its current review status.
 
 ---
 
@@ -97,9 +112,11 @@ the client sees the updated status and can resubmit.
 2. **Given** an admin is viewing a specific submission, **When** the
    admin clicks "Mark as Viewed", **Then** the status changes to
    "Viewed" and a timestamp is recorded.
-3. **Given** an admin marks a submission as "Needs Rewrite", **When**
-   the client opens their submission, **Then** they see the "Needs
-   Rewrite" status and can edit and resubmit the form.
+3. **Given** an admin marks a submission as "Needs Rewrite" and writes
+   a comment explaining what to fix, **When** the admin copies the
+   submission link and sends it to the client via WhatsApp, **Then**
+   the client opens the link, sees the "Needs Rewrite" status with
+   the admin's comment, and can edit and resubmit the form.
 4. **Given** a client has resubmitted after a rewrite request, **When**
    the admin opens the same submission, **Then** the admin sees the
    updated data and can review it again.
@@ -180,6 +197,13 @@ reload.
 - What happens when a client submits while a field definition is being
   updated? The submission MUST be validated against the field
   definitions that were active at the time the client loaded the form.
+- Is there a limit on resubmissions? No — clients can resubmit
+  without limit. Each resubmission cycle is recorded in the audit
+  trail, giving admins full visibility into the history.
+- What happens when an admin deletes a submission? All associated
+  data — field values, media files in cloud storage, and audit
+  entries — MUST be permanently removed. A confirmation dialog
+  MUST be shown before execution.
 
 ## Requirements *(mandatory)*
 
@@ -203,7 +227,9 @@ reload.
 - **FR-006**: The system MUST allow admins to set a submission's
   status to "Viewed", "Not Viewed", or "Needs Rewrite".
 - **FR-007**: When a submission is marked "Needs Rewrite", the system
-  MUST allow the client to edit and resubmit the original submission.
+  MUST allow the client to edit and resubmit via the original unique
+  submission link. The admin MUST be able to copy this link to share
+  with the client (e.g., via WhatsApp).
 - **FR-008**: The system MUST support full interface localization in
   Arabic and English, including RTL layout for Arabic.
 - **FR-009**: All user-facing strings MUST be sourced from translation
@@ -220,6 +246,21 @@ reload.
   admin review.
 - **FR-015**: The system MUST log every status change with a timestamp
   and the admin user who made the change (audit trail).
+- **FR-016**: The system MUST allow admins to transition a submission
+  between any statuses (Pending, Viewed, Needs Rewrite) without
+  restriction. When a client resubmits, the status MUST auto-reset
+  to Pending.
+- **FR-017**: When an admin marks a submission as "Needs Rewrite",
+  the system MUST require a free-text comment explaining what needs
+  correction. This comment MUST be visible to the client on the
+  submission detail page.
+- **FR-018**: The system MUST allow unlimited resubmission cycles for
+  any submission. Each resubmission MUST be recorded in the audit
+  trail with no cap on the number of cycles.
+- **FR-019**: The system MUST allow admins to permanently delete a
+  submission. Deletion MUST remove all associated media from cloud
+  storage and all related audit entries. A confirmation prompt MUST
+  be shown before deletion is executed.
 
 ### Key Entities
 
@@ -231,19 +272,25 @@ reload.
   complete data collection form. Key attributes: name, description,
   list of field references, creation date, last modified date.
 - **Submission**: A client's completed form data entry. Key attributes:
-  client identity, submission date, status (Pending / Viewed / Needs
-  Rewrite), list of field values (each referencing a FieldDefinition
-  and containing the submitted value or media reference).
+  unique access token (used in the shareable link), client name/contact
+  info (entered on the form), submission date, status (Pending / Viewed
+  / Needs Rewrite), list of field values (each referencing a
+  FieldDefinition and containing the submitted value or media
+  reference).
+  **State transitions**: Flexible — any status can transition to any
+  other status (Pending ↔ Viewed ↔ Needs Rewrite). When a client
+  resubmits after a Needs Rewrite, the status auto-resets to Pending.
 - **FieldValue**: A single data point within a submission, tied to a
   FieldDefinition. Key attributes: field reference, value (text,
   number, or media URL), original field snapshot (for historical
   integrity).
-- **User**: A person interacting with the system. Key attributes:
-  identity, role (Admin or Client), language preference, theme
-  preference.
+- **User**: An admin user of the system. Key attributes: identity,
+  role (Admin), language preference, theme preference. Note: clients
+  do not have user accounts — they access forms via unique links.
 - **AuditEntry**: A record of a status change on a submission. Key
   attributes: submission reference, old status, new status, admin user,
-  timestamp.
+  timestamp, comment (required when new status is Needs Rewrite,
+  optional otherwise).
 
 ## Success Criteria *(mandatory)*
 
@@ -270,9 +317,9 @@ reload.
 
 ## Assumptions
 
-- Clients are authenticated before accessing the submission form;
-  the authentication method (e.g., email/password, OAuth) is a
-  standard session-based approach.
+- Clients are NOT authenticated — they access the submission form via
+  a unique shareable link (containing an access token). No registration
+  or login is required for clients.
 - Admins are authenticated and authorized via a role-based access
   control system; only users with the Admin role can access the form
   builder and review dashboard.
@@ -282,10 +329,13 @@ reload.
   app is out of scope for v1.
 - The maximum file upload size is 10 MB per file; this can be
   adjusted via system configuration.
-- Notifications to clients when their submission status changes are
-  in-app (visible when the client next logs in); email or push
-  notifications are out of scope for v1.
+- Notifications to clients are handled externally by the admin (e.g.,
+  sending the submission link via WhatsApp). The system provides a
+  copyable link; automated messaging (WhatsApp API, email, SMS) is
+  out of scope for v1.
 - Admin-defined field labels support both Arabic and English text
   input; the admin enters both translations when creating a field.
 - A single form template is active at any time; multi-form support
   is out of scope for v1.
+- Data retention is admin-controlled; there is no automatic expiration
+  or time-based purging of submissions or media in v1.
