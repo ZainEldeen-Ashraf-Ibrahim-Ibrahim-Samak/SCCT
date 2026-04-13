@@ -150,7 +150,10 @@
       "pending": "Pending",
       "viewed": "Viewed",
       "needs_rewrite": "Needs Rewrite"
-    }
+    },
+    "noSubmissionsFound": "No submissions found.",
+    "resubmittedAt": "Resubmitted {date}",
+    "openMenu": "Open menu"
   },
   "client": {
     "formTitle": "Data Submission Form",
@@ -180,7 +183,10 @@
     },
     "fileTooLarge": "File exceeds maximum size of {maxSize}",
     "invalidLink": "This submission link is invalid or has expired",
-    "fieldRequired": "This field is required"
+    "fieldRequired": "This field is required",
+    "yourName": "Your Name",
+    "contactInfo": "Contact Information",
+    "contactPlaceholder": "Email or Phone"
   },
   "notifications": {
     "viewDetails": "View Details →"
@@ -205,6 +211,27 @@
     "clearForms": "Clear Form Cache",
     "clearSubmissions": "Clear Submission Cache",
     "confirmClear": "Are you sure you want to clear this cache segment?",
-    "stats": "Cache Distribution"
+    "stats": "Cache Distribution",
+    "quickOps": "Quick Operations",
+    "quickOpsDesc": "Perform segmented cache invalidation.",
+    "keysExplorer": "Keys Explorer",
+    "explorerDesc": "Browse, edit, and manage individual cache keys.",
+    "addKey": "Add Key",
+    "searchDesc": "Search keys by pattern (e.g. form:*)",
+    "noKeysFound": "No keys matching pattern found.",
+    "editKeyTitle": "Edit Cache Key",
+    "addKeyTitle": "Add New Cache Key",
+    "keyName": "Key Name",
+    "ttlSeconds": "TTL (seconds)",
+    "value": "Value",
+    "persistent": "Persistent",
+    "foreverDesc": "Set to 0 to keep forever."
+  },
+  "sharing": {
+    "title": "Share Submission Form",
+    "publicLink": "Public Link",
+    "qrTitle": "Scannable QR Code",
+    "dynamicLink": "Dynamic link",
+    "downloadPng": "Download QR as PNG"
   }
 }

@@ -42,7 +42,7 @@ interface UseSubmissionReturn {
   resubmitForm: () => Promise<void>;
 }
 
-export function useSubmission(tokenOrId: string): UseSubmissionReturn {
+export function useSubmission(tokenOrId: string, isExplicitForm: boolean = false): UseSubmissionReturn {
   const [isNew, setIsNew] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,7 +69,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/submissions/${tokenOrId}`);
+      const res = await fetch(`/api/submissions/${tokenOrId}${isExplicitForm ? "?type=form" : ""}`);
       if (!res.ok) {
         if (res.status === 404) throw new Error("not_found");
         throw new Error("server_error");

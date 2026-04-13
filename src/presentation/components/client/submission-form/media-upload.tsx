@@ -26,6 +26,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { env } from "@/env.mjs";
 
 interface MediaItem {
   url: string;
@@ -65,7 +66,7 @@ function SortableMediaItem({ item, type, disabled, onRemove }: SortableItemProps
       <div 
         {...attributes} 
         {...listeners}
-        className="absolute top-1 left-1 z-10 p-1 rounded bg-background/80 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing transition-opacity"
+        className="absolute top-1 start-1 z-10 p-1 rounded bg-background/80 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing transition-opacity"
       >
         <GripVertical className="h-4 w-4 text-muted-foreground" />
       </div>
@@ -94,7 +95,7 @@ function SortableMediaItem({ item, type, disabled, onRemove }: SortableItemProps
           type="button"
           variant="destructive"
           size="icon"
-          className="absolute top-1 right-1 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity z-20"
+          className="absolute top-1 end-1 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity z-20"
           onClick={() => onRemove(item.publicId)}
         >
           <X className="h-3 w-3" />
@@ -165,6 +166,9 @@ export function MediaUpload({
   }, [currentItems, onItemsChange]);
 
   const uploadOptions = {
+    cloudName: env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+    apiKey: env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
+    uploadPreset: env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
     multiple: isMultiple,
     maxFiles: isMultiple ? 10 : 1,
     maxFileSize: maxFileSize * 1024 * 1024,
@@ -250,7 +254,7 @@ export function MediaUpload({
             type="button"
             variant="destructive"
             size="icon"
-            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute top-2 end-2 opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={onRemove}
           >
             <X className="h-4 w-4" />

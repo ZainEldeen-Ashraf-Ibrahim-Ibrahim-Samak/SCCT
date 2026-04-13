@@ -14,9 +14,10 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface SubmissionFormProps {
   tokenOrId: string;
+  isExplicitForm?: boolean;
 }
 
-export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
+export function SubmissionForm({ tokenOrId, isExplicitForm = false }: SubmissionFormProps) {
   const t = useTranslations("client");
   const tp = useTranslations("submissions.statuses");
   const {
@@ -35,9 +36,10 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
     setClientContact,
     setFieldValue,
     setMediaValue,
+    setMediaItems,
     submitForm,
     resubmitForm,
-  } = useSubmission(tokenOrId);
+  } = useSubmission(tokenOrId, isExplicitForm);
 
   const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({});
 
@@ -56,7 +58,7 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
       <div className="max-w-md mx-auto mt-20">
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
+          <AlertTitle>{t("error")}</AlertTitle>
           <AlertDescription>{t("invalidLink")}</AlertDescription>
         </Alert>
       </div>
@@ -79,9 +81,10 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
       if (f.validationRules?.required) {
         const val = formData[f.id];
         const hasMedia = val?.mediaUrl && val.mediaUrl.trim().length > 0;
+        const hasMediaItems = val?.mediaItems && val.mediaItems.length > 0;
         const hasText = val?.value !== undefined && val?.value !== null && String(val.value).trim().length > 0;
 
-        if (!hasMedia && !hasText) {
+        if (!hasMedia && !hasText && !hasMediaItems) {
           errors[f.id] = true;
           isValid = false;
         }
@@ -151,7 +154,7 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="clientName" className={validationErrors.clientName ? "text-destructive" : ""}>
-                    Your Name <span className="text-destructive">*</span>
+                    {t("yourName")} <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="clientName"
@@ -166,13 +169,13 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
                   {validationErrors.clientName && <p className="text-xs text-destructive">{t("fieldRequired")}</p>}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="clientContact">Contact Information</Label>
+                  <Label htmlFor="clientContact">{t("contactInfo")}</Label>
                   <Input
                     id="clientContact"
                     value={clientContact}
                     onChange={(e) => setClientContact(e.target.value)}
                     disabled={isViewOnly}
-                    placeholder="Email or Phone"
+                    placeholder={t("contactPlaceholder")}
                   />
                 </div>
               </div>
@@ -220,9 +223,9 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
             <CardFooter className="bg-muted/10 pt-6 mt-4 border-t">
               <Button type="submit" className="w-full sm:w-auto" size="lg" disabled={isSubmitting}>
                 {isSubmitting ? (
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  <Loader2 className="me-2 h-5 w-5 animate-spin" />
                 ) : (
-                  <Send className="mr-2 h-5 w-5" />
+                  <Send className="me-2 h-5 w-5" />
                 )}
                 {isNew ? t("submitButton") : t("resubmitButton")}
               </Button>

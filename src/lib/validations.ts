@@ -130,6 +130,10 @@ export const fieldValueInputSchema = z.object({
   value: z.union([z.string(), z.number(), z.null()]).optional(),
   mediaUrl: z.string().url().optional().nullable(),
   mediaPublicId: z.string().optional().nullable(),
+  mediaItems: z.array(z.object({
+    url: z.string().url(),
+    publicId: z.string()
+  })).optional(),
 });
 
 export const createSubmissionSchema = z.object({

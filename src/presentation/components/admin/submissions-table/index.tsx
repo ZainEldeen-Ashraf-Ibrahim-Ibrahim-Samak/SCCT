@@ -73,7 +73,7 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
   if (submissions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center border rounded-md bg-muted/20">
-        <p className="text-muted-foreground">{"No submissions found."}</p>
+        <p className="text-muted-foreground">{t("noSubmissionsFound")}</p>
       </div>
     );
   }
@@ -100,7 +100,7 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
             <TableHead>{t("clientContact")}</TableHead>
             <TableHead>{tc("status")}</TableHead>
             <TableHead>{t("submittedAt")}</TableHead>
-            <TableHead className="text-right">{tc("actions")}</TableHead>
+            <TableHead className="text-end">{tc("actions")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -113,28 +113,28 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
                 <span title={formatDate(sub.submittedAt)}>{formatDate(sub.submittedAt)}</span>
                 {sub.lastResubmittedAt && (
                   <span className="block text-xs text-amber-600/80 mt-0.5">
-                    Resubmitted {formatDate(sub.lastResubmittedAt)}
+                    {t("resubmittedAt", { date: formatDate(sub.lastResubmittedAt) })}
                   </span>
                 )}
               </TableCell>
-              <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+              <TableCell className="text-end" onClick={(e) => e.stopPropagation()}>
                 <DropdownMenu>
                   <DropdownMenuTrigger render={<Button variant="ghost" className="h-8 w-8 p-0" />}>
-                    <span className="sr-only">Open menu</span>
+                    <span className="sr-only">{t("openMenu")}</span>
                     <MoreHorizontal className="h-4 w-4" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => router.push(`/admin/submissions/${sub.id}`)}>
-                      <Eye className="mr-2 h-4 w-4" />
+                      <Eye className="me-2 h-4 w-4" />
                       {t("viewDetail")}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleCopyLink(sub.accessToken)}>
-                      <Copy className="mr-2 h-4 w-4" />
+                      <Copy className="me-2 h-4 w-4" />
                       {t("copyLink")}
                     </DropdownMenuItem>
                     <AlertDialog>
                       <AlertDialogTrigger render={<DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive" />}>
-                        <Trash2 className="mr-2 h-4 w-4" />
+                        <Trash2 className="me-2 h-4 w-4" />
                         {t("deleteSubmission")}
                       </AlertDialogTrigger>
                       <AlertDialogContent>

@@ -1,23 +1,19 @@
 <!--
   Sync Impact Report
   ─────────────────────────────────────────────────────
-  Version change: 1.0.0 → 1.1.0
-  Bump rationale: MINOR — added guidance on full SpecKit workflow,
-    Zero-Warning build policy, i18n synchronization scripts, and 
-    strict devlogger usage.
+  Version change: 1.1.0 → 1.2.0
+  Bump rationale: MINOR — added Principle VIII (Late-Stage Heavy Processing)
+    and updated development workflow to prioritize fast feedback.
 
   Modified principles/sections:
-    V. Internationalization & Theming → updated to mandate sync scripts
-    Code Review & Quality Gates → updated with zero-warning and logging rules
-    Development Workflow → explicitly integrated full project flow
-
-  Added sections: none
-  Removed sections: none
+    Development Workflow → updated to prioritize fast feedback loops
+  
+  Added sections:
+    Principle VIII: Late-Stage Heavy Processing
 
   Templates requiring updates:
-    ✅ .specify/templates/plan-template.md — reviewed
-    ✅ .specify/templates/spec-template.md — reviewed
-    ✅ .specify/templates/tasks-template.md — reviewed
+    ✅ .specify/templates/plan-template.md — updated
+    ✅ .specify/templates/tasks-template.md — updated
 
   Follow-up TODOs: none
   ─────────────────────────────────────────────────────
@@ -157,6 +153,23 @@ personal information) and MUST enforce strict security practices.
   demands security-first design to protect users and comply with
   data protection expectations.
 
+### VIII. Late-Stage Heavy Processing
+
+Resource-intensive or time-consuming processes MUST be deferred to the
+final stages of the development and verification cycle.
+
+- **Fast Feedback First**: Core logic and UI functionality MUST be
+  verified using lightweight unit and integration tests before
+  initiating heavy tasks.
+- **Heavy Tasks Stage**: Full production builds (`npm run build`),
+  exhaustive E2E test suites, and intensive data migrations MUST be
+  scheduled as the final verification gate.
+- **Developer Velocity**: This staging ensures that developers can
+  iterate rapidly on features without being blocked by long-running
+  processes until the implementation is feature-complete.
+- **Rationale**: Prioritizing speed of iteration prevents technical
+  friction and keeps the development loop tight.
+
 ## Technology Stack Requirements
 
 The following versions and services are mandated:
@@ -182,6 +195,7 @@ The following versions and services are mandated:
 ### Project Flow & Branches
 
 - The project MUST utilize the full specification workflow sequentially: clarify → plan → tasks → implement → review.
+- **Staging Requirements**: Developers MUST follow Principle VIII by deferring heavy processes (builds, E2E) to the final Phase of the task list.
 - Feature branches MUST follow the naming convention `###-feature-name` (e.g., `002-cms-enhancements`).
 - Commits MUST use conventional commit messages (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`).
 - Pull requests MUST pass linting and type checks before merge.
@@ -216,4 +230,4 @@ The following versions and services are mandated:
 - Use the project's `.specify/` guidance files for runtime
   development guidance.
 
-**Version**: 1.1.0 | **Ratified**: 2026-04-12 | **Last Amended**: 2026-04-13
+**Version**: 1.2.0 | **Ratified**: 2026-04-12 | **Last Amended**: 2026-04-13

@@ -5,6 +5,8 @@ import { logger } from "@/lib/dev-logger";
 
 const repo = new MongoSubmissionRepository();
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const session = await auth();
   if (!session?.user) {

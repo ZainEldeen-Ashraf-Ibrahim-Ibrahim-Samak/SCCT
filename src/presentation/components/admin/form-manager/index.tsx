@@ -5,25 +5,36 @@ import { useTranslations } from "next-intl";
 import { useFormManager } from "@/presentation/view-models/use-form-manager";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, FileText, Trash2, Settings } from "lucide-react";
+import { Plus, FileText, Trash2, Settings, Share2, Copy, QrCode, Download } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { toast } from "sonner";
+import { QRCodeSVG } from "qrcode.react";
+import { useLocale } from "next-intl";
+import { useRef } from "react";
 
 export function FormManager() {
-  const t = useTranslations("forms");
   const tc = useTranslations("common");
+  const t = useTranslations("forms");
+  const ts = useTranslations("sharing");
+  const locale = useLocale();
   const { forms, isLoading, createForm, updateForm, deleteForm } = useFormManager();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newFormName, setNewFormName] = useState("");
   const [newFormDesc, setNewFormDesc] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+
+  // Share Dialog State
+  const [shareFormId, setShareFormId] = useState<string | null>(null);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
+  const qrRef = useRef<HTMLDivElement>(null);
 
   async function handleCreate() {
     if (!newFormName.trim()) return;
@@ -59,6 +70,49 @@ export function FormManager() {
     }
   }
 
+  function handleOpenShare(id: string) {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const url = `${origin}/${locale}/submit/form/${id}`;
+    setShareUrl(url);
+    setShareFormId(id);
+    setIsShareOpen(true);
+  }
+
+  function handleCopyShareLink() {
+    navigator.clipboard.writeText(shareUrl);
+    toast.success(tc("copied"));
+  }
+
+  function handleDownloadQR() {
+    if (!qrRef.current) return;
+    const svg = qrRef.current.querySelector("svg");
+    if (!svg) return;
+
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+
+    img.onload = () => {
+      canvas.width = img.width * 2; // High DPI
+      canvas.height = img.height * 2;
+      if (ctx) {
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.scale(2, 2);
+        ctx.drawImage(img, 0, 0);
+        const pngFile = canvas.toDataURL("image/png");
+        const downloadLink = document.createElement("a");
+        downloadLink.download = `form-qr-${shareFormId}.png`;
+        downloadLink.href = pngFile;
+        downloadLink.click();
+        toast.success(tc("success"));
+      }
+    };
+
+    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
+  }
+
   if (isLoading) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -78,7 +132,7 @@ export function FormManager() {
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger render={<Button />}>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="me-2 h-4 w-4" />
             {t("createForm")}
           </DialogTrigger>
           <DialogContent>
@@ -149,7 +203,7 @@ export function FormManager() {
                 <div className="flex items-center gap-2">
                   <Link href={`/admin/forms/${form.id}/fields`}>
                     <Button variant="outline" size="sm">
-                      <Settings className="mr-1 h-3 w-3" />
+                      <Settings className="me-1 h-3 w-3" />
                       {t("title")}
                     </Button>
                   </Link>
@@ -162,6 +216,14 @@ export function FormManager() {
                       {t("setActive")}
                     </Button>
                   )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleOpenShare(form.id)}
+                    title={ts("title")}
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </Button>
                   <AlertDialog>
                     <AlertDialogTrigger render={<Button variant="ghost" size="icon" className="ms-auto text-destructive" />}>
                       <Trash2 className="h-4 w-4" />
@@ -185,6 +247,74 @@ export function FormManager() {
           ))}
         </div>
       )}
+
+      {/* Share Dialog */}
+      <Dialog open={isShareOpen} onOpenChange={setIsShareOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Share2 className="h-5 w-5 text-primary" />
+              {ts("title")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center space-y-6 py-4">
+             <div className="bg-white p-4 rounded-xl shadow-inner border border-zinc-100" ref={qrRef}>
+                <QRCodeSVG 
+                  value={shareUrl} 
+                  size={200}
+                  level="H"
+                  includeMargin={false}
+                  imageSettings={{
+                    src: "/favicon.ico", // Attempt to include favicon as logo if available
+                    x: undefined,
+                    y: undefined,
+                    height: 24,
+                    width: 24,
+                    excavate: true,
+                  }}
+                />
+             </div>
+             
+              <div className="w-full space-y-2">
+                <Label className="text-muted-foreground text-xs uppercase tracking-wider font-bold">{ts("publicLink")}</Label>
+                <div className="flex items-center gap-2">
+                 <Input 
+                   readOnly 
+                   value={shareUrl} 
+                   className="bg-muted/30 font-mono text-xs overflow-hidden text-ellipsis h-10"
+                 />
+                 <Button size="icon" onClick={handleCopyShareLink}>
+                   <Copy className="h-4 w-4" />
+                 </Button>
+               </div>
+             </div>
+
+             <div className="w-full pt-4 border-t flex flex-col gap-3">
+               <div className="flex items-center justify-between text-muted-foreground">
+                 <div className="flex items-center gap-2 text-sm">
+                   <QrCode className="h-4 w-4" />
+                   <span>{ts("qrTitle")}</span>
+                 </div>
+                 <span className="text-[10px] bg-muted px-2 py-0.5 rounded uppercase">{ts("dynamicLink")}</span>
+               </div>
+               <Button variant="outline" size="sm" className="w-full gap-2" onClick={handleDownloadQR}>
+                 <Download className="h-4 w-4" />
+                 {ts("downloadPng")}
+               </Button>
+             </div>
+          </div>
+          <DialogFooter className="sm:justify-start">
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-full"
+              onClick={() => setIsShareOpen(false)}
+            >
+              {tc("close")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

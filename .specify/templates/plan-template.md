@@ -31,7 +31,10 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- [ ] I. Clean Architecture (MVVM) compliance?
+- [ ] II. Technology Stack Mandate followed?
+- [ ] V. Internationalization (AR/EN) & RTL support planned?
+- [ ] VIII. Heavy processes (build, e2e, migrations) deferred to the final phase?
 
 ## Project Structure
 

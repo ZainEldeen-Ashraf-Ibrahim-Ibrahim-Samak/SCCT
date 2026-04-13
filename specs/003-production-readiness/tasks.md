@@ -54,8 +54,8 @@
 
 ### Implementation for User Story 2
 
-- [ ] T009 [US2] Fix `null` redis check issue in `src/app/api/admin/events/route.ts`
-- [ ] T010 [US2] Run `npm run build`, identify all remaining warnings (Tailwind, ESLint, React keys), and apply fixes across the `/src` directory
+- [x] T009 [US2] Fix `null` redis check issue in `src/app/api/admin/events/route.ts`
+- [x] T010 [US2] Run `npm run build`, identify all remaining warnings (Tailwind, ESLint, React keys), and apply fixes across the `/src` directory
 
 **Checkpoint**: User Story 2 yields a clean build and remains independently verifiable.
 
@@ -66,14 +66,14 @@
 **Independent Test**: Build succeeds with `.env.example`-derived values and automated Jest integration tests pass for all core API endpoints.
 
 ### Tests for User Story 4
-- [ ] T011 [US4] Write Jest integration tests for Forms API endpoints in `tests/integration/api/forms.test.ts`
-- [ ] T012 [P] [US4] Write Jest integration tests for Submissions API endpoints in `tests/integration/api/submissions.test.ts`
-- [ ] T013 [P] [US4] Write Jest integration tests for Cloudinary Sign API routes in `tests/integration/api/cloudinary.test.ts`
+- [x] T011 [US4] Write Jest integration tests for Forms API endpoints in `tests/integration/api/forms.test.ts`
+- [x] T012 [P] [US4] Write Jest integration tests for Submissions API endpoints in `tests/integration/api/submissions.test.ts`
+- [x] T013 [P] [US4] Write Jest integration tests for Cloudinary Sign API routes in `tests/integration/api/cloudinary.test.ts`
 
 ### Implementation for User Story 4
 
-- [ ] T014 [US4] Standardize API route responses (Forms, Submissions, Cloudinary) to use structured error messages and correct status codes in `NextResponse.json`
-- [ ] T015 [US4] Ensure primary admin API routes are marked `force-dynamic` to avoid build-time DB connection attempts
+- [x] T014 [US4] Standardize API route responses (Forms, Submissions, Cloudinary) to use structured error messages and correct status codes in `NextResponse.json`
+- [x] T015 [US4] Ensure primary admin API routes are marked `force-dynamic` to avoid build-time DB connection attempts
 
 **Checkpoint**: User Story 4 guarantees env/API production contract readiness and is independently testable.
 
@@ -85,7 +85,7 @@
 
 ### Implementation for User Story 3
 
-- [ ] T016 [US3] Replace all instances of `console.log`, `console.error`, and `console.warn` with `devlogger` across the `/src` directory
+- [x] T016 [US3] Replace all instances of `console.log`, `console.error`, and `console.warn` with `devlogger` across the `/src` directory
 
 **Checkpoint**: User Story 3 enforces consistent logging standards and is independently testable.
 
@@ -93,4 +93,4 @@
 
 **Purpose**: Finalize production readiness evidence and cross-story validation.
 
-- [ ] T017 Execute final zero-warning build via `npm run build` using the updated `.env.example` template and verify all Jest tests pass.
+- [x] T017 Execute final zero-warning build via `npm run build` using the updated `.env.example` template and verify all Jest tests pass.

@@ -141,6 +141,7 @@ export function FieldFormDialog({ open, onOpenChange, field, onSave }: FieldForm
 
           <div className="flex items-center gap-2">
             <input
+              title="Mark this field as required"
               type="checkbox"
               id="isRequired"
               checked={isRequired}
@@ -155,6 +156,7 @@ export function FieldFormDialog({ open, onOpenChange, field, onSave }: FieldForm
           {(inputType === "image" || inputType === "file" || inputType === "text" || inputType === "number") && (
             <div className="flex items-center gap-2">
               <input
+                title="Allow multiple files to be uploaded"
                 type="checkbox"
                 id="isMultiple"
                 checked={isMultiple}

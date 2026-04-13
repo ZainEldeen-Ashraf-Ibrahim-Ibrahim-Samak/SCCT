@@ -28,41 +28,54 @@ export class ViewSubmissionUseCase {
     private fieldDefRepo: FieldDefinitionRepository
   ) {}
 
-  async execute(tokenOrId: string): Promise<ViewSubmissionResult | null> {
-    // 1. Try to find an existing submission by token
-    // (We also check ID here if admin is viewing it directly, though ViewSubmission is mainly client)
-    let submission = await this.submissionRepo.findByToken(tokenOrId);
-    if (!submission) {
-      try {
-         submission = await this.submissionRepo.findById(tokenOrId);
-      } catch {
-         // ignore invalid ID format
+  async execute(tokenOrId: string, isExplicitForm: boolean = false): Promise<ViewSubmissionResult | null> {
+    // 1. If explicitly requested as a form, skip submission lookup
+    if (!isExplicitForm) {
+      // Try to find an existing submission by token
+      let submission = await this.submissionRepo.findByToken(tokenOrId);
+      if (!submission) {
+        try {
+          submission = await this.submissionRepo.findById(tokenOrId);
+        } catch {
+          // ignore invalid ID format
+        }
+      }
+
+      if (submission) {
+        // Existing submission — fetch its saved values
+        const values = await this.fieldValueRepo.findBySubmissionId(submission.id);
+        return {
+          isNew: false,
+          submission,
+          values,
+          fields: [...submission.formSnapshot], // The fields as they were at submission time
+        };
       }
     }
 
-    if (submission) {
-      // Existing submission — fetch its saved values
-      const values = await this.fieldValueRepo.findBySubmissionId(submission.id);
-      return {
-        isNew: false,
-        submission,
-        values,
-        fields: [...submission.formSnapshot], // The fields as they were at submission time
-      };
+    // 2. Fetch specific form if requested OR fall back to active form
+    let targetForm: any = null;
+    if (isExplicitForm || tokenOrId.length > 20) { // Simple heuristic for ID vs generic token
+       try {
+         targetForm = await this.formTemplateRepo.findById(tokenOrId);
+       } catch {
+         // Not a valid form ID
+       }
     }
 
-    // 2. Not found, but is it a UUID token for a *new* submission?
-    // We expect the controller to pass a token. We return the fresh form.
-    const activeForm = await this.formTemplateRepo.findActive();
-    if (!activeForm) {
+    if (!targetForm) {
+      targetForm = await this.formTemplateRepo.findActive();
+    }
+
+    if (!targetForm) {
       return null; // No form to show
     }
 
-    const fields = await this.fieldDefRepo.findByFormId(activeForm.id, false);
+    const fields = await this.fieldDefRepo.findByFormId(targetForm.id, false);
 
     return {
       isNew: true,
-      formTemplate: activeForm,
+      formTemplate: targetForm,
       fields,
     };
   }

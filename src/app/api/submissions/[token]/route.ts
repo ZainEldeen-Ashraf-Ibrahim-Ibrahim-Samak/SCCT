@@ -28,7 +28,10 @@ const viewUseCase = new ViewSubmissionUseCase(
 export async function GET(request: Request, { params }: { params: Promise<{ token: string }> }) {
   try {
     const { token } = await params;
-    const result = await viewUseCase.execute(token);
+    const { searchParams } = new URL(request.url);
+    const isForm = searchParams.get("type") === "form";
+    
+    const result = await viewUseCase.execute(token, isForm);
 
     if (!result) {
       return errorResponse("Not found", 404, "NOT_FOUND");

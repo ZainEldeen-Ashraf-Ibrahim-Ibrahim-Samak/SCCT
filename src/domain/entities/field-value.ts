@@ -13,6 +13,7 @@ export interface FieldValue {
   value?: string | number | null;
   mediaUrl?: string | null;
   mediaPublicId?: string | null;
+  mediaItems?: { url: string; publicId: string }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,5 +24,5 @@ export type CreateFieldValueInput = Omit<
 >;
 
 export type UpdateFieldValueInput = Partial<
-  Pick<FieldValue, "value" | "mediaUrl" | "mediaPublicId">
+  Pick<FieldValue, "value" | "mediaUrl" | "mediaPublicId" | "mediaItems">
 >;

@@ -150,7 +150,10 @@
       "pending": "قيد الانتظار",
       "viewed": "تمت المراجعة",
       "needs_rewrite": "يحتاج تعديل"
-    }
+    },
+    "noSubmissionsFound": "لم يتم العثور على طلبات.",
+    "resubmittedAt": "تمت إعادة الإرسال في {date}",
+    "openMenu": "فتح القائمة"
   },
   "client": {
     "formTitle": "نموذج تقديم البيانات",
@@ -173,7 +176,10 @@
     "maxSizeLabel": "الحد الأقصى للحجم: {size}",
     "fileTooLarge": "الملف يتجاوز الحد الأقصى للحجم {maxSize}",
     "invalidLink": "رابط الطلب هذا غير صالح أو منتهي الصلاحية",
-    "fieldRequired": "هذا الحقل مطلوب"
+    "fieldRequired": "هذا الحقل مطلوب",
+    "yourName": "اسمك",
+    "contactInfo": "معلومات الاتصال",
+    "contactPlaceholder": "البريد الإلكتروني أو الهاتف"
   },
   "notifications": {
     "viewDetails": "عرض التفاصيل ←"
@@ -198,6 +204,27 @@
     "clearForms": "مسح ذاكرة النماذج",
     "clearSubmissions": "مسح ذاكرة الطلبات",
     "confirmClear": "هل أنت متأكد من مسح هذا الجزء من التخزين المؤقت؟",
-    "stats": "توزيع التخزين المؤقت"
+    "stats": "توزيع التخزين المؤقت",
+    "quickOps": "عمليات سريعة",
+    "quickOpsDesc": "تنفيذ إبطال جزئي للتخزين المؤقت.",
+    "keysExplorer": "مستكشف المفاتيح",
+    "explorerDesc": "تصفح وتعديل وإدارة مفاتيح التخزين المؤقت الفردية.",
+    "addKey": "إضافة مفتاح",
+    "searchDesc": "البحث عن المفاتيح حسب النمط (مثال: form:*)",
+    "noKeysFound": "لم يتم العثور على مفاتيح تطابق النمط.",
+    "editKeyTitle": "تعديل مفتاح التخزين",
+    "addKeyTitle": "إضافة مفتاح تخزين جديد",
+    "keyName": "اسم المفتاح",
+    "ttlSeconds": "وقت انتهاء الصلاحية (بالثواني)",
+    "value": "القيمة",
+    "persistent": "دائم",
+    "foreverDesc": "اضبط على 0 للبقاء للأبد."
+  },
+  "sharing": {
+    "title": "مشاركة نموذج الطلب",
+    "publicLink": "الرابط العام",
+    "qrTitle": "رمز QR قابل للمسح",
+    "dynamicLink": "رابط ديناميكي",
+    "downloadPng": "تنزيل QR كصورة PNG"
   }
 }

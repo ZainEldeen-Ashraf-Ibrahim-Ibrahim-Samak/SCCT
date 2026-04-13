@@ -8,6 +8,8 @@ import { logger } from "@/lib/dev-logger";
 const repo = new MongoFormTemplateRepository();
 const useCase = new ManageFormsUseCase(repo);
 
+export const dynamic = "force-dynamic";
+
 interface RouteParams {
   params: Promise<{ formId: string }>;
 }

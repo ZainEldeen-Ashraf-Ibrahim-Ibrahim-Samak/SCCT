@@ -156,6 +156,9 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] TXXX [P] Additional unit tests (if requested) in tests/unit/
 - [ ] TXXX Security hardening
 - [ ] TXXX Run quickstart.md validation
+- [ ] TXXX [Principle VIII] Execute full production build (`npm run build`)
+- [ ] TXXX [Principle VIII] Execute exhaustive E2E test suite (if applicable)
+- [ ] TXXX [Principle VIII] Verify final resource-intensive data migrations
 
 ---
 
@@ -175,6 +178,11 @@ Examples of foundational tasks (adjust based on your project):
 - **User Story 1 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories
 - **User Story 2 (P2)**: Can start after Foundational (Phase 2) - May integrate with US1 but should be independently testable
 - **User Story 3 (P3)**: Can start after Foundational (Phase 2) - May integrate with US1/US2 but should be independently testable
+
+### Heavy Process Staging (Principle VIII)
+
+- **Deferral**: ALL resource-intensive tasks (production build, full E2E, large migrations) MUST be placed in the final "Polish & Verification" phase.
+- **Prerequisite**: Heavy processes SHOULD only be initiated after all unit and integration tests have passed and feature logic is complete.
 
 ### Within Each User Story
 
