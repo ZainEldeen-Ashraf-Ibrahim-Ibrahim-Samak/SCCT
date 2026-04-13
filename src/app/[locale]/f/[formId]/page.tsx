@@ -14,14 +14,15 @@ export default async function PublicFormStartPage({
   params: Promise<{ locale: string; formId: string }>;
 }) {
   const { locale, formId } = await params;
+  let redirectToken = null;
 
   try {
     // Validate form exists and is active
     const form = await formTemplateRepo.findById(formId);
     if (!form || !form.isActive) {
       // If form not found or not active, just redirect to not-found or home
-      // For now, redirect to a safe fallback
-      redirect(`/${locale}`);
+      // We will handle this outside the try block
+      return;
     }
 
     const fields = await fieldDefRepo.findByFormId(formId, false);
@@ -45,12 +46,16 @@ export default async function PublicFormStartPage({
     const { SubmissionModel } = await import("@/data/models/submission.model");
     await SubmissionModel.findByIdAndUpdate(submission.id, { status: "draft" });
 
-    // Redirect to the user's specific submission URL
-    redirect(`/${locale}/submit/${token}`);
+    redirectToken = token;
   } catch (error) {
     // We can't log 'error' easily if we only rely on redirection, but just to satisfy eslint
     console.error("Public submission init failed:", error);
     // On error, fallback to root
+  }
+
+  if (redirectToken) {
+    redirect(`/${locale}/submit/${redirectToken}`);
+  } else {
     redirect(`/${locale}`);
   }
 }
