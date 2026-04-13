@@ -41,7 +41,7 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
     }
   };
 
-  if (isLoading) {
+  if (isLoading && submissions.length === 0) {
     return (
       <div className="rounded-md border">
         <Table>
