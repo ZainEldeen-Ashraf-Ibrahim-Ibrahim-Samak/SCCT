@@ -27,11 +27,16 @@ export function LiveNotifications() {
         try {
           const data = JSON.parse(event.data);
           
-          if (data.type === "CONNECTION_ESTABLISHED") {
+          if (data.type === "CONNECTION_ESTABLISHED" || data.type === "PING" || data.type === "keep-alive") {
             return;
           }
 
           const notification = data as AdminNotification;
+
+          // Do not show an empty toast if there's no valid title or message to display
+          if (!notification.title && !notification.message) {
+            return;
+          }
 
           if (notification.type === "NEW_SUBMISSION") {
             window.dispatchEvent(new CustomEvent("submissions-updated"));
