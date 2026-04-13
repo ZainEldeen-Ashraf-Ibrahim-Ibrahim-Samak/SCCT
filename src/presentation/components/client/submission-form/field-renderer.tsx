@@ -37,7 +37,7 @@ export function FieldRenderer({
 
   const displayName = locale === "ar" ? field.nameAr : field.nameEn;
   const isRequired = field.validationRules?.required;
-  const { minLength, maxLength, min, max } = field.validationRules ?? {};
+  const { minLength, maxLength } = field.validationRules ?? {};
 
   const renderLabel = () => (
     <div className="flex items-center gap-1 mb-2">
@@ -48,8 +48,33 @@ export function FieldRenderer({
     </div>
   );
 
+  const renderReadonlyEmpty = () => (
+    <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm text-muted-foreground italic">
+      {tc("noResults")}
+    </div>
+  );
+
+  const renderReadonlyValue = (text: string) => (
+    <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm whitespace-pre-wrap">
+      {text}
+    </div>
+  );
+
   switch (field.inputType) {
     case "text":
+      const textValue = (value as string) || "";
+
+      if (disabled) {
+        return (
+          <div className="space-y-1">
+            {renderLabel()}
+            {textValue.trim().length > 0
+              ? renderReadonlyValue(textValue)
+              : renderReadonlyEmpty()}
+          </div>
+        );
+      }
+
       // If no max length or large max length, use textarea, else input
       if (!maxLength || maxLength > 100) {
         return (
@@ -57,7 +82,7 @@ export function FieldRenderer({
             {renderLabel()}
             <Textarea
               id={field.id}
-              value={(value as string) || ""}
+              value={textValue}
               onChange={(e) => onChangeValue(e.target.value)}
               placeholder={displayName}
               required={isRequired}
@@ -74,7 +99,7 @@ export function FieldRenderer({
           {renderLabel()}
           <Input
             id={field.id}
-            value={(value as string) || ""}
+            value={textValue}
             onChange={(e) => onChangeValue(e.target.value)}
             placeholder={displayName}
             required={isRequired}
@@ -87,6 +112,20 @@ export function FieldRenderer({
       );
 
     case "number":
+      const numberValue =
+        value === null || value === undefined ? "" : String(value);
+
+      if (disabled) {
+        return (
+          <div className="space-y-1">
+            {renderLabel()}
+            {numberValue.trim().length > 0
+              ? renderReadonlyValue(numberValue)
+              : renderReadonlyEmpty()}
+          </div>
+        );
+      }
+
       return (
         <div className="space-y-1">
           {renderLabel()}
@@ -95,7 +134,7 @@ export function FieldRenderer({
             type="text"
             inputMode="numeric"
             pattern="[0-9]*"
-            value={value === null || value === undefined ? "" : value}
+            value={numberValue}
             onChange={(e) => {
               const val = e.target.value;
               // Allow only digits to simulate number input but preserve leading zeros
@@ -112,13 +151,26 @@ export function FieldRenderer({
       );
 
     case "date":
+      const dateValue = (value as string) || "";
+
+      if (disabled) {
+        return (
+          <div className="space-y-1">
+            {renderLabel()}
+            {dateValue.trim().length > 0
+              ? renderReadonlyValue(dateValue)
+              : renderReadonlyEmpty()}
+          </div>
+        );
+      }
+
       return (
         <div className="space-y-1">
           {renderLabel()}
           <Input
             id={field.id}
             type="date"
-            value={(value as string) || ""}
+            value={dateValue}
             onChange={(e) => onChangeValue(e.target.value)}
             required={isRequired}
             disabled={disabled}
@@ -128,22 +180,25 @@ export function FieldRenderer({
       );
 
     case "dropdown":
-      const options = locale === "ar" ? field.dropdownOptionsAr : field.dropdownOptionsEn;
-      const valStr = value?.toString();
-      // Ensure we have a valid matched option if it exists
-      const matchIndex = locale === "en"
-        ? field.dropdownOptionsEn.indexOf(valStr || "")
-        : field.dropdownOptionsAr.indexOf(valStr || "");
+      const dropdownValue = (value as string) || "";
 
-      // Next select needs the value. If cross-language match we select the localized version.
-      // But underlying value saved needs to be consistent. Let's save the English one as source-of-truth if possible,
-      // or just the localized one depending on constraints. For simplicity, we just save the index essentially via exact string match,
-      // but the data model currently just saves the string. We'll save the localized string.
+      if (disabled) {
+        return (
+          <div className="space-y-1">
+            {renderLabel()}
+            {dropdownValue.trim().length > 0
+              ? renderReadonlyValue(dropdownValue)
+              : renderReadonlyEmpty()}
+          </div>
+        );
+      }
+
+      const options = locale === "ar" ? field.dropdownOptionsAr : field.dropdownOptionsEn;
       return (
         <div className="space-y-1">
           {renderLabel()}
           <Select
-            value={(value as string) || ""}
+            value={dropdownValue}
             onValueChange={(val) => onChangeValue(val)}
             disabled={disabled}
           >
@@ -163,6 +218,18 @@ export function FieldRenderer({
 
     case "image":
     case "file":
+      const hasSingleMedia = !!mediaUrl && mediaUrl.trim().length > 0;
+      const hasMediaItems = mediaItems.length > 0;
+
+      if (disabled && !hasSingleMedia && !hasMediaItems) {
+        return (
+          <div className="space-y-1">
+            {renderLabel()}
+            {renderReadonlyEmpty()}
+          </div>
+        );
+      }
+
       return (
         <div className="space-y-1">
           {renderLabel()}

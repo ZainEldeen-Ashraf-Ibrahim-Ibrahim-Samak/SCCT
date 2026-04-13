@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Clock, Eye, AlertCircle, File, ArrowLeft, ExternalLink } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { logger } from "@/lib/dev-logger";
@@ -114,6 +115,17 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
     }
   };
 
+  const hasAnyValue = values.some((val) => {
+    const hasText =
+      val?.value !== undefined &&
+      val?.value !== null &&
+      String(val.value).trim().length > 0;
+    const hasMedia = !!val?.mediaUrl && val.mediaUrl.trim().length > 0;
+    const hasMediaItems = (val?.mediaItems?.length ?? 0) > 0;
+
+    return hasText || hasMedia || hasMediaItems;
+  });
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <Link href="/admin/dashboard">
@@ -122,6 +134,14 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
           {tc("back")}
         </Button>
       </Link>
+
+      {submission.formSnapshot.length > 0 && !hasAnyValue && (
+        <Alert className="border-amber-300 bg-amber-50 text-amber-950 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>{t("viewDetail")}</AlertTitle>
+          <AlertDescription>{tc("noResults")}</AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">

@@ -18,7 +18,7 @@ interface SubmissionFormProps {
 
 export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
   const t = useTranslations("client");
-  const tp = useTranslations("submissions.statuses");
+  const tc = useTranslations("common");
   const {
     isNew,
     isLoading,
@@ -68,6 +68,19 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
   const isNeedsRewrite = submission?.status === "needs_rewrite";
   const isDraft = submission?.status === "draft";
   const isViewOnly = !isNew && !isNeedsRewrite && !isDraft;
+  const displayTitle = formName || (isNew || isDraft ? t("formTitle") : t("viewingSubmission"));
+
+  const hasAnyValue = fields.some((field) => {
+    const val = formData[field.id];
+    const hasText =
+      val?.value !== undefined &&
+      val?.value !== null &&
+      String(val.value).trim().length > 0;
+    const hasMedia = !!val?.mediaUrl && val.mediaUrl.trim().length > 0;
+    const hasMediaItems = (val?.mediaItems?.length ?? 0) > 0;
+
+    return hasText || hasMedia || hasMediaItems;
+  });
 
   const validate = () => {
     const errors: Record<string, boolean> = {};
@@ -138,10 +151,18 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
     <div className="max-w-3xl mx-auto py-8 px-4">
       {statusAlert}
 
+      {isViewOnly && !hasAnyValue && fields.length > 0 && (
+        <Alert className="mb-6 border-amber-300 bg-amber-50 text-amber-950 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>{t("viewingSubmission")}</AlertTitle>
+          <AlertDescription>{tc("noResults")}</AlertDescription>
+        </Alert>
+      )}
+
       <Card className={`shadow-lg border-t-4 ${isViewOnly ? "border-t-muted opacity-80" : "border-t-primary"}`}>
         <CardHeader className="space-y-4 pb-8">
           <div>
-            <CardTitle className="text-3xl font-extrabold">{formName}</CardTitle>
+            <CardTitle className="text-3xl font-extrabold">{displayTitle}</CardTitle>
             {formDescription && (
               <CardDescription className="text-base mt-2 whitespace-pre-wrap">
                 {formDescription}

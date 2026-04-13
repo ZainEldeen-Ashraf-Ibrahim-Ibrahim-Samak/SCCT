@@ -217,7 +217,8 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
           updateDraft({ clientName: "", clientContact: "", formData: initialForm });
         }
       } else {
-        setFormName(data.submission?.formTemplateId || "Submission");
+        setFormName("");
+        setFormDescription("");
         setSubmission(data.submission);
         setValues(data.values || []);
         setFields(data.fields || []);
