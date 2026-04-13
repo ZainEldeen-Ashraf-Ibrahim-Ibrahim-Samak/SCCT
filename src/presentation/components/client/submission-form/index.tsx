@@ -32,8 +32,6 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
     formData,
     clientName,
     setClientName,
-    clientContact,
-    setClientContact,
     contactRecords,
     addContactRecord,
     updateContactRecord,
@@ -226,7 +224,7 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
           <CardContent className="space-y-8">
             <div className="space-y-4 bg-muted/30 p-6 rounded-xl border border-border/50">
               <h3 className="font-semibold text-lg">{isNew || isDraft ? t("formSubtitle") : t("viewingSubmission")}</h3>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-1">
                 <div className="space-y-2">
                   <Label htmlFor="clientName" className={validationErrors.clientName ? "text-destructive" : ""}>
                     {t("yourName")} <span className="text-destructive">*</span>
@@ -243,16 +241,6 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
                     className={validationErrors.clientName ? "border-destructive" : ""}
                   />
                   {validationErrors.clientName && <p className="text-xs text-destructive">{t("fieldRequired")}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="clientContact">{t("contactInfo")}</Label>
-                  <Input
-                    id="clientContact"
-                    value={clientContact}
-                    onChange={(e) => setClientContact(e.target.value)}
-                    disabled={isViewOnly}
-                    placeholder={t("contactPlaceholder")}
-                  />
                 </div>
               </div>
 

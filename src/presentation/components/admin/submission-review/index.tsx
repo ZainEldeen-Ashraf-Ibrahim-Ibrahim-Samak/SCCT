@@ -167,6 +167,22 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-8">
+                {submission.contactRecords && submission.contactRecords.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-base font-semibold text-foreground/80">{t("clientContact")}</Label>
+                    <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
+                      {submission.contactRecords.map((record, idx) => (
+                        <div key={record.id || `${record.name}-${idx}`} className="rounded-md border bg-background p-3 text-sm">
+                          <p className="font-medium">{record.name || tc("noResults")}</p>
+                          <p className="text-muted-foreground">{record.contact || tc("noResults")}</p>
+                          {record.role && <p className="text-muted-foreground">{record.role}</p>}
+                          {record.notes && <p className="mt-1 whitespace-pre-wrap">{record.notes}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {submission.formSnapshot.map((field) => {
                   const val = values.find(v => v.fieldDefinitionId === field.id);
                   const displayName = locale === "ar" ? field.nameAr || field.nameEn : field.nameEn;

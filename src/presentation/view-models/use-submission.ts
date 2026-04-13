@@ -27,7 +27,6 @@ export interface ContactRecordDraft {
 
 interface DraftState {
   clientName: string;
-  clientContact: string;
   contactRecords: ContactRecordDraft[];
   formData: Record<string, FormFieldData>;
 }
@@ -106,7 +105,7 @@ function summarizeFieldPayload(fieldValues: SubmissionFieldPayload[]) {
 function hasMeaningfulDraftData(draft: DraftState | undefined): boolean {
   if (!draft) return false;
 
-  if (draft.clientName.trim().length > 0 || draft.clientContact.trim().length > 0) {
+  if (draft.clientName.trim().length > 0) {
     return true;
   }
 
@@ -148,8 +147,6 @@ interface UseSubmissionReturn {
   formData: Record<string, FormFieldData>;
   clientName: string;
   setClientName: (name: string) => void;
-  clientContact: string;
-  setClientContact: (contact: string) => void;
   contactRecords: ContactRecordDraft[];
   addContactRecord: () => void;
   updateContactRecord: (id: string, patch: Partial<Omit<ContactRecordDraft, "id">>) => void;
@@ -182,11 +179,10 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
 
   const { draft, updateDraft, clearDraft, isLoaded: draftLoaded } = useDraftAutosave<DraftState>(
     `scct_draft_${tokenOrId}`,
-    { clientName: "", clientContact: "", contactRecords: [createEmptyContactRecord()], formData: {} }
+    { clientName: "", contactRecords: [createEmptyContactRecord()], formData: {} }
   );
 
   const clientName = draft?.clientName || "";
-  const clientContact = draft?.clientContact || "";
   const contactRecords =
     draft?.contactRecords && draft.contactRecords.length > 0
       ? draft.contactRecords
@@ -208,10 +204,6 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
   const setClientName = (name: string) => {
     isEditingRef.current = true;
     updateDraft(prev => ({ ...prev, clientName: name }));
-  };
-  const setClientContact = (contact: string) => {
-    isEditingRef.current = true;
-    updateDraft(prev => ({ ...prev, clientContact: contact }));
   };
 
   const addContactRecord = () => {
@@ -336,7 +328,6 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
           });
           updateDraft({
             clientName: "",
-            clientContact: "",
             contactRecords: [createEmptyContactRecord()],
             formData: initialForm,
           });
@@ -401,7 +392,6 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
 
           updateDraft({ 
             clientName: data.submission?.clientName || "", 
-            clientContact: data.submission?.clientContact || "", 
             contactRecords:
               nextDraftContactRecords.length > 0
                 ? nextDraftContactRecords
@@ -517,7 +507,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       const endpoint = `/api/submissions/${currentToken}`;
       const payload = {
         clientName: currentDraft.clientName,
-        clientContact: currentDraft.clientContact,
+        clientContact: "",
         contactRecords: validContactRecords,
         fieldValues,
       };
@@ -526,7 +516,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
         endpoint,
         tokenOrId: currentToken,
         clientNameLength: currentDraft.clientName.length,
-        clientContactLength: currentDraft.clientContact.length,
+        clientContactLength: 0,
         fieldSummary,
       });
 
@@ -586,7 +576,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       
       const payload = {
         clientName: currentDraft.clientName,
-        clientContact: currentDraft.clientContact,
+        clientContact: "",
         contactRecords: validContactRecords,
         fieldValues,
       };
@@ -595,7 +585,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
         endpoint,
         tokenOrId: currentToken,
         clientNameLength: currentDraft.clientName.length,
-        clientContactLength: currentDraft.clientContact.length,
+        clientContactLength: 0,
         fieldSummary,
       });
 
@@ -638,8 +628,6 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
     formData,
     clientName,
     setClientName,
-    clientContact,
-    setClientContact,
     contactRecords,
     addContactRecord,
     updateContactRecord,
