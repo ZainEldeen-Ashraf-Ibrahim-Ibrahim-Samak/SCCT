@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Clock, Eye, AlertCircle, File, ArrowLeft, ExternalLink } from "lucide-react";
+import { Clock, Eye, AlertCircle, File, ArrowLeft, ExternalLink, Download } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { logger } from "@/lib/dev-logger";
 import { formatDate } from "@/lib/utils";
@@ -195,16 +195,29 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
                                      </a>
                                    </div>
                                  )}
-                                 <a 
-                                   href={item.url} 
-                                   target="_blank" 
-                                   rel="noreferrer" 
-                                   title="Open media"
-                                   aria-label="Open media"
-                                   className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                                 >
-                                   <ExternalLink className="h-5 w-5 text-white" />
-                                 </a>
+                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                                   <a 
+                                     href={item.url} 
+                                     target="_blank" 
+                                     rel="noreferrer" 
+                                     title="Open media"
+                                     aria-label="Open media"
+                                     className="bg-white/20 p-2 rounded-full hover:bg-white/40"
+                                   >
+                                     <ExternalLink className="h-5 w-5 text-white" />
+                                   </a>
+                                   {field.inputType === "image" && (
+                                     <a 
+                                       href={`${item.url.replace("/upload/", "/upload/fl_attachment/")}`} 
+                                       download
+                                       title="Download media"
+                                       aria-label="Download media"
+                                       className="bg-white/20 p-2 rounded-full hover:bg-white/40"
+                                     >
+                                       <Download className="h-5 w-5 text-white" />
+                                     </a>
+                                   )}
+                                 </div>
                                </div>
                              ))}
                            </div>
@@ -218,16 +231,27 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
                                 className="object-contain" 
                                 sizes="(max-width: 768px) 100vw, 384px"
                               />
-                              <a
-                                href={val.mediaUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                title="Open media"
-                                aria-label="Open media"
-                                className="absolute top-2 right-2 bg-black/60 p-2 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                <ExternalLink className="h-4 w-4" />
-                              </a>
+                              <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <a
+                                  href={val.mediaUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  title="Open media"
+                                  aria-label="Open media"
+                                  className="bg-black/60 p-2 rounded-full text-white hover:bg-black/80"
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                </a>
+                                <a
+                                  href={`${val.mediaUrl.replace("/upload/", "/upload/fl_attachment/")}`}
+                                  download
+                                  title="Download media"
+                                  aria-label="Download media"
+                                  className="bg-black/60 p-2 rounded-full text-white hover:bg-black/80"
+                                >
+                                  <Download className="h-4 w-4" />
+                                </a>
+                              </div>
                             </div>
                           ) : (
                             <div className="flex items-center gap-3">
