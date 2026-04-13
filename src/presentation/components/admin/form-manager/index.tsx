@@ -103,23 +103,12 @@ export function FormManager() {
     }
   }
 
-  async function handleOpenShare(id: string) {
-    setIsShareLoading(true);
-    try {
-      const res = await fetch(`/api/admin/forms/${id}/provision`, { method: "POST" });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error);
-
-      const origin = typeof window !== "undefined" ? window.location.origin : "";
-      const url = `${origin}/${locale}/submit/${data.data.token}`;
-      setShareUrl(url);
-      setShareFormId(id);
-      setIsShareOpen(true);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : ts("provisionError"));
-    } finally {
-      setIsShareLoading(false);
-    }
+  function handleOpenShare(id: string) {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const url = `${origin}/${locale}/f/${id}`;
+    setShareUrl(url);
+    setShareFormId(id);
+    setIsShareOpen(true);
   }
 
   function handleCopyShareLink() {
@@ -273,13 +262,8 @@ export function FormManager() {
                     size="icon"
                     onClick={() => handleOpenShare(form.id)}
                     title={ts("title")}
-                    disabled={isShareLoading}
                   >
-                    {isShareLoading && shareFormId === form.id ? (
-                      <span className="me-2 h-4 w-4 animate-spin border-2 border-primary border-t-transparent rounded-full" />
-                    ) : (
-                      <Share2 className="h-4 w-4" />
-                    )}
+                    <Share2 className="h-4 w-4" />
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger nativeButton={false} render={<Button variant="ghost" size="icon" className="ms-auto text-destructive" />}>

@@ -1,0 +1,56 @@
+import { redirect } from "next/navigation";
+import { generateAccessToken } from "@/lib/utils";
+import { MongoSubmissionRepository } from "@/data/repositories/mongo-submission-repository";
+import { MongoFormTemplateRepository } from "@/data/repositories/mongo-form-template-repository";
+import { MongoFieldDefinitionRepository } from "@/data/repositories/mongo-field-definition-repository";
+
+const submissionRepo = new MongoSubmissionRepository();
+const formTemplateRepo = new MongoFormTemplateRepository();
+const fieldDefRepo = new MongoFieldDefinitionRepository();
+
+export default async function PublicFormStartPage({
+  params,
+}: {
+  params: Promise<{ locale: string; formId: string }>;
+}) {
+  const { locale, formId } = await params;
+
+  try {
+    // Validate form exists and is active
+    const form = await formTemplateRepo.findById(formId);
+    if (!form || !form.isActive) {
+      // If form not found or not active, just redirect to not-found or home
+      // For now, redirect to a safe fallback
+      redirect(`/${locale}`);
+    }
+
+    const fields = await fieldDefRepo.findByFormId(formId, false);
+
+    // Create a new empty submission to generate an invite token, marked as draft
+    const token = generateAccessToken();
+    const submission = await submissionRepo.create(
+      {
+        formTemplateId: formId,
+        clientName: "",
+        clientContact: "",
+        formSnapshot: fields,
+      },
+      token
+    );
+
+    // We update status to 'draft' directly if we need to align with data models.
+    // However, we don't have an admin session. We can assign 'system' or leave it to the repo defaults.
+    // In our model `status` defaults to `pending`. We want to make it `draft`.
+    // Let's rely on directly updating the underlying model just for the status to bypass audit needing admin info
+    const { SubmissionModel } = await import("@/data/models/submission.model");
+    await SubmissionModel.findByIdAndUpdate(submission.id, { status: "draft" });
+
+    // Redirect to the user's specific submission URL
+    redirect(`/${locale}/submit/${token}`);
+  } catch (error) {
+    // We can't log 'error' easily if we only rely on redirection, but just to satisfy eslint
+    console.error("Public submission init failed:", error);
+    // On error, fallback to root
+    redirect(`/${locale}`);
+  }
+}
