@@ -18,9 +18,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://scct-three.vercel.app/"),
   title: "SCCT — Client Data Collection",
   description:
     "Dynamic client data collection and admin review system with bilingual support",
+  verification: {
+    google: "K2hBH3SrfPai7vh5FKzjqFugBv_kw7QmvPr-HxqVOGQ",
+  },
 };
 
 export const viewport: Viewport = {
