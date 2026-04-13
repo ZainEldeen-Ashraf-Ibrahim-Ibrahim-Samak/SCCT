@@ -163,16 +163,8 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
 
     connect();
 
-    // Background polling fallback (10s) to ensure status sync
-    const interval = setInterval(() => {
-      if (!isSubmitting && !isLoading) {
-        fetchContent();
-      }
-    }, 10000);
-
     return () => {
       clearTimeout(reconnectTimeout);
-      clearInterval(interval);
       if (eventSource) eventSource.close();
     };
   }, [fetchContent, tokenOrId]);

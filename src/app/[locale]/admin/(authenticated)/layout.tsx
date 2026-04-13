@@ -39,12 +39,11 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
 
         <SidebarNav userRole={userRole} />
 
-        <div className="p-4 border-t space-y-2">
+        <div className="p-4 border-t">
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
             <ThemeToggle />
           </div>
-          <LogoutButton />
         </div>
       </aside>
 

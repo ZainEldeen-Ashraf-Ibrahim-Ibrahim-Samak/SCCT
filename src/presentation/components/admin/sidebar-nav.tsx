@@ -6,6 +6,7 @@ import { LayoutDashboard, FileText, Clock, ImageIcon, Users, Database, Settings 
 import { cn } from "@/lib/utils";
 import { useSubmissionsList } from "@/presentation/view-models/use-submissions-list";
 import { useEffect } from "react";
+import { LogoutButton } from "./logout-button";
 
 interface SidebarNavProps {
   userRole?: string;
@@ -87,6 +88,9 @@ export function SidebarNav({ userRole }: SidebarNavProps) {
           </Link>
         );
       })}
+      <div className="pt-2 mt-2 border-t">
+         <LogoutButton />
+      </div>
     </nav>
   );
 }
