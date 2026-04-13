@@ -7,12 +7,17 @@ export const env = createEnv({
     AUTH_SECRET: z.string().min(1),
     AUTH_URL: z.string().url().optional(),
     CRON_SECRET: z.string().min(1),
+    LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).optional(),
+    INITIAL_ADMIN_PASSWORD: z.string().min(1).optional(),
     CLOUDINARY_API_KEY: z.string().min(1).optional(),
     CLOUDINARY_API_SECRET: z.string().min(1).optional(),
     UPSTASH_REDIS_REST_URL: z.string().url().optional(),
     UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
   },
   client: {
+    NEXT_PUBLIC_LOG_LEVEL: z
+      .enum(["debug", "info", "warn", "error"])
+      .optional(),
     NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: z.string().min(1).optional(),
     NEXT_PUBLIC_CLOUDINARY_API_KEY: z.string().min(1).optional(),
     NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: z.string().min(1).optional(),
@@ -24,6 +29,9 @@ export const env = createEnv({
     AUTH_SECRET: process.env.AUTH_SECRET,
     AUTH_URL: process.env.AUTH_URL,
     CRON_SECRET: process.env.CRON_SECRET,
+    LOG_LEVEL: process.env.LOG_LEVEL,
+    INITIAL_ADMIN_PASSWORD: process.env.INITIAL_ADMIN_PASSWORD,
+    NEXT_PUBLIC_LOG_LEVEL: process.env.NEXT_PUBLIC_LOG_LEVEL,
     UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
     UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
     NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
