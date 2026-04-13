@@ -2,7 +2,7 @@
 
 import { useMediaManager } from "@/presentation/view-models/use-media-manager";
 import { Button } from "@/components/ui/button";
-import { Loader2, Trash2, ExternalLink, Image as ImageIcon, File, RefreshCw } from "lucide-react";
+import { Loader2, Trash2, ExternalLink, Download, Image as ImageIcon, File, RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
@@ -85,15 +85,24 @@ export function MediaGallery() {
                       href={res.secure_url} 
                       target="_blank" 
                       rel="noreferrer" 
-                      className="bg-white/20 hover:bg-white/40 p-3 rounded-full text-white backdrop-blur-md transition-all hover:scale-110"
-                      title={t("viewFile")}
+                      className="flex items-center justify-center bg-white/20 hover:bg-white/40 h-10 w-10 rounded-full text-white backdrop-blur-md transition-all hover:scale-110"
+                      title={t("viewFile") || "View"}
                     >
                       <ExternalLink className="w-5 h-5" />
+                    </a>
+                    <a 
+                      href={res.secure_url.replace("/upload/", "/upload/fl_attachment/")} 
+                      download
+                      className="flex items-center justify-center bg-white/20 hover:bg-white/40 h-10 w-10 rounded-full text-white backdrop-blur-md transition-all hover:scale-110"
+                      title={t("downloadFile") || "Download"}
+                      aria-label={t("downloadFile") || "Download"}
+                    >
+                      <Download className="w-5 h-5" />
                     </a>
                     <button 
                       aria-label={t("deleteFile")}
                       onClick={() => handleDelete(res.public_id)}
-                      className="bg-red-500/60 hover:bg-red-600 p-3 rounded-full text-white backdrop-blur-md transition-all hover:scale-110"
+                      className="flex items-center justify-center bg-red-500/60 hover:bg-red-600 h-10 w-10 rounded-full text-white backdrop-blur-md transition-all hover:scale-110"
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>
