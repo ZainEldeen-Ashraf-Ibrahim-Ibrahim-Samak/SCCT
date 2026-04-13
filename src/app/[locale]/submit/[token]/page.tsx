@@ -1,8 +1,9 @@
 import { SubmissionForm } from "@/presentation/components/client/submission-form";
 import type { Metadata } from "next";
+import { SITE_NAME } from "@/components/shared/site-name";
 
 export const metadata: Metadata = {
-  title: "Submit Data — SCCT",
+  title: `Submit Data — ${SITE_NAME}`,
 };
 
 interface SubmitPageProps {

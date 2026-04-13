@@ -3,6 +3,7 @@ import { MongoSubmissionRepository } from "@/data/repositories/mongo-submission-
 import { updateSubmissionStatusSchema } from "@/lib/validations";
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
 import { logger } from "@/lib/dev-logger";
+import { CacheService } from "@/data/services/cache-service";
 
 const repo = new MongoSubmissionRepository();
 
@@ -28,6 +29,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       comment: parsed.data.comment,
       admin: { id: session.user.id as string, name: session.user.name as string },
     });
+
+    await CacheService.invalidateAllSubmissionPayloadCache();
 
     if (!result) {
       return errorResponse("Not found", 404, "NOT_FOUND");

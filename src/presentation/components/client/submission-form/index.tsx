@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useSubmission } from "@/presentation/view-models/use-submission";
 import { FieldRenderer } from "./field-renderer";
+import { ContactRecords } from "./contact-records";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,11 +34,17 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
     setClientName,
     clientContact,
     setClientContact,
+    contactRecords,
+    addContactRecord,
+    updateContactRecord,
+    removeContactRecord,
     setFieldValue,
     setMediaValue,
     setMediaItems,
     submitForm,
     resubmitForm,
+    droppedFieldIds,
+    clearDroppedFieldWarning,
     statusChangedLive,
   } = useSubmission(tokenOrId);
 
@@ -73,9 +80,11 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
   const hasAnyValue = fields.some((field) => {
     const val = formData[field.id];
     const hasText =
-      val?.value !== undefined &&
-      val?.value !== null &&
-      String(val.value).trim().length > 0;
+      Array.isArray(val?.value)
+        ? val.value.length > 0
+        : val?.value !== undefined &&
+          val?.value !== null &&
+          String(val.value).trim().length > 0;
     const hasMedia = !!val?.mediaUrl && val.mediaUrl.trim().length > 0;
     const hasMediaItems = (val?.mediaItems?.length ?? 0) > 0;
 
@@ -91,14 +100,21 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
       isValid = false;
     }
 
+    const hasValidContactRecord = contactRecords.some((record) => record.name.trim().length > 0);
+    if (!hasValidContactRecord) {
+      errors.contactRecords = true;
+      isValid = false;
+    }
+
     fields.forEach((f) => {
       if (f.validationRules?.required) {
         const val = formData[f.id];
         const hasMedia = val?.mediaUrl && val.mediaUrl.trim().length > 0;
         const hasMediaItems = val?.mediaItems && val.mediaItems.length > 0;
         const hasText = val?.value !== undefined && val?.value !== null && String(val.value).trim().length > 0;
+        const hasList = Array.isArray(val?.value) && val.value.length > 0;
 
-        if (!hasMedia && !hasText && !hasMediaItems) {
+        if (!hasMedia && !hasText && !hasList && !hasMediaItems) {
           errors[f.id] = true;
           isValid = false;
         }
@@ -181,6 +197,19 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
         </Alert>
       )}
 
+      {droppedFieldIds.length > 0 && (
+        <Alert className="mb-6 border-amber-300 bg-amber-50 text-amber-950 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-100">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>{t("droppedValuesTitle")}</AlertTitle>
+          <AlertDescription className="flex items-center justify-between gap-2">
+            <span>{t("droppedValuesDescription", { count: droppedFieldIds.length })}</span>
+            <Button variant="outline" size="sm" type="button" onClick={clearDroppedFieldWarning}>
+              {tc("close")}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card className={`shadow-lg border-t-4 ${isViewOnly ? "border-t-muted opacity-80" : "border-t-primary"}`}>
         <CardHeader className="space-y-4 pb-8">
           <div>
@@ -226,6 +255,28 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
                   />
                 </div>
               </div>
+
+              <ContactRecords
+                records={contactRecords}
+                onAdd={() => {
+                  addContactRecord();
+                  if (validationErrors.contactRecords) {
+                    setValidationErrors((prev) => ({ ...prev, contactRecords: false }));
+                  }
+                }}
+                onUpdate={(id, patch) => {
+                  updateContactRecord(id, patch);
+                  if (validationErrors.contactRecords) {
+                    setValidationErrors((prev) => ({ ...prev, contactRecords: false }));
+                  }
+                }}
+                onRemove={removeContactRecord}
+                disabled={isViewOnly}
+              />
+
+              {validationErrors.contactRecords && (
+                <p className="text-xs text-destructive">{t("contactRecordRequired")}</p>
+              )}
             </div>
 
             <div className="space-y-6">

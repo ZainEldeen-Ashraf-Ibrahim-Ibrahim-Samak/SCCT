@@ -4,6 +4,7 @@ import { ManageFieldsUseCase } from "@/domain/use-cases/admin/manage-fields";
 import { reorderFieldsSchema } from "@/lib/validations";
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
 import { logger } from "@/lib/dev-logger";
+import { CacheService } from "@/data/services/cache-service";
 
 const repo = new MongoFieldDefinitionRepository();
 const useCase = new ManageFieldsUseCase(repo);
@@ -23,6 +24,7 @@ export async function PATCH(request: Request) {
     }
 
     await useCase.reorderFields(parsed.data.formTemplateId, parsed.data.fieldOrder);
+    await CacheService.invalidateAllSubmissionPayloadCache();
     return successResponse({ message: "Field order updated" });
   } catch (error) {
     logger.error("Failed to reorder fields", error);

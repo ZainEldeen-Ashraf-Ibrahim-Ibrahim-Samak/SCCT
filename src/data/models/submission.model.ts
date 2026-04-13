@@ -17,8 +17,27 @@ export interface ISubmission extends Document {
   clientContact: string;
   status: SubmissionStatus;
   rewriteComment: string;
+  contactRecords: Array<{
+    id: string;
+    name: string;
+    contact?: string;
+    role?: string;
+    notes?: string;
+  }>;
   formSnapshot: Record<string, unknown>[]; // Frozen representation of FieldDefinitions
   auditTrail: IAuditEntry[];
+  resubmissionRequest?: {
+    id: string;
+    targetAccessToken: string;
+    requestedByAdminId: mongoose.Types.ObjectId;
+    requestedByAdminName: string;
+    comment?: string;
+    status: "pending_delivery" | "delivered" | "seen" | "expired";
+    createdAt: Date;
+    expiresAt: Date;
+    deliveredAt?: Date | null;
+    seenAt?: Date | null;
+  } | null;
   submittedAt: Date;
   lastResubmittedAt?: Date | null;
   updatedAt: Date;
@@ -38,6 +57,38 @@ const auditEntrySchema = new Schema<IAuditEntry>(
 
 const formSnapshotItemSchema = new Schema<Record<string, unknown>>({}, { _id: false, strict: false });
 
+const contactRecordSchema = new Schema(
+  {
+    id: { type: String, required: true },
+    name: { type: String, required: true, trim: true, maxlength: 200 },
+    contact: { type: String, default: "", trim: true, maxlength: 200 },
+    role: { type: String, default: "", trim: true, maxlength: 100 },
+    notes: { type: String, default: "", trim: true, maxlength: 1000 },
+  },
+  { _id: false }
+);
+
+const resubmissionRequestSchema = new Schema(
+  {
+    id: { type: String, required: true },
+    targetAccessToken: { type: String, required: true },
+    requestedByAdminId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    requestedByAdminName: { type: String, required: true },
+    comment: { type: String, default: "" },
+    status: {
+      type: String,
+      enum: ["pending_delivery", "delivered", "seen", "expired"],
+      required: true,
+      default: "pending_delivery",
+    },
+    createdAt: { type: Date, required: true },
+    expiresAt: { type: Date, required: true },
+    deliveredAt: { type: Date, default: null },
+    seenAt: { type: Date, default: null },
+  },
+  { _id: false }
+);
+
 const submissionSchema = new Schema<ISubmission>(
   {
     accessToken: { type: String, required: true, unique: true },
@@ -51,8 +102,10 @@ const submissionSchema = new Schema<ISubmission>(
       required: true,
     },
     rewriteComment: { type: String, default: "" },
+    contactRecords: { type: [contactRecordSchema], default: [] },
     formSnapshot: { type: [formSnapshotItemSchema], required: true },
     auditTrail: [auditEntrySchema],
+    resubmissionRequest: { type: resubmissionRequestSchema, default: null },
     submittedAt: { type: Date, default: Date.now },
     lastResubmittedAt: { type: Date, default: null },
   },

@@ -11,24 +11,53 @@ import { toast } from "sonner";
 
 interface FormFieldData {
   fieldDefinitionId: string;
-  value?: string | number | null;
+  value?: string | number | string[] | null;
   mediaUrl?: string | null;
   mediaPublicId?: string | null;
   mediaItems?: { url: string; publicId: string }[];
 }
 
+export interface ContactRecordDraft {
+  id: string;
+  name: string;
+  contact: string;
+  role: string;
+  notes: string;
+}
+
 interface DraftState {
   clientName: string;
   clientContact: string;
+  contactRecords: ContactRecordDraft[];
   formData: Record<string, FormFieldData>;
 }
 
 interface SubmissionFieldPayload {
   fieldDefinitionId: string;
-  value: string | number | null;
+  value: string | number | string[] | null;
   mediaUrl: string | null;
   mediaPublicId: string | null;
   mediaItems: { url: string; publicId: string }[];
+}
+
+interface EventsPayload {
+  type?: string;
+  status?: string;
+  requestStatus?: "pending_delivery" | "delivered" | "seen" | "expired";
+  messageKey?: string;
+  droppedFieldIds?: string[];
+}
+
+const MIN_CONTACT_RECORDS = 1;
+
+function createEmptyContactRecord(): ContactRecordDraft {
+  return {
+    id: `cr_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    name: "",
+    contact: "",
+    role: "",
+    notes: "",
+  };
 }
 
 function normalizeSubmissionFieldValues(
@@ -37,9 +66,12 @@ function normalizeSubmissionFieldValues(
 ): SubmissionFieldPayload[] {
   return fields.map((field) => {
     const raw = formData[field.id];
+    const normalizedValue = Array.isArray(raw?.value)
+      ? [...new Set(raw.value.map((v) => String(v).trim()).filter(Boolean))]
+      : raw?.value ?? null;
     return {
       fieldDefinitionId: field.id,
-      value: raw?.value ?? null,
+      value: normalizedValue,
       mediaUrl: raw?.mediaUrl ?? null,
       mediaPublicId: raw?.mediaPublicId ?? null,
       mediaItems: Array.isArray(raw?.mediaItems) ? raw.mediaItems : [],
@@ -47,11 +79,23 @@ function normalizeSubmissionFieldValues(
   });
 }
 
+function isValueCompatibleWithField(value: FormFieldData["value"], field: FieldDefinition): boolean {
+  if (value === undefined || value === null) return true;
+  if (field.inputType === "dropdown" && field.isMultiple) return Array.isArray(value);
+  if (field.inputType === "dropdown" && !field.isMultiple) return !Array.isArray(value);
+  if (field.inputType === "number") return !Array.isArray(value);
+  if (field.inputType === "text" || field.inputType === "date") return !Array.isArray(value);
+  return true;
+}
+
 function summarizeFieldPayload(fieldValues: SubmissionFieldPayload[]) {
   return {
     total: fieldValues.length,
     withText: fieldValues.filter(
-      (fv) => fv.value !== null && fv.value !== undefined && String(fv.value).trim().length > 0,
+      (fv) => {
+        if (Array.isArray(fv.value)) return fv.value.length > 0;
+        return fv.value !== null && fv.value !== undefined && String(fv.value).trim().length > 0;
+      },
     ).length,
     withMediaUrl: fieldValues.filter((fv) => !!fv.mediaUrl).length,
     withMediaItems: fieldValues.filter((fv) => fv.mediaItems.length > 0).length,
@@ -66,11 +110,24 @@ function hasMeaningfulDraftData(draft: DraftState | undefined): boolean {
     return true;
   }
 
+  if ((draft.contactRecords ?? []).some((record) => {
+    return (
+      record.name.trim().length > 0 ||
+      record.contact.trim().length > 0 ||
+      record.role.trim().length > 0 ||
+      record.notes.trim().length > 0
+    );
+  })) {
+    return true;
+  }
+
   return Object.values(draft.formData || {}).some((field) => {
     const hasText =
-      field?.value !== undefined &&
-      field?.value !== null &&
-      String(field.value).trim().length > 0;
+      Array.isArray(field?.value)
+        ? field.value.length > 0
+        : field?.value !== undefined &&
+          field?.value !== null &&
+          String(field.value).trim().length > 0;
     const hasMedia = !!field?.mediaUrl && field.mediaUrl.trim().length > 0;
     const hasMediaItems = Array.isArray(field?.mediaItems) && field.mediaItems.length > 0;
 
@@ -93,11 +150,17 @@ interface UseSubmissionReturn {
   setClientName: (name: string) => void;
   clientContact: string;
   setClientContact: (contact: string) => void;
-  setFieldValue: (id: string, value: string | number | null) => void;
+  contactRecords: ContactRecordDraft[];
+  addContactRecord: () => void;
+  updateContactRecord: (id: string, patch: Partial<Omit<ContactRecordDraft, "id">>) => void;
+  removeContactRecord: (id: string) => void;
+  setFieldValue: (id: string, value: string | number | string[] | null) => void;
   setMediaValue: (id: string, url: string, publicId: string) => void;
   setMediaItems: (id: string, items: { url: string; publicId: string }[]) => void;
   submitForm: (explicitFormData?: Record<string, FormFieldData>) => Promise<void>;
   resubmitForm: (explicitFormData?: Record<string, FormFieldData>) => Promise<void>;
+  droppedFieldIds: string[];
+  clearDroppedFieldWarning: () => void;
   /** True briefly after an SSE status change is received — allows the UI to animate */
   statusChangedLive: boolean;
 }
@@ -114,21 +177,24 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
   const [fields, setFields] = useState<FieldDefinition[]>([]);
   const [submission, setSubmission] = useState<Submission | null>(null);
   const [values, setValues] = useState<FieldValue[]>([]);
+  const [droppedFieldIds, setDroppedFieldIds] = useState<string[]>([]);
   const [statusChangedLive, setStatusChangedLive] = useState(false);
 
   const { draft, updateDraft, clearDraft, isLoaded: draftLoaded } = useDraftAutosave<DraftState>(
     `scct_draft_${tokenOrId}`,
-    { clientName: "", clientContact: "", formData: {} }
+    { clientName: "", clientContact: "", contactRecords: [createEmptyContactRecord()], formData: {} }
   );
 
   const clientName = draft?.clientName || "";
   const clientContact = draft?.clientContact || "";
+  const contactRecords = draft?.contactRecords || [createEmptyContactRecord()];
   const formData = draft?.formData || {};
 
   // Use a ref to access draft state inside fetchContent without adding it as a dependency.
   // This prevents the fetch callback from being recreated on every keystroke.
   const draftRef = useRef(draft);
   draftRef.current = draft;
+  const formVersionRef = useRef<string | null>(null);
 
   // Queue for SSE events received during active editing.
   // Events are stored here and only processed after submit/navigate.
@@ -145,7 +211,50 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
     updateDraft(prev => ({ ...prev, clientContact: contact }));
   };
 
-  const setFieldValue = (id: string, value: string | number | null) => {
+  const addContactRecord = () => {
+    isEditingRef.current = true;
+    updateDraft((prev) => ({
+      ...prev,
+      contactRecords: [...(prev.contactRecords ?? []), createEmptyContactRecord()],
+    }));
+  };
+
+  const updateContactRecord = (
+    id: string,
+    patch: Partial<Omit<ContactRecordDraft, "id">>,
+  ) => {
+    isEditingRef.current = true;
+    updateDraft((prev) => ({
+      ...prev,
+      contactRecords: (prev.contactRecords ?? []).map((record) =>
+        record.id === id
+          ? {
+              ...record,
+              name: patch.name ?? record.name,
+              contact: patch.contact ?? record.contact,
+              role: patch.role ?? record.role,
+              notes: patch.notes ?? record.notes,
+            }
+          : record,
+      ),
+    }));
+  };
+
+  const removeContactRecord = (id: string) => {
+    isEditingRef.current = true;
+    updateDraft((prev) => {
+      const records = prev.contactRecords ?? [];
+      if (records.length <= MIN_CONTACT_RECORDS) {
+        return prev;
+      }
+      return {
+        ...prev,
+        contactRecords: records.filter((record) => record.id !== id),
+      };
+    });
+  };
+
+  const setFieldValue = (id: string, value: string | number | string[] | null) => {
     isEditingRef.current = true;
     updateDraft(prev => ({
       ...prev,
@@ -178,6 +287,8 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
     }));
   };
 
+  const clearDroppedFieldWarning = () => setDroppedFieldIds([]);
+
   // Stable fetchContent — depends only on tokenOrId and draftLoaded.
   // Reads draft state via ref to avoid recreating the callback on every keystroke.
   const fetchContent = useCallback(async (background = false) => {
@@ -199,6 +310,11 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
 
       const data = json.data;
       setIsNew(data.isNew);
+      const nextFormVersion = typeof data.formVersion === "string" ? data.formVersion : null;
+      const formVersionChanged =
+        !!nextFormVersion &&
+        !!formVersionRef.current &&
+        formVersionRef.current !== nextFormVersion;
 
       // Read draft via ref — no reactive dependency
       const currentDraft = draftRef.current;
@@ -208,13 +324,19 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
         setFormName(data.formTemplate?.name || "");
         setFormDescription(data.formTemplate?.description || "");
         setFields(data.fields || []);
+        formVersionRef.current = nextFormVersion;
         
         if (!hasDraftData) {
           const initialForm: Record<string, FormFieldData> = {};
           data.fields.forEach((f: FieldDefinition) => {
             initialForm[f.id] = { fieldDefinitionId: f.id };
           });
-          updateDraft({ clientName: "", clientContact: "", formData: initialForm });
+          updateDraft({
+            clientName: "",
+            clientContact: "",
+            contactRecords: [createEmptyContactRecord()],
+            formData: initialForm,
+          });
         }
       } else {
         setFormName("");
@@ -225,12 +347,44 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
 
         // Existing submissions should reflect DB state after reload/admin updates.
         // Keep local draft only while user is actively editing and there is meaningful draft content.
-        const shouldHydrateFromServer = !isEditingRef.current || !hasDraftData;
+        const shouldHydrateFromServer = formVersionChanged || !isEditingRef.current || !hasDraftData;
         if (shouldHydrateFromServer) {
-          const initialForm: Record<string, FormFieldData> = {};
+          const nextDraftContactRecords: ContactRecordDraft[] =
+            (data.submission?.contactRecords ?? []).map((record: { id: string; name: string; contact?: string; role?: string; notes?: string }) => ({
+              id: record.id,
+              name: record.name,
+              contact: record.contact ?? "",
+              role: record.role ?? "",
+              notes: record.notes ?? "",
+            })) || [];
+
+          const currentDraftFormData = currentDraft?.formData ?? {};
+          const dropped: string[] = [];
+          const fieldIdSet = new Set(data.fields.map((field: FieldDefinition) => field.id));
+          Object.keys(currentDraftFormData).forEach((key) => {
+            if (!fieldIdSet.has(key)) dropped.push(key);
+          });
+
+          const reconciledFormData: Record<string, FormFieldData> = {};
           data.fields.forEach((f: FieldDefinition) => {
+            const localValue = currentDraftFormData[f.id];
+            if (localValue && isValueCompatibleWithField(localValue.value, f)) {
+              reconciledFormData[f.id] = {
+                fieldDefinitionId: f.id,
+                value: localValue.value,
+                mediaUrl: localValue.mediaUrl,
+                mediaPublicId: localValue.mediaPublicId,
+                mediaItems: localValue.mediaItems || [],
+              };
+              return;
+            }
+
+            if (localValue && !isValueCompatibleWithField(localValue.value, f)) {
+              dropped.push(f.id);
+            }
+
             const matchedVal = data.values?.find((v: FieldValue) => v.fieldDefinitionId === f.id);
-            initialForm[f.id] = {
+            reconciledFormData[f.id] = {
               fieldDefinitionId: f.id,
               value: matchedVal?.value,
               mediaUrl: matchedVal?.mediaUrl,
@@ -238,10 +392,18 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
               mediaItems: matchedVal?.mediaItems || [],
             };
           });
+
+          setDroppedFieldIds(dropped);
+          formVersionRef.current = nextFormVersion;
+
           updateDraft({ 
             clientName: data.submission?.clientName || "", 
             clientContact: data.submission?.clientContact || "", 
-            formData: initialForm 
+            contactRecords:
+              nextDraftContactRecords.length > 0
+                ? nextDraftContactRecords
+                : [createEmptyContactRecord()],
+            formData: reconciledFormData,
           });
         } else {
           logger.debug("Preserving in-progress local draft over server payload", {
@@ -272,7 +434,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       
       eventSource.onmessage = (event) => {
         try {
-          const data = JSON.parse(event.data);
+          const data = JSON.parse(event.data) as EventsPayload;
           if (data.type === "STATUS_CHANGED") {
             // Queue SSE events during active editing — process after submit/navigate
             if (isEditingRef.current) {
@@ -284,6 +446,9 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
                 toast.info("✓ Your submission has been viewed");
               } else if (newStatus === "needs_rewrite") {
                 toast.warning("Your submission needs revision");
+              }
+              if (data.requestStatus === "pending_delivery" || data.requestStatus === "delivered") {
+                toast.warning("A resubmission request was sent");
               }
               // Trigger live-update animation flag
               setStatusChangedLive(true);
@@ -321,9 +486,19 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
     const resolvedFormData = explicitFormData || currentDraft.formData;
     const fieldValues = normalizeSubmissionFieldValues(resolvedFormData, fields);
     const fieldSummary = summarizeFieldPayload(fieldValues);
+    const validContactRecords = (currentDraft.contactRecords ?? [])
+      .map((record) => ({
+        ...record,
+        name: record.name.trim(),
+        contact: record.contact.trim(),
+        role: record.role.trim(),
+        notes: record.notes.trim(),
+      }))
+      .filter((record) => record.name.length > 0);
     
     if (
       !currentDraft.clientName.trim() &&
+      validContactRecords.length < MIN_CONTACT_RECORDS &&
       fieldSummary.withText === 0 &&
       fieldSummary.withMediaUrl === 0 &&
       fieldSummary.withMediaItems === 0
@@ -340,6 +515,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       const payload = {
         clientName: currentDraft.clientName,
         clientContact: currentDraft.clientContact,
+        contactRecords: validContactRecords,
         fieldValues,
       };
 
@@ -389,12 +565,26 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       const resolvedFormData = explicitFormData || currentDraft.formData;
       const fieldValues = normalizeSubmissionFieldValues(resolvedFormData, fields);
       const fieldSummary = summarizeFieldPayload(fieldValues);
+      const validContactRecords = (currentDraft.contactRecords ?? [])
+        .map((record) => ({
+          ...record,
+          name: record.name.trim(),
+          contact: record.contact.trim(),
+          role: record.role.trim(),
+          notes: record.notes.trim(),
+        }))
+        .filter((record) => record.name.length > 0);
+
+      if (validContactRecords.length < MIN_CONTACT_RECORDS) {
+        throw new Error("Please add at least one contact record.");
+      }
       const currentToken = window.location.pathname.split("/").pop() || tokenOrId;
       const endpoint = `/api/submissions/${currentToken}`;
       
       const payload = {
         clientName: currentDraft.clientName,
         clientContact: currentDraft.clientContact,
+        contactRecords: validContactRecords,
         fieldValues,
       };
 
@@ -447,11 +637,17 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
     setClientName,
     clientContact,
     setClientContact,
+    contactRecords,
+    addContactRecord,
+    updateContactRecord,
+    removeContactRecord,
     setFieldValue,
     setMediaValue,
     setMediaItems,
     submitForm,
     resubmitForm,
+    droppedFieldIds,
+    clearDroppedFieldWarning,
     statusChangedLive,
   };
 }

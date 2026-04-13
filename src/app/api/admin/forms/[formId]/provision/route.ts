@@ -35,6 +35,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ for
       formTemplateId: formId,
       clientName: "", // Empty so the localized placeholder shows up for the client
       clientContact: "",
+      contactRecords: [{ id: "primary", name: "Primary Contact" }],
       formSnapshot: fields,
     }, token);
 

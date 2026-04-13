@@ -4,13 +4,16 @@ import { FieldValueModel } from "@/data/models/field-value.model";
 import { connectToDatabase } from "@/lib/db";
 
 function toEntity(doc: Record<string, unknown>): FieldValue {
+  const rawValue = doc.value as unknown;
   return {
     id: doc._id?.toString() ?? "",
     submissionId: doc.submissionId?.toString() ?? "",
     fieldDefinitionId: doc.fieldDefinitionId?.toString() ?? "",
     fieldNameSnapshot: doc.fieldNameSnapshot as string,
     fieldTypeSnapshot: doc.fieldTypeSnapshot as FieldValue["fieldTypeSnapshot"],
-    value: doc.value as FieldValue["value"],
+    value: Array.isArray(rawValue)
+      ? rawValue.map((v) => String(v))
+      : (rawValue as FieldValue["value"]),
     mediaUrl: doc.mediaUrl as string | null,
     mediaPublicId: doc.mediaPublicId as string | null,
     mediaItems: (doc.mediaItems as any) ?? [],

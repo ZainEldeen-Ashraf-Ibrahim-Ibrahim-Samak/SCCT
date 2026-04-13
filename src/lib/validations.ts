@@ -127,7 +127,9 @@ export const updateFormTemplateSchema = z.object({
 
 export const fieldValueInputSchema = z.object({
   fieldDefinitionId: z.string().min(1),
-  value: z.union([z.string(), z.number(), z.null()]).optional(),
+  value: z
+    .union([z.string(), z.number(), z.array(z.string()), z.null()])
+    .optional(),
   mediaUrl: z.string().optional().nullable(),
   mediaPublicId: z.string().optional().nullable(),
   mediaItems: z.array(z.object({
@@ -136,12 +138,23 @@ export const fieldValueInputSchema = z.object({
   })).optional(),
 });
 
+export const contactRecordSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1).max(200),
+  contact: z.string().max(200).optional().default(""),
+  role: z.string().max(100).optional().default(""),
+  notes: z.string().max(1000).optional().default(""),
+});
+
 export const createSubmissionSchema = z.object({
   clientName: z
     .string()
     .min(1, "Name is required")
     .max(200, "Name must be 200 characters or fewer"),
   clientContact: z.string().optional().default(""),
+  contactRecords: z
+    .array(contactRecordSchema)
+    .min(1, "At least one contact record is required"),
   fieldValues: z.array(fieldValueInputSchema),
 });
 

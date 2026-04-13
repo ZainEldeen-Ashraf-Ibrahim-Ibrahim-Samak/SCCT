@@ -19,9 +19,9 @@
 
 **Purpose**: Create shared UI/text primitives needed across story implementation.
 
-- [ ] T001 Create reusable site-name element with canonical value in `src/components/shared/site-name.tsx`
-- [ ] T002 Add new shared UX translation keys for contact records, reconciliation warnings, and notification states in `src/messages/en.json`
-- [ ] T003 [P] Mirror the new translation keys in `src/messages/ar.json`
+- [X] T001 Create reusable site-name element with canonical value in `src/components/shared/site-name.tsx`
+- [X] T002 Add new shared UX translation keys for contact records, reconciliation warnings, and notification states in `src/messages/en.json`
+- [X] T003 [P] Mirror the new translation keys in `src/messages/ar.json`
 
 ---
 
@@ -31,10 +31,10 @@
 
 **⚠️ CRITICAL**: No user story work should begin until this phase is complete.
 
-- [ ] T004 Extend submission payload validation for `contactRecords` minimum cardinality and multi-select array values in `src/lib/validations.ts`
-- [ ] T005 Update shared domain entity types for submission/request lifecycle and multi-value field support in `src/domain/entities/submission.ts` and `src/domain/entities/field-value.ts`
-- [ ] T006 Extend persistence schemas for contact records and resubmission request metadata in `src/data/models/submission.model.ts` and `src/data/models/field-value.model.ts`
-- [ ] T007 Update repository/cache contracts to support new submission metadata and invalidation behavior in `src/domain/repositories/submission-repository.ts`, `src/data/repositories/mongo-submission-repository.ts`, and `src/data/services/cache-service.ts`
+- [X] T004 Extend submission payload validation for `contactRecords` minimum cardinality and multi-select array values in `src/lib/validations.ts`
+- [X] T005 Update shared domain entity types for submission/request lifecycle and multi-value field support in `src/domain/entities/submission.ts` and `src/domain/entities/field-value.ts`
+- [X] T006 Extend persistence schemas for contact records and resubmission request metadata in `src/data/models/submission.model.ts` and `src/data/models/field-value.model.ts`
+- [X] T007 Update repository/cache contracts to support new submission metadata and invalidation behavior in `src/domain/repositories/submission-repository.ts`, `src/data/repositories/mongo-submission-repository.ts`, and `src/data/services/cache-service.ts`
 
 **Checkpoint**: Foundation ready - user stories can now be implemented.
 
@@ -48,12 +48,12 @@
 
 ### Implementation for User Story 1
 
-- [ ] T008 [P] [US1] Add contact-record draft state/actions (`add`, `edit`, `delete`, min-one guard) in `src/presentation/view-models/use-submission.ts`
-- [ ] T009 [P] [US1] Create repeatable contact-record editor UI component in `src/presentation/components/client/submission-form/contact-records.tsx`
-- [ ] T010 [US1] Integrate contact-record editor and inline validation into submission page in `src/presentation/components/client/submission-form/index.tsx`
-- [ ] T011 [US1] Include `contactRecords` in submit/resubmit payload mapping in `src/presentation/view-models/use-submission.ts`
-- [ ] T012 [US1] Enforce `contactRecords.length >= 1` in token submission API handling in `src/app/api/submissions/[token]/route.ts` and `src/domain/use-cases/client/submit-form.ts`
-- [ ] T013 [US1] Hydrate persisted contact records back into client draft state on reload in `src/domain/use-cases/client/view-submission.ts` and `src/presentation/view-models/use-submission.ts`
+- [X] T008 [P] [US1] Add contact-record draft state/actions (`add`, `edit`, `delete`, min-one guard) in `src/presentation/view-models/use-submission.ts`
+- [X] T009 [P] [US1] Create repeatable contact-record editor UI component in `src/presentation/components/client/submission-form/contact-records.tsx`
+- [X] T010 [US1] Integrate contact-record editor and inline validation into submission page in `src/presentation/components/client/submission-form/index.tsx`
+- [X] T011 [US1] Include `contactRecords` in submit/resubmit payload mapping in `src/presentation/view-models/use-submission.ts`
+- [X] T012 [US1] Enforce `contactRecords.length >= 1` in token submission API handling in `src/app/api/submissions/[token]/route.ts` and `src/domain/use-cases/client/submit-form.ts`
+- [X] T013 [US1] Hydrate persisted contact records back into client draft state on reload in `src/domain/use-cases/client/view-submission.ts` and `src/presentation/view-models/use-submission.ts`
 
 **Checkpoint**: User Story 1 is independently functional and testable.
 
@@ -67,12 +67,12 @@
 
 ### Implementation for User Story 2
 
-- [ ] T014 [P] [US2] Add resubmission request lifecycle fields and status mapping in `src/data/models/submission.model.ts`
-- [ ] T015 [US2] Persist and update resubmission request visibility/delivery state in `src/data/repositories/mongo-submission-repository.ts`
-- [ ] T016 [US2] Emit user-targeted status-change notifications from admin status updates in `src/app/api/admin/submissions/[id]/route.ts` and `src/lib/events/publisher.ts`
-- [ ] T017 [US2] Expose durable pending notification state with 7-day retention logic in `src/app/api/submissions/[token]/events/route.ts`
-- [ ] T018 [US2] Surface user notification receipt and status messaging in `src/presentation/view-models/use-submission.ts` and `src/presentation/components/client/submission-form/index.tsx`
-- [ ] T019 [US2] Show persisted resubmission request status in admin revisit view in `src/presentation/components/admin/submission-review/index.tsx`
+- [X] T014 [P] [US2] Add resubmission request lifecycle fields and status mapping in `src/data/models/submission.model.ts`
+- [X] T015 [US2] Persist and update resubmission request visibility/delivery state in `src/data/repositories/mongo-submission-repository.ts`
+- [X] T016 [US2] Emit user-targeted status-change notifications from admin status updates in `src/app/api/admin/submissions/[id]/route.ts` and `src/lib/events/publisher.ts`
+- [X] T017 [US2] Expose durable pending notification state with 7-day retention logic in `src/app/api/submissions/[token]/events/route.ts`
+- [X] T018 [US2] Surface user notification receipt and status messaging in `src/presentation/view-models/use-submission.ts` and `src/presentation/components/client/submission-form/index.tsx`
+- [X] T019 [US2] Show persisted resubmission request status in admin revisit view in `src/presentation/components/admin/submission-review/index.tsx`
 
 **Checkpoint**: User Story 2 is independently functional and testable.
 
@@ -86,11 +86,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T020 [US3] Add latest-form refresh fetch flow and version comparison guards in `src/presentation/view-models/use-submission.ts`
-- [ ] T021 [US3] Implement field-level draft reconciliation and dropped-field collection in `src/presentation/view-models/use-submission.ts`
-- [ ] T022 [US3] Render localized dropped-values warning banner on refresh in `src/presentation/components/client/submission-form/index.tsx`
-- [ ] T023 [US3] Invalidate/reload field-definition caches after reorder updates in `src/app/api/admin/fields/reorder/route.ts` and `src/data/services/cache-service.ts`
-- [ ] T024 [US3] Return latest published field ordering/version payload for token refresh consumers in `src/domain/use-cases/client/view-submission.ts` and `src/app/api/submissions/[token]/route.ts`
+- [X] T020 [US3] Add latest-form refresh fetch flow and version comparison guards in `src/presentation/view-models/use-submission.ts`
+- [X] T021 [US3] Implement field-level draft reconciliation and dropped-field collection in `src/presentation/view-models/use-submission.ts`
+- [X] T022 [US3] Render localized dropped-values warning banner on refresh in `src/presentation/components/client/submission-form/index.tsx`
+- [X] T023 [US3] Invalidate/reload field-definition caches after reorder updates in `src/app/api/admin/fields/reorder/route.ts` and `src/data/services/cache-service.ts`
+- [X] T024 [US3] Return latest published field ordering/version payload for token refresh consumers in `src/domain/use-cases/client/view-submission.ts` and `src/app/api/submissions/[token]/route.ts`
 
 **Checkpoint**: User Story 3 is independently functional and testable.
 
@@ -104,12 +104,12 @@
 
 ### Implementation for User Story 4
 
-- [ ] T025 [P] [US4] Implement `isMultiple` dropdown UI behavior for sector selections in `src/presentation/components/client/submission-form/field-renderer.tsx`
-- [ ] T026 [US4] Normalize multi-select sector arrays in submission/resubmission payload creation in `src/presentation/view-models/use-submission.ts`
-- [ ] T027 [US4] Validate and persist multi-select sector arrays in `src/domain/use-cases/client/submit-form.ts` and `src/data/repositories/mongo-field-value-repository.ts`
-- [ ] T028 [US4] Render stored multi-select sector values correctly in admin review UI in `src/presentation/components/admin/submission-review/index.tsx`
-- [ ] T029 [US4] Replace hardcoded logo text usage with shared site-name element in `src/components/shared/logo.tsx` and `src/components/shared/site-name.tsx`
-- [ ] T030 [US4] Replace hardcoded site-name metadata/title strings with shared element usage in `src/app/[locale]/layout.tsx`, `src/app/[locale]/submit/[token]/page.tsx`, `src/app/[locale]/admin/(authenticated)/dashboard/page.tsx`, `src/app/[locale]/admin/(authenticated)/forms/page.tsx`, `src/app/[locale]/admin/(authenticated)/forms/[id]/fields/page.tsx`, `src/app/[locale]/admin/(authenticated)/media/page.tsx`, `src/app/[locale]/admin/(authenticated)/settings/page.tsx`, and `src/app/[locale]/admin/(authenticated)/submissions/[id]/page.tsx`
+- [X] T025 [P] [US4] Implement `isMultiple` dropdown UI behavior for sector selections in `src/presentation/components/client/submission-form/field-renderer.tsx`
+- [X] T026 [US4] Normalize multi-select sector arrays in submission/resubmission payload creation in `src/presentation/view-models/use-submission.ts`
+- [X] T027 [US4] Validate and persist multi-select sector arrays in `src/domain/use-cases/client/submit-form.ts` and `src/data/repositories/mongo-field-value-repository.ts`
+- [X] T028 [US4] Render stored multi-select sector values correctly in admin review UI in `src/presentation/components/admin/submission-review/index.tsx`
+- [X] T029 [US4] Replace hardcoded logo text usage with shared site-name element in `src/components/shared/logo.tsx` and `src/components/shared/site-name.tsx`
+- [X] T030 [US4] Replace hardcoded site-name metadata/title strings with shared element usage in `src/app/[locale]/layout.tsx`, `src/app/[locale]/submit/[token]/page.tsx`, `src/app/[locale]/admin/(authenticated)/dashboard/page.tsx`, `src/app/[locale]/admin/(authenticated)/forms/page.tsx`, `src/app/[locale]/admin/(authenticated)/forms/[id]/fields/page.tsx`, `src/app/[locale]/admin/(authenticated)/media/page.tsx`, `src/app/[locale]/admin/(authenticated)/settings/page.tsx`, and `src/app/[locale]/admin/(authenticated)/submissions/[id]/page.tsx`
 
 **Checkpoint**: User Story 4 is independently functional and testable.
 

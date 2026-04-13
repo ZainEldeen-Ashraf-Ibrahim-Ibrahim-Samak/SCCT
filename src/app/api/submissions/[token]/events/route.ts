@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import { redis } from "@/lib/redis";
 import { errorResponse } from "@/lib/api-response";
 import { logger } from "@/lib/dev-logger";
+import { MongoSubmissionRepository } from "@/data/repositories/mongo-submission-repository";
 
 export const dynamic = "force-dynamic";
+
+const submissionRepo = new MongoSubmissionRepository();
 
 type EventPayload = {
   timestamp?: string;
@@ -49,6 +52,20 @@ export async function GET(
       };
 
       sendEvent({ type: "CONNECTION_ESTABLISHED", token });
+
+      try {
+        const submission = await submissionRepo.findByToken(token);
+        if (submission) {
+          sendEvent({
+            type: "STATUS_CHANGED",
+            status: submission.status,
+            requestStatus: submission.resubmissionRequest?.status,
+            timestamp: new Date().toISOString(),
+          });
+        }
+      } catch (error) {
+        logger.debug("Unable to preload submission request status", { token, error });
+      }
 
       let active = true;
       let lastChecked = Date.now();

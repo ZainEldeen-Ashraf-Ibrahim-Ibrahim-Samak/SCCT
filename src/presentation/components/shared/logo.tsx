@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
-import { useLocale } from "next-intl";
+import { SiteName } from "@/components/shared/site-name";
 
 export function Logo({ className = "" }: { className?: string }) {
   return (
@@ -12,9 +12,7 @@ export function Logo({ className = "" }: { className?: string }) {
         height={32}
         className="object-contain shrink-0"
       />
-      <span className="text-xl font-bold text-primary tracking-tight">
-        SCCT
-      </span>
+      <SiteName className="text-xl font-bold text-primary tracking-tight" />
     </Link>
   );
 }

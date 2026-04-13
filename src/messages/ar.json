@@ -167,7 +167,17 @@
     "resubmittedAt": "تمت إعادة الإرسال في {date}",
     "updatedBy": "بواسطة {name}",
     "openMenu": "فتح القائمة",
-    "unnamedSubmission": "طلب بدون اسم"
+    "unnamedSubmission": "طلب بدون اسم",
+    "contactRecords": "سجلات التواصل",
+    "contactRecordEntry": "جهة التواصل #{index}",
+    "resubmissionRequestStatus": "طلب إعادة الإرسال",
+    "requestExpiresAt": "ينتهي في {date}",
+    "requestStatuses": {
+      "pending_delivery": "بانتظار التسليم",
+      "delivered": "تم التسليم",
+      "seen": "تمت المشاهدة",
+      "expired": "منتهي"
+    }
   },
   "client": {
     "formTitle": "نموذج تقديم البيانات",
@@ -204,7 +214,23 @@
     "yourName": "اسمك",
     "namePlaceholder": "أدخل اسمك",
     "contactInfo": "معلومات الاتصال",
-    "contactPlaceholder": "الهاتف"
+    "contactPlaceholder": "الهاتف",
+    "contactRecordsTitle": "سجلات التواصل",
+    "contactRecordLabel": "جهة التواصل #{index}",
+    "contactRecordName": "اسم جهة التواصل",
+    "contactRecordNamePlaceholder": "أدخل اسم جهة التواصل",
+    "contactRecordContact": "تفاصيل التواصل",
+    "contactRecordContactPlaceholder": "هاتف أو بريد إلكتروني",
+    "contactRecordRole": "الصفة",
+    "contactRecordRolePlaceholder": "القرابة أو الصفة",
+    "contactRecordNotes": "ملاحظات",
+    "contactRecordNotesPlaceholder": "ملاحظات اختيارية",
+    "addContactRecord": "إضافة جهة تواصل",
+    "removeContactRecord": "حذف جهة التواصل",
+    "contactRecordMinOne": "يجب وجود سجل تواصل واحد على الأقل.",
+    "contactRecordRequired": "أضف جهة تواصل واحدة على الأقل مع الاسم.",
+    "droppedValuesTitle": "تم تحديث النموذج",
+    "droppedValuesDescription": "تمت إزالة {count} من القيم غير المحفوظة بسبب تغيير النموذج."
   },
   "notifications": {
     "viewDetails": "عرض التفاصيل ←"

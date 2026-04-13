@@ -3,6 +3,7 @@ import { generateAccessToken } from "@/lib/utils";
 import { MongoSubmissionRepository } from "@/data/repositories/mongo-submission-repository";
 import { MongoFormTemplateRepository } from "@/data/repositories/mongo-form-template-repository";
 import { MongoFieldDefinitionRepository } from "@/data/repositories/mongo-field-definition-repository";
+import { logger } from "@/lib/dev-logger";
 
 const submissionRepo = new MongoSubmissionRepository();
 const formTemplateRepo = new MongoFormTemplateRepository();
@@ -34,6 +35,7 @@ export default async function PublicFormStartPage({
         formTemplateId: formId,
         clientName: "",
         clientContact: "",
+        contactRecords: [{ id: "primary", name: "Primary Contact" }],
         formSnapshot: fields,
       },
       token
@@ -49,7 +51,7 @@ export default async function PublicFormStartPage({
     redirectToken = token;
   } catch (error) {
     // We can't log 'error' easily if we only rely on redirection, but just to satisfy eslint
-    console.error("Public submission init failed:", error);
+    logger.error("Public submission init failed", error);
     // On error, fallback to root
   }
 

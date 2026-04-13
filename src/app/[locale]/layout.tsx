@@ -5,6 +5,7 @@ import { getMessages } from "next-intl/server";
 import { ThemeProvider } from "@/presentation/providers/theme-provider";
 import { AuthProvider } from "@/presentation/providers/auth-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { SITE_NAME } from "@/components/shared/site-name";
 import "@/app/globals.css";
 
 const geistSans = Geist({
@@ -19,7 +20,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://scct-three.vercel.app/"),
-  title: "SCCT — Client Data Collection",
+  title: `${SITE_NAME} — Client Data Collection`,
   description:
     "Dynamic client data collection and admin review system with bilingual support",
   verification: {

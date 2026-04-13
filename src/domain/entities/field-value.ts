@@ -10,7 +10,7 @@ export interface FieldValue {
   fieldDefinitionId: string;
   fieldNameSnapshot: string;
   fieldTypeSnapshot: InputType;
-  value?: string | number | null;
+  value?: string | number | string[] | null;
   mediaUrl?: string | null;
   mediaPublicId?: string | null;
   mediaItems?: { url: string; publicId: string }[];

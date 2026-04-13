@@ -17,6 +17,11 @@ export interface SubmissionRepository {
   ): Promise<{ submissions: Submission[]; total: number; totalPages: number }>;
   getCounts(): Promise<{ pending: number; draft: number; viewed: number; needs_rewrite: number; total: number }>;
   updateStatus(id: string, input: UpdateSubmissionStatusInput): Promise<Submission | null>;
-  resetStatusForResubmission(id: string, name?: string, contact?: string): Promise<Submission | null>;
+  resetStatusForResubmission(
+    id: string,
+    name?: string,
+    contact?: string,
+    contactRecords?: CreateSubmissionInput["contactRecords"],
+  ): Promise<Submission | null>;
   delete(id: string): Promise<boolean>;
 }

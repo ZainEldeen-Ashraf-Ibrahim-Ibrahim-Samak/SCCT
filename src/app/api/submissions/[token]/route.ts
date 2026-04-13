@@ -31,7 +31,7 @@ export const dynamic = "force-dynamic";
 function summarizeFieldValues(
   fieldValues: Array<{
     fieldDefinitionId: string;
-    value?: string | number | null;
+    value?: string | number | string[] | null;
     mediaUrl?: string | null;
     mediaItems?: Array<{ url: string; publicId: string }>;
   }>,
@@ -39,7 +39,10 @@ function summarizeFieldValues(
   return {
     total: fieldValues.length,
     withText: fieldValues.filter(
-      (fv) => fv.value !== null && fv.value !== undefined && String(fv.value).trim().length > 0,
+      (fv) => {
+        if (Array.isArray(fv.value)) return fv.value.length > 0;
+        return fv.value !== null && fv.value !== undefined && String(fv.value).trim().length > 0;
+      },
     ).length,
     withMediaUrl: fieldValues.filter((fv) => !!fv.mediaUrl).length,
     withMediaItems: fieldValues.filter((fv) => (fv.mediaItems?.length ?? 0) > 0).length,
@@ -84,12 +87,14 @@ export async function POST(
       token,
       clientNameLength: parsed.data.clientName.length,
       clientContactLength: parsed.data.clientContact?.length ?? 0,
+      contactRecordsCount: parsed.data.contactRecords?.length ?? 0,
       fieldSummary: summarizeFieldValues(parsed.data.fieldValues),
     });
 
     const result = await submitUseCase.execute({
       clientName: parsed.data.clientName,
       clientContact: parsed.data.clientContact,
+      contactRecords: parsed.data.contactRecords,
       fieldValues: parsed.data.fieldValues,
     }, {
       tokenOrFormId: token,
@@ -142,12 +147,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ to
       token,
       clientNameLength: parsed.data.clientName.length,
       clientContactLength: parsed.data.clientContact?.length ?? 0,
+      contactRecordsCount: parsed.data.contactRecords?.length ?? 0,
       fieldSummary: summarizeFieldValues(parsed.data.fieldValues),
     });
 
     const result = await submitUseCase.resubmit(token, {
       clientName: parsed.data.clientName,
       clientContact: parsed.data.clientContact,
+      contactRecords: parsed.data.contactRecords,
       fieldValues: parsed.data.fieldValues,
     });
 

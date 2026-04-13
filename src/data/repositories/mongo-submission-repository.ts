@@ -9,6 +9,57 @@ import { CacheService } from "@/data/services/cache-service";
 import { logger } from "@/lib/dev-logger";
 import { NotificationPublisher } from "@/lib/events/publisher";
 
+const RESUBMISSION_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
+
+function normalizeContactRecords(records: unknown): Submission["contactRecords"] {
+  if (!Array.isArray(records)) return [];
+  const processed = records.map((item) => {
+    if (!item || typeof item !== "object") return null;
+    const candidate = item as Record<string, unknown>;
+    const id = typeof candidate.id === "string" ? candidate.id.trim() : "";
+    const name = typeof candidate.name === "string" ? candidate.name.trim() : "";
+    if (!id || !name) return null;
+    return {
+      id,
+      name,
+      contact: typeof candidate.contact === "string" ? candidate.contact : "",
+      role: typeof candidate.role === "string" ? candidate.role : "",
+      notes: typeof candidate.notes === "string" ? candidate.notes : "",
+    };
+  });
+  return processed.filter((item): item is NonNullable<typeof item> => item !== null);
+}
+
+function normalizeResubmissionRequest(
+  request: unknown,
+): Submission["resubmissionRequest"] {
+  if (!request || typeof request !== "object") return null;
+
+  const candidate = request as Record<string, unknown>;
+  const status = candidate.status;
+  if (
+    status !== "pending_delivery" &&
+    status !== "delivered" &&
+    status !== "seen" &&
+    status !== "expired"
+  ) {
+    return null;
+  }
+
+  return {
+    id: String(candidate.id ?? ""),
+    targetAccessToken: String(candidate.targetAccessToken ?? ""),
+    requestedByAdminId: candidate.requestedByAdminId?.toString() ?? "",
+    requestedByAdminName: String(candidate.requestedByAdminName ?? ""),
+    comment: typeof candidate.comment === "string" ? candidate.comment : "",
+    status,
+    createdAt: new Date(String(candidate.createdAt ?? new Date().toISOString())),
+    expiresAt: new Date(String(candidate.expiresAt ?? new Date().toISOString())),
+    deliveredAt: candidate.deliveredAt ? new Date(String(candidate.deliveredAt)) : null,
+    seenAt: candidate.seenAt ? new Date(String(candidate.seenAt)) : null,
+  };
+}
+
 function toEntity(doc: Record<string, unknown>): Submission {
   return {
     id: doc._id?.toString() ?? "",
@@ -18,8 +69,10 @@ function toEntity(doc: Record<string, unknown>): Submission {
     clientContact: doc.clientContact as string,
     status: doc.status as Submission["status"],
     rewriteComment: doc.rewriteComment as string,
+    contactRecords: normalizeContactRecords(doc.contactRecords),
     formSnapshot: (doc.formSnapshot as unknown as Submission["formSnapshot"]) ?? [],
     auditTrail: (doc.auditTrail as unknown as Submission["auditTrail"]) ?? [],
+    resubmissionRequest: normalizeResubmissionRequest(doc.resubmissionRequest),
     submittedAt: doc.submittedAt as Date,
     lastResubmittedAt: doc.lastResubmittedAt as Date | null,
     updatedAt: doc.updatedAt as Date,
@@ -32,6 +85,7 @@ export class MongoSubmissionRepository implements SubmissionRepository {
       await connectToDatabase();
       const doc = await SubmissionModel.create({
         ...input,
+        contactRecords: input.contactRecords,
         accessToken,
         status: "pending",
         auditTrail: [],
@@ -60,8 +114,25 @@ export class MongoSubmissionRepository implements SubmissionRepository {
     try {
       return await CacheService.getSubmission(accessToken, async () => {
         await connectToDatabase();
-        const doc = await SubmissionModel.findOne({ accessToken }).lean();
-        return doc ? toEntity(doc) : null;
+        const doc = await SubmissionModel.findOne({ accessToken });
+        if (!doc) return null;
+
+        const now = new Date();
+        if (doc.resubmissionRequest) {
+          if (
+            doc.resubmissionRequest.status !== "expired" &&
+            doc.resubmissionRequest.expiresAt.getTime() <= now.getTime()
+          ) {
+            doc.resubmissionRequest.status = "expired";
+            await doc.save();
+          } else if (doc.resubmissionRequest.status === "pending_delivery") {
+            doc.resubmissionRequest.status = "delivered";
+            doc.resubmissionRequest.deliveredAt = now;
+            await doc.save();
+          }
+        }
+
+        return toEntity(doc.toObject() as unknown as Record<string, unknown>);
       });
     } catch (error) {
       logger.error("Failed to find submission by token", { accessToken, error });
@@ -180,8 +251,25 @@ export class MongoSubmissionRepository implements SubmissionRepository {
       submission.status = input.status;
       if (input.status === "needs_rewrite") {
         submission.rewriteComment = input.comment || "";
+        const now = new Date();
+        submission.resubmissionRequest = {
+          id: `rr_${submission._id.toString()}_${now.getTime()}`,
+          targetAccessToken: submission.accessToken,
+          requestedByAdminId: new mongoose.Types.ObjectId(input.admin.id as string),
+          requestedByAdminName: input.admin.name,
+          comment: input.comment || "",
+          status: "pending_delivery",
+          createdAt: now,
+          expiresAt: new Date(now.getTime() + RESUBMISSION_RETENTION_MS),
+          deliveredAt: null,
+          seenAt: null,
+        };
       } else {
         submission.rewriteComment = "";
+        if (submission.resubmissionRequest && submission.resubmissionRequest.status !== "expired") {
+          submission.resubmissionRequest.status = "seen";
+          submission.resubmissionRequest.seenAt = new Date();
+        }
       }
       submission.auditTrail.push(auditEntry);
 
@@ -189,8 +277,12 @@ export class MongoSubmissionRepository implements SubmissionRepository {
       const leanDoc = await SubmissionModel.findById(id).lean();
       if (leanDoc) {
         await CacheService.invalidateSubmissionCache(leanDoc.accessToken);
-        // SIGNAL CLIENT (NEW)
-        await NotificationPublisher.notifyClientStatusChange(leanDoc.accessToken, leanDoc.status);
+        // SIGNAL CLIENT
+        await NotificationPublisher.notifyClientStatusChange(
+          leanDoc.accessToken,
+          leanDoc.status,
+          leanDoc.resubmissionRequest?.status,
+        );
       }
       return leanDoc ? toEntity(leanDoc) : null;
     } catch (error) {
@@ -199,24 +291,45 @@ export class MongoSubmissionRepository implements SubmissionRepository {
     }
   }
 
-  async resetStatusForResubmission(id: string, name?: string, contact?: string): Promise<Submission | null> {
+  async resetStatusForResubmission(
+    id: string,
+    name?: string,
+    contact?: string,
+    contactRecords?: CreateSubmissionInput["contactRecords"],
+  ): Promise<Submission | null> {
     try {
       await connectToDatabase();
-    const doc = await SubmissionModel.findByIdAndUpdate(
-      id,
-      {
-        status: "pending",
-        rewriteComment: "",
-        lastResubmittedAt: new Date(),
-        ...(name !== undefined ? { clientName: name } : {}),
-        ...(contact !== undefined ? { clientContact: contact } : {})
-      },
-      { new: true }
-    ).lean();
+      const existing = await SubmissionModel.findById(id).lean();
+      const nextResubmissionRequest =
+        existing?.resubmissionRequest && existing.resubmissionRequest.status !== "expired"
+          ? {
+              ...existing.resubmissionRequest,
+              status: "seen" as const,
+              seenAt: new Date(),
+            }
+          : existing?.resubmissionRequest ?? null;
+
+      const doc = await SubmissionModel.findByIdAndUpdate(
+        id,
+        {
+          status: "pending",
+          rewriteComment: "",
+          lastResubmittedAt: new Date(),
+          ...(name !== undefined ? { clientName: name } : {}),
+          ...(contact !== undefined ? { clientContact: contact } : {}),
+          ...(contactRecords !== undefined ? { contactRecords } : {}),
+          resubmissionRequest: nextResubmissionRequest,
+        },
+        { new: true }
+      ).lean();
       if (doc) {
         await CacheService.invalidateSubmissionCache(doc.accessToken);
-        // SIGNAL CLIENT (NEW)
-        await NotificationPublisher.notifyClientStatusChange(doc.accessToken, "pending");
+        // SIGNAL CLIENT
+        await NotificationPublisher.notifyClientStatusChange(
+          doc.accessToken,
+          "pending",
+          doc.resubmissionRequest?.status,
+        );
       }
       return doc ? toEntity(doc) : null;
     } catch (error) {

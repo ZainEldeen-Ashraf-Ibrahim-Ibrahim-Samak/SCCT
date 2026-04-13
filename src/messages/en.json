@@ -167,7 +167,17 @@
     "resubmittedAt": "Resubmitted {date}",
     "updatedBy": "Updated by {name}",
     "openMenu": "Open menu",
-    "unnamedSubmission": "Unnamed Submission"
+    "unnamedSubmission": "Unnamed Submission",
+    "contactRecords": "Contact Records",
+    "contactRecordEntry": "Contact #{index}",
+    "resubmissionRequestStatus": "Resubmission Request",
+    "requestExpiresAt": "Expires at {date}",
+    "requestStatuses": {
+      "pending_delivery": "Pending delivery",
+      "delivered": "Delivered",
+      "seen": "Seen",
+      "expired": "Expired"
+    }
   },
   "client": {
     "formTitle": "Data Submission Form",
@@ -204,7 +214,23 @@
     "yourName": "Your Name",
     "namePlaceholder": "Enter your name",
     "contactInfo": "Contact Information",
-    "contactPlaceholder": "Phone"
+    "contactPlaceholder": "Phone",
+    "contactRecordsTitle": "Contact Records",
+    "contactRecordLabel": "Contact #{index}",
+    "contactRecordName": "Contact Name",
+    "contactRecordNamePlaceholder": "Enter contact name",
+    "contactRecordContact": "Contact Details",
+    "contactRecordContactPlaceholder": "Phone or email",
+    "contactRecordRole": "Role",
+    "contactRecordRolePlaceholder": "Relation or role",
+    "contactRecordNotes": "Notes",
+    "contactRecordNotesPlaceholder": "Optional notes",
+    "addContactRecord": "Add Contact",
+    "removeContactRecord": "Remove Contact",
+    "contactRecordMinOne": "At least one contact record is required.",
+    "contactRecordRequired": "Add at least one contact with a name.",
+    "droppedValuesTitle": "Form Updated",
+    "droppedValuesDescription": "{count} unsaved field values were removed because the form changed."
   },
   "notifications": {
     "viewDetails": "View Details →"

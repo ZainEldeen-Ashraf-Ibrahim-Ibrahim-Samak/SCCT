@@ -81,4 +81,10 @@ export const CacheService = {
     await cacheInvalidate(...keys);
     await cacheInvalidatePattern("submissions:list:*");
   },
+
+  async invalidateAllSubmissionPayloadCache(): Promise<void> {
+    await cacheInvalidate(CacheKeys.submissionsCounts());
+    await cacheInvalidatePattern("submissions:list:*");
+    await cacheInvalidatePattern("submission:*");
+  },
 };

@@ -11,9 +11,16 @@ import { logger } from "@/lib/dev-logger";
 interface SubmitFormData {
   clientName: string;
   clientContact?: string;
+  contactRecords: Array<{
+    id: string;
+    name: string;
+    contact?: string;
+    role?: string;
+    notes?: string;
+  }>;
   fieldValues: Array<{
     fieldDefinitionId: string;
-    value?: string | number | null;
+    value?: string | number | string[] | null;
     mediaUrl?: string | null;
     mediaPublicId?: string | null;
     mediaItems?: Array<{ url: string; publicId: string }>;
@@ -21,6 +28,33 @@ interface SubmitFormData {
 }
 
 const OBJECT_ID_PATTERN = /^[a-f0-9]{24}$/i;
+
+function hasValueContent(value: string | number | string[] | null | undefined): boolean {
+  if (Array.isArray(value)) return value.length > 0;
+  if (value === undefined || value === null) return false;
+  return value.toString().trim().length > 0;
+}
+
+function normalizeContactRecords(
+  records: SubmitFormData["contactRecords"],
+): SubmitFormData["contactRecords"] {
+  const seenIds = new Set<string>();
+  return records
+    .map((record) => {
+      const id = String(record.id ?? "").trim();
+      const name = String(record.name ?? "").trim();
+      if (!id || !name || seenIds.has(id)) return null;
+      seenIds.add(id);
+      return {
+        id,
+        name,
+        contact: record.contact ? String(record.contact).trim() : undefined,
+        role: record.role ? String(record.role).trim() : undefined,
+        notes: record.notes ? String(record.notes).trim() : undefined,
+      };
+    })
+    .filter((record): record is NonNullable<typeof record> => !!record);
+}
 
 /**
  * Use case for client form submission (P1).
@@ -56,6 +90,11 @@ export class SubmitFormUseCase {
       return { success: false, error: "Active form has no fields" };
     }
 
+    const normalizedContacts = normalizeContactRecords(data.contactRecords ?? []);
+    if (normalizedContacts.length < 1) {
+      return { success: false, error: "At least one contact record is required" };
+    }
+
     logger.info("Submit form context resolved", {
       tokenOrFormId,
       resolvedFormId: activeForm.id,
@@ -73,13 +112,25 @@ export class SubmitFormUseCase {
         const submittedValue = data.fieldValues.find((v) => v.fieldDefinitionId === field.id);
         const hasMedia = submittedValue?.mediaUrl && submittedValue.mediaUrl.trim().length > 0;
         const hasMediaItems = submittedValue?.mediaItems && submittedValue.mediaItems.length > 0;
-        const hasTextValue =
-          submittedValue?.value !== undefined &&
-          submittedValue?.value !== null &&
-          submittedValue.value.toString().trim().length > 0;
+        const hasTextValue = hasValueContent(submittedValue?.value);
 
         if (!hasMedia && !hasTextValue && !hasMediaItems) {
           return { success: false, error: `Field '${field.nameEn}' is required` };
+        }
+      }
+
+      const submittedValue = data.fieldValues.find((v) => v.fieldDefinitionId === field.id);
+      if (!submittedValue) continue;
+
+      if (field.inputType === "dropdown" && field.isMultiple) {
+        if (!Array.isArray(submittedValue.value)) {
+          return { success: false, error: `Field '${field.nameEn}' expects multiple selections` };
+        }
+
+        const uniqueValues = [...new Set(submittedValue.value.map((v) => String(v).trim()).filter(Boolean))];
+        const allowed = new Set([...(field.dropdownOptionsEn ?? []), ...(field.dropdownOptionsAr ?? [])]);
+        if (uniqueValues.some((v) => !allowed.has(v))) {
+          return { success: false, error: `Field '${field.nameEn}' contains invalid options` };
         }
       }
     }
@@ -91,6 +142,7 @@ export class SubmitFormUseCase {
         formTemplateId: activeForm.id,
         clientName: data.clientName,
         clientContact: data.clientContact || "",
+        contactRecords: normalizedContacts,
         formSnapshot: activeFields,
       },
       token
@@ -146,6 +198,11 @@ export class SubmitFormUseCase {
       return { success: false, error: "Only submissions marked 'Needs Rewrite' or 'Draft' can be resubmitted" };
     }
 
+    const normalizedContacts = normalizeContactRecords(data.contactRecords ?? []);
+    if (normalizedContacts.length < 1) {
+      return { success: false, error: "At least one contact record is required" };
+    }
+
     if (!data.fieldValues || data.fieldValues.length === 0) {
       return { success: false, error: "Submission must contain field values" };
     }
@@ -156,13 +213,25 @@ export class SubmitFormUseCase {
         const submittedValue = data.fieldValues.find((v) => v.fieldDefinitionId === field.id);
         const hasMedia = submittedValue?.mediaUrl && submittedValue.mediaUrl.trim().length > 0;
         const hasMediaItems = submittedValue?.mediaItems && submittedValue.mediaItems.length > 0;
-        const hasTextValue =
-          submittedValue?.value !== undefined &&
-          submittedValue?.value !== null &&
-          submittedValue.value.toString().trim().length > 0;
+        const hasTextValue = hasValueContent(submittedValue?.value);
 
         if (!hasMedia && !hasTextValue && !hasMediaItems) {
           return { success: false, error: `Field '${field.nameEn}' is required` };
+        }
+      }
+
+      const submittedValue = data.fieldValues.find((v) => v.fieldDefinitionId === field.id);
+      if (!submittedValue) continue;
+
+      if (field.inputType === "dropdown" && field.isMultiple) {
+        if (!Array.isArray(submittedValue.value)) {
+          return { success: false, error: `Field '${field.nameEn}' expects multiple selections` };
+        }
+
+        const uniqueValues = [...new Set(submittedValue.value.map((v) => String(v).trim()).filter(Boolean))];
+        const allowed = new Set([...(field.dropdownOptionsEn ?? []), ...(field.dropdownOptionsAr ?? [])]);
+        if (uniqueValues.some((v) => !allowed.has(v))) {
+          return { success: false, error: `Field '${field.nameEn}' contains invalid options` };
         }
       }
     }
@@ -202,7 +271,8 @@ export class SubmitFormUseCase {
     const updatedSubmission = await this.submissionRepo.resetStatusForResubmission(
       submission.id,
       data.clientName,
-      data.clientContact
+      data.clientContact,
+      normalizedContacts,
     );
 
     // Fire & forget notification

@@ -8,14 +8,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MediaUpload } from "./media-upload";
 import type { FieldDefinition } from "@/domain/entities/field-definition";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 interface FieldRendererProps {
   field: FieldDefinition;
-  value?: string | number | null;
+  value?: string | number | string[] | null;
   mediaUrl?: string | null;
   mediaPublicId?: string | null;
   mediaItems?: { url: string; publicId: string }[];
-  onChangeValue: (val: string | number | null) => void;
+  onChangeValue: (val: string | number | string[] | null) => void;
   onChangeMedia: (url: string, publicId: string) => void;
   onChangeMediaItems?: (items: { url: string; publicId: string }[]) => void;
   hasError?: boolean;
@@ -206,6 +208,74 @@ export function FieldRenderer({
       }
 
       const options = locale === "ar" ? field.dropdownOptionsAr : field.dropdownOptionsEn;
+
+      if (field.isMultiple) {
+        const selectedValues = Array.isArray(value)
+          ? value.map((v) => String(v))
+          : typeof value === "string" && value.trim().length > 0
+            ? [value]
+            : [];
+
+        if (disabled) {
+          return (
+            <div className="space-y-1">
+              {renderLabel()}
+              {selectedValues.length > 0
+                ? renderReadonlyValue(selectedValues.join(", "))
+                : renderReadonlyEmpty()}
+            </div>
+          );
+        }
+
+        const handleAdd = (val: string | null) => {
+          if (!val) return;
+          if (selectedValues.includes(val)) return;
+          onChangeValue([...selectedValues, val]);
+        };
+
+        const handleRemove = (val: string) => {
+          onChangeValue(selectedValues.filter((item) => item !== val));
+        };
+
+        return (
+          <div className="space-y-2">
+            {renderLabel(field.id)}
+            <Select value="" onValueChange={handleAdd} disabled={disabled}>
+              <SelectTrigger id={field.id} className={hasError ? "border-destructive ring-destructive" : ""}>
+                <SelectValue placeholder={tc("optional")} />
+              </SelectTrigger>
+              <SelectContent>
+                {options.map((opt, i) => (
+                  <SelectItem key={i} value={opt} disabled={selectedValues.includes(opt)}>
+                    {opt}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <div className="flex flex-wrap gap-2">
+              {selectedValues.map((item) => (
+                <span
+                  key={item}
+                  className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium"
+                >
+                  {item}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-4 w-4"
+                    onClick={() => handleRemove(item)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </span>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
       return (
         <div className="space-y-1">
           {renderLabel(field.id)}
