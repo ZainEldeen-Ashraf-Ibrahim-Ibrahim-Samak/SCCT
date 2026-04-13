@@ -163,7 +163,7 @@
     },
     "noSubmissionsFound": "لم يتم العثور على طلبات.",
     "resubmittedAt": "تمت إعادة الإرسال في {date}",
-    "viewedBy": "تم العرض بواسطة {name}",
+    "updatedBy": "بواسطة {name}",
     "openMenu": "فتح القائمة",
     "unnamedSubmission": "طلب بدون اسم"
   },

@@ -112,12 +112,12 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
     }
   };
 
-  const getLatestViewer = (sub: Submission) => {
-    if (sub.status === "viewed" && sub.auditTrail && sub.auditTrail.length > 0) {
-      // Find the most recent audit entry where newStatus is "viewed"
-      const viewEntries = [...sub.auditTrail].reverse().find(entry => entry.newStatus === "viewed");
-      if (viewEntries) {
-        return viewEntries.adminName;
+  const getLatestUpdater = (sub: Submission) => {
+    if (sub.auditTrail && sub.auditTrail.length > 0) {
+      // Find the most recent audit entry where newStatus matches current status
+      const updatedEntries = [...sub.auditTrail].reverse().find(entry => entry.newStatus === sub.status);
+      if (updatedEntries) {
+        return updatedEntries.adminName;
       }
     }
     return null;
@@ -138,7 +138,7 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
           </TableHeader>
           <TableBody>
             {submissions.map((sub) => {
-              const latestViewer = getLatestViewer(sub);
+              const latestUpdater = getLatestUpdater(sub);
               return (
                 <TableRow key={sub.id} className="cursor-pointer group" onClick={() => router.push(`/admin/submissions/${sub.id}`)}>
                   <TableCell className="font-medium group-hover:text-primary transition-colors">
@@ -148,9 +148,9 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
                   <TableCell>
                     <div className="flex flex-col items-start gap-1">
                       {getStatusBadge(sub.status)}
-                      {latestViewer && (
+                      {latestUpdater && (
                         <span className="text-[10px] text-muted-foreground whitespace-nowrap bg-muted/60 px-1.5 py-0.5 rounded">
-                           {t("viewedBy", { name: latestViewer })}
+                           {t("updatedBy", { name: latestUpdater })}
                         </span>
                       )}
                     </div>

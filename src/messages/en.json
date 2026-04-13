@@ -163,7 +163,7 @@
     },
     "noSubmissionsFound": "No submissions found.",
     "resubmittedAt": "Resubmitted {date}",
-    "viewedBy": "Viewed by {name}",
+    "updatedBy": "Updated by {name}",
     "openMenu": "Open menu",
     "unnamedSubmission": "Unnamed Submission"
   },
