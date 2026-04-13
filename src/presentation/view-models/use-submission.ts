@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useLocale } from "next-intl";
 import type { FieldDefinition } from "@/domain/entities/field-definition";
 import type { Submission } from "@/domain/entities/submission";
 import type { FieldValue } from "@/domain/entities/field-value";
@@ -42,7 +43,8 @@ interface UseSubmissionReturn {
   resubmitForm: () => Promise<void>;
 }
 
-export function useSubmission(tokenOrId: string, isExplicitForm: boolean = false): UseSubmissionReturn {
+export function useSubmission(tokenOrId: string): UseSubmissionReturn {
+  const locale = useLocale();
   const [isNew, setIsNew] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,7 +71,7 @@ export function useSubmission(tokenOrId: string, isExplicitForm: boolean = false
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/submissions/${tokenOrId}${isExplicitForm ? "?type=form" : ""}`);
+      const res = await fetch(`/api/submissions/${tokenOrId}`);
       if (!res.ok) {
         if (res.status === 404) throw new Error("not_found");
         throw new Error("server_error");
@@ -183,7 +185,7 @@ export function useSubmission(tokenOrId: string, isExplicitForm: boolean = false
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Failed to submit");
       clearDraft();
-      window.location.href = `/submit/${json.data.accessToken}`;
+      window.location.href = `/${locale}/submit/${json.data.accessToken}`;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Submission failed");
       throw err;

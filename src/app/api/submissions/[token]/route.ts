@@ -6,6 +6,7 @@ import { createSubmissionSchema } from "@/lib/validations";
 import { SubmitFormUseCase, ViewSubmissionUseCase } from "@/domain/use-cases/client";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { logger } from "@/lib/dev-logger";
+import { NotificationPublisher } from "@/lib/events/publisher";
 
 const submissionRepo = new MongoSubmissionRepository();
 const fieldValueRepo = new MongoFieldValueRepository();
@@ -28,10 +29,7 @@ const viewUseCase = new ViewSubmissionUseCase(
 export async function GET(request: Request, { params }: { params: Promise<{ token: string }> }) {
   try {
     const { token } = await params;
-    const { searchParams } = new URL(request.url);
-    const isForm = searchParams.get("type") === "form";
-    
-    const result = await viewUseCase.execute(token, isForm);
+    const result = await viewUseCase.execute(token);
 
     if (!result) {
       return errorResponse("Not found", 404, "NOT_FOUND");
@@ -59,9 +57,17 @@ export async function POST(request: Request) {
       fieldValues: parsed.data.fieldValues,
     });
 
-    if (!result.success) {
+    if (!result.success || !result.submission) {
       return errorResponse(result.error ?? "Invalid submission", 400, "SUBMISSION_INVALID");
     }
+
+    // Notify admins
+    await NotificationPublisher.notifyAdmins({
+      type: "NEW_SUBMISSION",
+      title: "New Submission",
+      message: `${parsed.data.clientName} has submitted a new form.`,
+      link: `/admin/submissions/${result.submission.id}`
+    });
 
     return successResponse(result.submission, 201);
   } catch (error) {
@@ -86,9 +92,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ to
       fieldValues: parsed.data.fieldValues,
     });
 
-    if (!result.success) {
+    if (!result.success || !result.submission) {
       return errorResponse(result.error ?? "Invalid resubmission", 400, "RESUBMISSION_INVALID");
     }
+
+    // Notify admins
+    await NotificationPublisher.notifyAdmins({
+      type: "NEW_SUBMISSION",
+      title: "Form Resubmitted",
+      message: `${parsed.data.clientName} has updated their submission.`,
+      link: `/admin/submissions/${result.submission.id}`
+    });
 
     return successResponse(result.submission);
   } catch (error) {

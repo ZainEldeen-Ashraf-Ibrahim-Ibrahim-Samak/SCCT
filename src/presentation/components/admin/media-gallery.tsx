@@ -2,12 +2,23 @@
 
 import { useMediaManager } from "@/presentation/view-models/use-media-manager";
 import { Button } from "@/components/ui/button";
-import { Loader2, Trash2, ExternalLink, Image as ImageIcon, File } from "lucide-react";
+import { Loader2, Trash2, ExternalLink, Image as ImageIcon, File, RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 export function MediaGallery() {
+  const t = useTranslations("media");
   const { resources, isLoading, isPaginating, hasMore, loadMore, deleteMedia, refresh } = useMediaManager();
+
+  const handleDelete = async (publicId: string) => {
+    if (!confirm(t("deleteConfirm"))) return;
+    try {
+      await deleteMedia(publicId);
+    } catch {
+      // errors are handled in the view-model toast flow
+    }
+  };
 
   if (isLoading) {
     return (
@@ -26,57 +37,75 @@ export function MediaGallery() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold tracking-tight">Media Manager</h2>
-          <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">
-            Browse and manage all uploaded assets in the Cloudinary storage.
+          <h2 className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+            {t("title")}
+          </h2>
+          <p className="text-muted-foreground text-sm mt-1 max-w-md">
+            {t("subtitle")}
           </p>
         </div>
-        <Button variant="outline" onClick={refresh}>Refresh</Button>
+        <Button 
+          variant="outline" 
+          onClick={refresh} 
+          className="shrink-0 hover:bg-primary hover:text-primary-foreground transition-all duration-300"
+        >
+          <RefreshCw className="h-4 w-4 me-2" />
+          {t("refresh")}
+        </Button>
       </div>
 
       {resources.length === 0 ? (
-        <div className="text-center py-12 bg-muted/20 border border-dashed rounded-xl">
-          <p className="text-muted-foreground">No media files found.</p>
+        <div className="text-center py-20 bg-muted/20 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-3">
+          <ImageIcon className="h-12 w-12 text-muted-foreground/30" />
+          <p className="text-muted-foreground font-medium">{t("noFiles")}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
           {resources.map((res) => (
-            <Card key={res.public_id} className="relative group overflow-hidden border-zinc-200 dark:border-zinc-800">
-              <div className="aspect-square bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center relative">
+            <Card key={res.public_id} className="group relative overflow-hidden border-zinc-200 dark:border-zinc-800 hover:ring-2 hover:ring-primary/20 transition-all duration-300">
+              <div className="aspect-square bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center relative overflow-hidden">
                 {res.resource_type === "image" ? (
                   <Image 
                     src={res.secure_url} 
                     alt={res.public_id} 
                     fill 
-                    className="object-cover" 
+                    className="object-cover transition-transform duration-500 group-hover:scale-110" 
                     sizes="(max-width: 768px) 50vw, 25vw"
                   />
                 ) : (
-                  <File className="w-12 h-12 text-zinc-400" />
+                  <File className="w-12 h-12 text-zinc-400 group-hover:scale-110 transition-transform duration-500" />
                 )}
                 
-                {/* Hover overlay */}
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3">
-                  <a href={res.secure_url} target="_blank" rel="noreferrer" className="bg-white/10 hover:bg-white/20 p-2 rounded-full text-white backdrop-blur-sm transition-colors">
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
-                  <button 
-                    aria-label="Delete media file"
-                    onClick={() => deleteMedia(res.public_id)}
-                    className="bg-red-500/80 hover:bg-red-600 p-2 rounded-full text-white backdrop-blur-sm transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                {/* Hover overlay with Glassmorphism */}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-4 backdrop-blur-[2px]">
+                  <div className="flex gap-2">
+                    <a 
+                      href={res.secure_url} 
+                      target="_blank" 
+                      rel="noreferrer" 
+                      className="bg-white/20 hover:bg-white/40 p-3 rounded-full text-white backdrop-blur-md transition-all hover:scale-110"
+                      title={t("viewFile")}
+                    >
+                      <ExternalLink className="w-5 h-5" />
+                    </a>
+                    <button 
+                      aria-label={t("deleteFile")}
+                      onClick={() => handleDelete(res.public_id)}
+                      className="bg-red-500/60 hover:bg-red-600 p-3 rounded-full text-white backdrop-blur-md transition-all hover:scale-110"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
               </div>
-              <div className="p-3">
-                <p className="text-xs font-medium truncate" title={res.public_id}>
+              <div className="p-3 bg-card border-t">
+                <p className="text-xs font-semibold truncate text-foreground" title={res.public_id}>
                   {res.public_id.split("/").pop()}
                 </p>
-                <div className="flex justify-between items-center mt-1 text-[10px] text-zinc-500">
-                  <span className="uppercase">{res.format}</span>
+                <div className="flex justify-between items-center mt-2 text-[10px] text-muted-foreground font-mono">
+                  <span className="bg-muted px-1.5 py-0.5 rounded uppercase font-bold text-primary/70">{res.format}</span>
                   <span>{formatBytes(res.bytes)}</span>
                 </div>
               </div>
@@ -86,9 +115,19 @@ export function MediaGallery() {
       )}
 
       {hasMore && (
-        <div className="flex justify-center pt-8 border-t border-zinc-100 dark:border-zinc-800">
-          <Button variant="secondary" onClick={loadMore} disabled={isPaginating}>
-            {isPaginating ? "Loading..." : "Load Older Files"}
+        <div className="flex justify-center pt-10 border-t mt-12">
+          <Button 
+            variant="secondary" 
+            onClick={loadMore} 
+            disabled={isPaginating}
+            className="min-w-[200px] hover:shadow-lg transition-all duration-300 ring-offset-background active:scale-95"
+          >
+            {isPaginating ? (
+              <>
+                <Loader2 className="h-4 w-4 me-2 animate-spin" />
+                {t("loading")}
+              </>
+            ) : t("loadMore")}
           </Button>
         </div>
       )}

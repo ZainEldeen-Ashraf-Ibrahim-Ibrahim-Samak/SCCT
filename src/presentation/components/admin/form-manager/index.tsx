@@ -34,6 +34,7 @@ export function FormManager() {
   const [shareFormId, setShareFormId] = useState<string | null>(null);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
+  const [isShareLoading, setIsShareLoading] = useState(false);
   const qrRef = useRef<HTMLDivElement>(null);
 
   async function handleCreate() {
@@ -70,12 +71,23 @@ export function FormManager() {
     }
   }
 
-  function handleOpenShare(id: string) {
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
-    const url = `${origin}/${locale}/submit/form/${id}`;
-    setShareUrl(url);
-    setShareFormId(id);
-    setIsShareOpen(true);
+  async function handleOpenShare(id: string) {
+    setIsShareLoading(true);
+    try {
+      const res = await fetch(`/api/admin/forms/${id}/provision`, { method: "POST" });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      const url = `${origin}/${locale}/submit/${data.data.token}`;
+      setShareUrl(url);
+      setShareFormId(id);
+      setIsShareOpen(true);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : ts("provisionError"));
+    } finally {
+      setIsShareLoading(false);
+    }
   }
 
   function handleCopyShareLink() {
@@ -131,7 +143,7 @@ export function FormManager() {
           <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogTrigger render={<Button />}>
+          <DialogTrigger nativeButton={false} render={<Button />}>
             <Plus className="me-2 h-4 w-4" />
             {t("createForm")}
           </DialogTrigger>
@@ -221,11 +233,16 @@ export function FormManager() {
                     size="icon"
                     onClick={() => handleOpenShare(form.id)}
                     title={ts("title")}
+                    disabled={isShareLoading}
                   >
-                    <Share2 className="h-4 w-4" />
+                    {isShareLoading && shareFormId === form.id ? (
+                      <span className="me-2 h-4 w-4 animate-spin border-2 border-primary border-t-transparent rounded-full" />
+                    ) : (
+                      <Share2 className="h-4 w-4" />
+                    )}
                   </Button>
                   <AlertDialog>
-                    <AlertDialogTrigger render={<Button variant="ghost" size="icon" className="ms-auto text-destructive" />}>
+                    <AlertDialogTrigger nativeButton={false} render={<Button variant="ghost" size="icon" className="ms-auto text-destructive" />}>
                       <Trash2 className="h-4 w-4" />
                     </AlertDialogTrigger>
                     <AlertDialogContent>

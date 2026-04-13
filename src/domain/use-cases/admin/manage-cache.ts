@@ -28,12 +28,25 @@ export async function getCacheStats() {
   }
 
   try {
-    // Scan for high-level segments
-    const [_, formKeys] = await redis.scan(0, { match: "form:*", count: 1000 });
-    const [__, fieldKeys] = await redis.scan(0, { match: "fields:*", count: 1000 });
-    const [___, listKeys] = await redis.scan(0, { match: "submissions:list:*", count: 1000 });
-    const [____, subKeys] = await redis.scan(0, { match: "submission:*", count: 1000 });
-    const [_____, countKeys] = await redis.scan(0, { match: "submissions:counts", count: 1000 });
+    // Helper to fully scan a pattern
+    const scanAll = async (pattern: string) => {
+      let cursor = "0";
+      const allKeys: string[] = [];
+      do {
+        const [nextCursor, keys] = await redis!.scan(cursor, { match: pattern, count: 500 });
+        allKeys.push(...keys);
+        cursor = nextCursor;
+      } while (cursor !== "0"  && cursor !== "");
+      return allKeys;
+    };
+
+    const [formKeys, fieldKeys, listKeys, subKeys, countKeys] = await Promise.all([
+      scanAll("form:*"),
+      scanAll("fields:*"),
+      scanAll("submissions:list:*"),
+      scanAll("submission:*"),
+      scanAll("submissions:counts")
+    ]);
 
     const total = formKeys.length + fieldKeys.length + listKeys.length + subKeys.length + countKeys.length;
 
@@ -87,8 +100,14 @@ export async function listCacheKeys(pattern: string = "*") {
   if (!redis) return [];
 
   try {
-    const [_, keys] = await redis.scan(0, { match: pattern, count: 500 });
-    return keys;
+    let cursor = "0";
+    const allKeys: string[] = [];
+    do {
+      const [nextCursor, keys] = await redis.scan(cursor, { match: pattern, count: 500 });
+      allKeys.push(...keys);
+      cursor = nextCursor;
+    } while (cursor !== "0" && cursor !== "");
+    return allKeys;
   } catch (error) {
     devlogger.error("Failed to list cache keys", error);
     return [];

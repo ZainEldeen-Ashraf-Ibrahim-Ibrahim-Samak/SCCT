@@ -32,6 +32,7 @@ import {
 import { toast } from "sonner";
 import { Trash2, UserPlus, Loader2 } from "lucide-react";
 import { createTeamMember, deleteTeamMember, updateTeamMemberRole } from "@/domain/use-cases/admin/manage-team";
+import { useTranslations } from "next-intl";
 
 type TeamMember = {
   id: string;
@@ -42,12 +43,20 @@ type TeamMember = {
 };
 
 export function TeamClient({ initialMembers, currentUserId }: { initialMembers: TeamMember[], currentUserId: string }) {
+  const t = useTranslations("team");
   const [members, setMembers] = useState<TeamMember[]>(initialMembers);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [newMember, setNewMember] = useState({ name: "", email: "", role: "user" as "admin" | "user", password: "" });
   const router = useRouter();
+
+  const getErrorMessage = (error: unknown, fallback: string): string => {
+    if (error instanceof Error && error.message) {
+      return error.message;
+    }
+    return fallback;
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,26 +66,26 @@ export function TeamClient({ initialMembers, currentUserId }: { initialMembers: 
       setMembers([result, ...members]);
       setIsCreateOpen(false);
       setNewMember({ name: "", email: "", role: "user", password: "" });
-      toast.success("Team member added successfully");
+      toast.success(t("createSuccess"));
       router.refresh();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to create team member");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, t("createError")));
     } finally {
       setIsCreating(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to remove this user?")) return;
+    if (!confirm(t("deleteConfirm"))) return;
     
     setIsDeleting(id);
     try {
       await deleteTeamMember(id);
       setMembers(members.filter(m => m.id !== id));
-      toast.success("Team member removed");
+      toast.success(t("deleteSuccess"));
       router.refresh();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to delete team member");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, t("deleteError")));
     } finally {
       setIsDeleting(null);
     }
@@ -86,10 +95,10 @@ export function TeamClient({ initialMembers, currentUserId }: { initialMembers: 
     try {
       await updateTeamMemberRole(id, newRole);
       setMembers(members.map(m => m.id === id ? { ...m, role: newRole } : m));
-      toast.success("Role updated successfully");
+      toast.success(t("roleUpdateSuccess"));
       router.refresh();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update role");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, t("roleUpdateError")));
       // Revert select visually by re-fetching or forcing state refresh, though simplified here.
     }
   };
@@ -101,20 +110,20 @@ export function TeamClient({ initialMembers, currentUserId }: { initialMembers: 
           <DialogTrigger render={
             <Button>
               <UserPlus className="mr-2 h-4 w-4" />
-              Add User
+              {t("addUser")}
             </Button>
           } />
           <DialogContent>
             <form onSubmit={handleCreate}>
               <DialogHeader>
-                <DialogTitle>Add Team Member</DialogTitle>
+                <DialogTitle>{t("addMember")}</DialogTitle>
                 <DialogDescription>
-                  Create a new admin or user account for your team.
+                  {t("addMemberDescription")}
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="name">Name</Label>
+                  <Label htmlFor="name">{t("name")}</Label>
                   <Input
                     id="name"
                     required
@@ -123,7 +132,7 @@ export function TeamClient({ initialMembers, currentUserId }: { initialMembers: 
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t("email")}</Label>
                   <Input
                     id="email"
                     type="email"
@@ -133,37 +142,37 @@ export function TeamClient({ initialMembers, currentUserId }: { initialMembers: 
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="password">Password (Optional)</Label>
+                  <Label htmlFor="password">{t("password")}</Label>
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Defaults to password123"
+                    placeholder={t("passwordPlaceholder")}
                     value={newMember.password}
                     onChange={(e) => setNewMember({ ...newMember, password: e.target.value })}
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label>Role</Label>
+                  <Label>{t("role")}</Label>
                   <Select
                     onValueChange={(val) => setNewMember({ ...newMember, role: (val as "admin" | "user") || "user" })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a role" />
+                      <SelectValue placeholder={t("selectRole")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="user">User</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="user">{t("user")}</SelectItem>
+                      <SelectItem value="admin">{t("admin")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
-                  Cancel
+                  {t("cancel")}
                 </Button>
                 <Button type="submit" disabled={isCreating}>
                   {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Save
+                  {t("save")}
                 </Button>
               </DialogFooter>
             </form>
@@ -175,10 +184,10 @@ export function TeamClient({ initialMembers, currentUserId }: { initialMembers: 
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t("name")}</TableHead>
+              <TableHead>{t("email")}</TableHead>
+              <TableHead>{t("role")}</TableHead>
+              <TableHead className="text-right">{t("actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -195,8 +204,8 @@ export function TeamClient({ initialMembers, currentUserId }: { initialMembers: 
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="user">User</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="user">{t("user")}</SelectItem>
+                      <SelectItem value="admin">{t("admin")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </TableCell>
@@ -220,7 +229,7 @@ export function TeamClient({ initialMembers, currentUserId }: { initialMembers: 
             {members.length === 0 && (
               <TableRow>
                 <TableCell colSpan={4} className="text-center h-24 text-muted-foreground">
-                  No team members found.
+                  {t("noMembers")}
                 </TableCell>
               </TableRow>
             )}

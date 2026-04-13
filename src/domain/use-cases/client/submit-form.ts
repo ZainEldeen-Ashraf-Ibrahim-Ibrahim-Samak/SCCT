@@ -110,8 +110,8 @@ export class SubmitFormUseCase {
       return { success: false, error: "Submission not found" };
     }
 
-    if (submission.status !== "needs_rewrite") {
-      return { success: false, error: "Only submissions marked 'Needs Rewrite' can be resubmitted" };
+    if (submission.status !== "needs_rewrite" && submission.status !== "draft") {
+      return { success: false, error: "Only submissions marked 'Needs Rewrite' or 'Draft' can be resubmitted" };
     }
 
     // 1. Validate against the snapshot
@@ -144,8 +144,12 @@ export class SubmitFormUseCase {
 
     await this.fieldValueRepo.updateMany(submission.id, updates);
 
-    // 3. Reset submission status to pending
-    const updatedSubmission = await this.submissionRepo.resetStatusForResubmission(submission.id);
+    // 3. Reset submission status to pending and update details
+    const updatedSubmission = await this.submissionRepo.resetStatusForResubmission(
+      submission.id,
+      data.clientName,
+      data.clientContact
+    );
 
     // Fire & forget notification
     NotificationPublisher.notifyAdmins({

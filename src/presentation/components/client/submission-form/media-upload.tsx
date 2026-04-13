@@ -1,7 +1,6 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { CldUploadWidget } from "next-cloudinary";
 import { Button } from "@/components/ui/button";
 import { Image as ImageIcon, File, X, UploadCloud, GripVertical, Plus } from "lucide-react";
 import Image from "next/image";
@@ -26,7 +25,6 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { env } from "@/env.mjs";
 
 interface MediaItem {
   url: string;
@@ -138,15 +136,98 @@ export function MediaUpload({
     })
   );
 
-  const handleSuccess = (result: any) => {
-    if (result?.info && typeof result.info !== "string" && result.info.secure_url) {
-      if (isMultiple) {
-        const newItem = { url: result.info.secure_url, publicId: result.info.public_id || "" };
-        onItemsChange?.([...currentItems, newItem]);
-      } else {
-        onUpload(result.info.secure_url, result.info.public_id ?? "");
+  const [isUploading, setIsUploading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+
+  const handleFiles = async (incomingFiles: FileList | File[]) => {
+    const files = Array.from(incomingFiles);
+    if (files.length === 0) return;
+
+    const selectedFiles = isMultiple ? files : files.slice(0, 1);
+    const maxBytes = maxFileSize * 1024 * 1024;
+    const uploadedItems: MediaItem[] = [];
+    let hasUploadFailure = false;
+
+    setIsUploading(true);
+
+    try {
+      for (const file of selectedFiles) {
+        if (file.size > maxBytes) {
+          toast.error(t("fileTooLarge", { maxSize: formatFileSize(maxBytes) }));
+          hasUploadFailure = true;
+          continue;
+        }
+
+        if (type === "image" && !file.type.startsWith("image/")) {
+          toast.error(t("invalidFileType"));
+          hasUploadFailure = true;
+          continue;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          toast.error(data.error || t("uploadError"));
+          hasUploadFailure = true;
+          continue;
+        }
+
+        if (isMultiple) {
+          uploadedItems.push({ url: data.url, publicId: data.publicId });
+        } else {
+          onUpload(data.url, data.publicId);
+        }
       }
-      toast.success(t("uploadSuccess"));
+
+      if (isMultiple && uploadedItems.length > 0) {
+        onItemsChange?.([...currentItems, ...uploadedItems]);
+      }
+
+      if (uploadedItems.length > 0 || (!isMultiple && !hasUploadFailure)) {
+        toast.success(t("uploadSuccess"));
+      }
+
+      if (hasUploadFailure && uploadedItems.length === 0) {
+        toast.error(t("uploadError"));
+      }
+    } catch (err) {
+      logger.error("Upload error", err);
+      toast.error(t("uploadError"));
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const onDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      void handleFiles(e.dataTransfer.files);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    if (e.target.files && e.target.files.length > 0) {
+      void handleFiles(e.target.files);
     }
   };
 
@@ -164,17 +245,6 @@ export function MediaUpload({
       }
     }
   }, [currentItems, onItemsChange]);
-
-  const uploadOptions = {
-    cloudName: env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-    apiKey: env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
-    uploadPreset: env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
-    multiple: isMultiple,
-    maxFiles: isMultiple ? 10 : 1,
-    maxFileSize: maxFileSize * 1024 * 1024,
-    resourceType: type === "image" ? "image" : "auto",
-    clientAllowedFormats: type === "image" ? ["png", "jpg", "jpeg", "webp"] : undefined,
-  };
 
   // Multiple view
   if (isMultiple) {
@@ -201,23 +271,38 @@ export function MediaUpload({
               ))}
               
               {!disabled && (
-                <CldUploadWidget
-                  signatureEndpoint="/api/cloudinary/sign"
-                  options={uploadOptions}
-                  onSuccess={handleSuccess}
-                  onError={() => toast.error(t("uploadError"))}
+                <div
+                  className="relative aspect-square sm:w-40 sm:h-40"
+                  onDragEnter={onDrag}
+                  onDragOver={onDrag}
+                  onDragLeave={onDrag}
+                  onDrop={onDrop}
                 >
-                  {({ open }) => (
-                    <button
-                      type="button"
-                      onClick={() => open()}
-                      className="border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary/50 hover:bg-muted/50 transition-colors h-full aspect-square sm:w-40 sm:h-40"
-                    >
-                      <Plus className="h-6 w-6" />
-                      <span className="text-xs font-medium">{t("addMore")}</span>
-                    </button>
-                  )}
-                </CldUploadWidget>
+                  <input
+                    title={t("addMore")}
+                    type="file"
+                    multiple={isMultiple}
+                    onChange={handleChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    disabled={isUploading}
+                    accept={type === "image" ? "image/*" : undefined}
+                  />
+                  <div className={`
+                    border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-1 
+                    text-muted-foreground hover:border-primary/50 hover:bg-muted/50 transition-all h-full
+                    ${dragActive ? "border-primary bg-primary/5" : ""}
+                    ${isUploading ? "opacity-50" : ""}
+                  `}>
+                    {isUploading ? (
+                      <UploadCloud className="h-6 w-6 animate-bounce" />
+                    ) : (
+                      <>
+                        <Plus className="h-6 w-6" />
+                        <span className="text-xs font-medium">{t("addMore")}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           </SortableContext>
@@ -230,7 +315,7 @@ export function MediaUpload({
     );
   }
 
-  // Single view (mostly unchanged logic but simplified)
+  // Single view
   if (currentUrl) {
     return (
       <div className="relative group rounded-lg border bg-muted/30 overflow-hidden w-fit max-w-full">
@@ -265,23 +350,41 @@ export function MediaUpload({
   }
 
   return (
-    <CldUploadWidget
-      signatureEndpoint="/api/cloudinary/sign"
-      options={uploadOptions}
-      onSuccess={handleSuccess}
-      onError={() => toast.error(t("uploadError"))}
+    <div 
+      className="relative w-full sm:w-auto overflow-hidden"
+      onDragEnter={onDrag}
+      onDragOver={onDrag}
+      onDragLeave={onDrag}
+      onDrop={onDrop}
     >
-      {({ open }) => (
-        <button
-          type="button"
-          onClick={() => open()}
-          disabled={disabled}
-          className="w-full sm:w-auto h-32 px-8 border-2 border-dashed rounded-xl transition-colors hover:border-primary/50 hover:bg-muted/50 flex flex-col items-center justify-center gap-2 text-muted-foreground group"
-        >
-          {type === "image" ? <ImageIcon className="h-8 w-8" /> : <UploadCloud className="h-8 w-8" />}
-          <span className="text-sm font-medium">{type === "image" ? t("uploadImage") : t("uploadFile")}</span>
-        </button>
-      )}
-    </CldUploadWidget>
+      <input
+        title={t("addMore")}
+        type="file"
+        onChange={handleChange}
+        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+        disabled={disabled || isUploading}
+        accept={type === "image" ? "image/*" : undefined}
+      />
+      <div
+        className={`
+          w-full sm:min-w-[240px] h-32 px-8 border-2 border-dashed rounded-xl transition-all 
+          hover:border-primary/50 hover:bg-muted/50 flex flex-col items-center justify-center gap-2 
+          text-muted-foreground group
+          ${dragActive ? "border-primary bg-primary/5 ring-4 ring-primary/10" : ""}
+          ${isUploading ? "opacity-50" : ""}
+        `}
+      >
+        {isUploading ? (
+          <UploadCloud className="h-8 w-8 animate-bounce" />
+        ) : (
+          <>
+            {type === "image" ? <ImageIcon className="h-8 w-8 group-hover:scale-110 transition-transform" /> : <UploadCloud className="h-8 w-8 group-hover:scale-110 transition-transform" />}
+            <span className="text-sm font-medium">
+              {dragActive ? t("dropToUpload") : (type === "image" ? t("uploadImage") : t("uploadFile"))}
+            </span>
+          </>
+        )}
+      </div>
+    </div>
   );
 }

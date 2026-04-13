@@ -6,7 +6,7 @@ import { User } from "./user";
  * Domain layer — zero framework imports.
  */
 
-export type SubmissionStatus = "pending" | "viewed" | "needs_rewrite";
+export type SubmissionStatus = "draft" | "pending" | "viewed" | "needs_rewrite";
 
 export interface AuditEntry {
   oldStatus: SubmissionStatus;

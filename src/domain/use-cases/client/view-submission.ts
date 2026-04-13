@@ -15,6 +15,8 @@ interface ViewSubmissionResult {
   values?: FieldValue[];
 }
 
+const OBJECT_ID_PATTERN = /^[a-f0-9]{24}$/i;
+
 /**
  * Use case for a client viewing a submission link (US2).
  * If the token isn't a submission yet, we render the active form.
@@ -28,39 +30,32 @@ export class ViewSubmissionUseCase {
     private fieldDefRepo: FieldDefinitionRepository
   ) {}
 
-  async execute(tokenOrId: string, isExplicitForm: boolean = false): Promise<ViewSubmissionResult | null> {
-    // 1. If explicitly requested as a form, skip submission lookup
-    if (!isExplicitForm) {
-      // Try to find an existing submission by token
-      let submission = await this.submissionRepo.findByToken(tokenOrId);
-      if (!submission) {
-        try {
-          submission = await this.submissionRepo.findById(tokenOrId);
-        } catch {
-          // ignore invalid ID format
-        }
-      }
+  private async buildExistingSubmissionResult(submission: Submission): Promise<ViewSubmissionResult> {
+    const values = await this.fieldValueRepo.findBySubmissionId(submission.id);
+    return {
+      isNew: false,
+      submission,
+      values,
+      fields: [...submission.formSnapshot],
+    };
+  }
 
-      if (submission) {
-        // Existing submission — fetch its saved values
-        const values = await this.fieldValueRepo.findBySubmissionId(submission.id);
-        return {
-          isNew: false,
-          submission,
-          values,
-          fields: [...submission.formSnapshot], // The fields as they were at submission time
-        };
-      }
+  async execute(tokenOrId: string): Promise<ViewSubmissionResult | null> {
+    const submissionByToken = await this.submissionRepo.findByToken(tokenOrId);
+    if (submissionByToken) {
+      return this.buildExistingSubmissionResult(submissionByToken);
     }
 
-    // 2. Fetch specific form if requested OR fall back to active form
-    let targetForm: any = null;
-    if (isExplicitForm || tokenOrId.length > 20) { // Simple heuristic for ID vs generic token
-       try {
-         targetForm = await this.formTemplateRepo.findById(tokenOrId);
-       } catch {
-         // Not a valid form ID
-       }
+    let targetForm: FormTemplate | null = null;
+    if (OBJECT_ID_PATTERN.test(tokenOrId)) {
+      targetForm = await this.formTemplateRepo.findById(tokenOrId);
+
+      if (!targetForm) {
+        const submissionById = await this.submissionRepo.findById(tokenOrId);
+        if (submissionById) {
+          return this.buildExistingSubmissionResult(submissionById);
+        }
+      }
     }
 
     if (!targetForm) {
@@ -68,7 +63,7 @@ export class ViewSubmissionUseCase {
     }
 
     if (!targetForm) {
-      return null; // No form to show
+      return null;
     }
 
     const fields = await this.fieldDefRepo.findByFormId(targetForm.id, false);

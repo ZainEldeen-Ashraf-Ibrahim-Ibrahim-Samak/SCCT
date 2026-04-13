@@ -80,6 +80,8 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case "draft":
+        return <Badge variant="outline" className="text-muted-foreground border-dashed">{t("statuses.draft")}</Badge>;
       case "pending":
         return <Badge variant="secondary" className="bg-amber-100 text-amber-800 hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400">{t("statuses.pending")}</Badge>;
       case "viewed":
@@ -119,7 +121,7 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
               </TableCell>
               <TableCell className="text-end" onClick={(e) => e.stopPropagation()}>
                 <DropdownMenu>
-                  <DropdownMenuTrigger render={<Button variant="ghost" className="h-8 w-8 p-0" />}>
+                  <DropdownMenuTrigger nativeButton={false} render={<Button variant="ghost" className="h-8 w-8 p-0" />}>
                     <span className="sr-only">{t("openMenu")}</span>
                     <MoreHorizontal className="h-4 w-4" />
                   </DropdownMenuTrigger>
@@ -133,7 +135,7 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
                       {t("copyLink")}
                     </DropdownMenuItem>
                     <AlertDialog>
-                      <AlertDialogTrigger render={<DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive" />}>
+                      <AlertDialogTrigger nativeButton={false} render={<DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive" />}>
                         <Trash2 className="me-2 h-4 w-4" />
                         {t("deleteSubmission")}
                       </AlertDialogTrigger>

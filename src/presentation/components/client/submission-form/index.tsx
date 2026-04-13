@@ -14,10 +14,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface SubmissionFormProps {
   tokenOrId: string;
-  isExplicitForm?: boolean;
 }
 
-export function SubmissionForm({ tokenOrId, isExplicitForm = false }: SubmissionFormProps) {
+export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
   const t = useTranslations("client");
   const tp = useTranslations("submissions.statuses");
   const {
@@ -39,7 +38,7 @@ export function SubmissionForm({ tokenOrId, isExplicitForm = false }: Submission
     setMediaItems,
     submitForm,
     resubmitForm,
-  } = useSubmission(tokenOrId, isExplicitForm);
+  } = useSubmission(tokenOrId);
 
   const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({});
 
@@ -66,7 +65,8 @@ export function SubmissionForm({ tokenOrId, isExplicitForm = false }: Submission
   }
 
   const isNeedsRewrite = submission?.status === "needs_rewrite";
-  const isViewOnly = !isNew && !isNeedsRewrite;
+  const isDraft = submission?.status === "draft";
+  const isViewOnly = !isNew && !isNeedsRewrite && !isDraft;
 
   const validate = () => {
     const errors: Record<string, boolean> = {};
@@ -100,13 +100,13 @@ export function SubmissionForm({ tokenOrId, isExplicitForm = false }: Submission
     if (!validate()) return;
     if (isNew) {
       await submitForm();
-    } else if (isNeedsRewrite) {
+    } else if (isNeedsRewrite || isDraft) {
       await resubmitForm();
     }
   };
 
   let statusAlert = null;
-  if (submission && !isNeedsRewrite) {
+  if (submission && !isNeedsRewrite && !isDraft) {
      statusAlert = (
        <Alert className="mb-6 bg-primary/5 border-primary/20">
          <CheckCircle2 className="h-4 w-4 text-primary" />
@@ -150,7 +150,7 @@ export function SubmissionForm({ tokenOrId, isExplicitForm = false }: Submission
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-8">
             <div className="space-y-4 bg-muted/30 p-6 rounded-xl border border-border/50">
-              <h3 className="font-semibold text-lg">{isNew ? t("formSubtitle") : t("viewingSubmission")}</h3>
+              <h3 className="font-semibold text-lg">{isNew || isDraft ? t("formSubtitle") : t("viewingSubmission")}</h3>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="clientName" className={validationErrors.clientName ? "text-destructive" : ""}>
@@ -227,7 +227,7 @@ export function SubmissionForm({ tokenOrId, isExplicitForm = false }: Submission
                 ) : (
                   <Send className="me-2 h-5 w-5" />
                 )}
-                {isNew ? t("submitButton") : t("resubmitButton")}
+                {isNew || isDraft ? t("submitButton") : t("resubmitButton")}
               </Button>
             </CardFooter>
           )}

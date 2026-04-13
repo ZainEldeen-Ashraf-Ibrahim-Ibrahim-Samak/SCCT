@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 export interface SettingsState {
   backup: {
@@ -14,6 +15,7 @@ export interface SettingsState {
 }
 
 export function useAdminSettings() {
+  const t = useTranslations("adminSettings");
   const [settings, setSettings] = useState<SettingsState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -22,25 +24,27 @@ export function useAdminSettings() {
   const fetchSettings = async () => {
     try {
       const res = await fetch("/api/admin/settings");
-      if (!res.ok) throw new Error("Failed to load settings");
+      if (!res.ok) throw new Error(t("loadSettingsError"));
       const data = await res.json();
       
       if (data.data) {
         setSettings({
-          backup: data.data.backup || { destination: "cloud", active: true, lastRunAt: null },
+          backup: data.data.backup || { destination: "local", active: true, lastRunAt: null },
           cron: data.data.cron || { activeInterval: "none", timezone: "UTC" }
         });
       }
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : t("loadSettingsError");
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchSettings();
-  }, []);
+    void fetchSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [t]);
 
   const saveSettings = async (newSettings: SettingsState) => {
     setIsSaving(true);
@@ -51,11 +55,12 @@ export function useAdminSettings() {
         body: JSON.stringify(newSettings),
       });
 
-      if (!res.ok) throw new Error("Failed to save settings");
+      if (!res.ok) throw new Error(t("saveError"));
       setSettings(newSettings);
-      toast.success("Settings updated successfully");
-    } catch (e: any) {
-      toast.error(e.message);
+      toast.success(t("saveSuccess"));
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : t("saveError");
+      toast.error(message);
     } finally {
       setIsSaving(false);
     }
@@ -63,17 +68,18 @@ export function useAdminSettings() {
 
   const triggerBackup = async () => {
     setIsBackingUp(true);
-    const toastId = toast.loading("Executing database backup...");
+    const toastId = toast.loading(t("backupLoading"));
     try {
       const res = await fetch("/api/admin/backups", { method: "POST" });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Backup failed");
+      if (!res.ok) throw new Error(data.error || t("backupError"));
       
-      toast.success("Backup securely exported!", { id: toastId });
+      toast.success(t("backupSuccess"), { id: toastId });
       // Refresh to update lastRunAt
       await fetchSettings();
-    } catch (e: any) {
-      toast.error(e.message, { id: toastId });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : t("backupError");
+      toast.error(message, { id: toastId });
     } finally {
       setIsBackingUp(false);
     }

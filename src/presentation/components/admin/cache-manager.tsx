@@ -72,7 +72,7 @@ export function CacheManager() {
       const data = await getCacheStats();
       setStats(data);
     } catch (error) {
-      toast.error("Failed to refresh statistics");
+      toast.error(t("toasts.refreshFailed"));
     } finally {
       setIsRefreshing(false);
     }
@@ -84,7 +84,7 @@ export function CacheManager() {
       const result = await listCacheKeys(searchPattern);
       setKeys(result);
     } catch (error) {
-      toast.error("Discovery failed");
+      toast.error(t("toasts.searchFailed"));
     } finally {
       setIsSearching(false);
     }
@@ -101,7 +101,7 @@ export function CacheManager() {
         setIsViewModalOpen(true);
       }
     } catch (error) {
-      toast.error("Failed to fetch key details");
+      toast.error(t("toasts.fetchKeyFailed"));
     }
   };
 
@@ -120,25 +120,25 @@ export function CacheManager() {
       }
 
       await updateCacheValue(selectedKey, valueToSave, editTtl);
-      toast.success("Key updated successfully");
+      toast.success(t("toasts.updateSuccess"));
       setIsViewModalOpen(false);
       handleSearch();
     } catch (error) {
-      toast.error("Update failed");
+      toast.error(t("toasts.updateFailed"));
     } finally {
       setIsUpdateLoading(false);
     }
   };
 
   const handleDeleteKey = async (key: string) => {
-    if (!confirm(`Are you sure you want to delete the key: ${key}?`)) return;
+    if (!confirm(t("toasts.deleteConfirm", { key }))) return;
     try {
       await deleteCacheKey(key);
-      toast.success("Key deleted");
+      toast.success(t("toasts.deleteSuccess"));
       setKeys(prev => prev.filter(k => k !== key));
       fetchStats();
     } catch (error) {
-      toast.error("Deletion failed");
+      toast.error(t("toasts.deleteFailed"));
     }
   };
 
@@ -161,7 +161,7 @@ export function CacheManager() {
         toast.error(result.message);
       }
     } catch (error) {
-      toast.error("An error occurred during cleanup");
+      toast.error(t("toasts.cleanupError"));
     } finally {
       setIsClearing(null);
     }
@@ -251,7 +251,7 @@ export function CacheManager() {
                 onClick={() => handleClear("submissions")}
                 disabled={isClearing !== null || !stats?.available}
                 >
-                <RefreshCcw className={`mr-2 h-4 w-4 ${isClearing === "submissions" ? "animate-spin" : ""}`} />
+                <RefreshCcw className={`me-2 h-4 w-4 ${isClearing === "submissions" ? "animate-spin" : ""}`} />
                 {t("clearSubmissions")}
                 </Button>
 

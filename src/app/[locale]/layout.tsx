@@ -39,19 +39,19 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} dir={dir} suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning>
-        <NextIntlClientProvider messages={messages} locale={locale}>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
           >
-            <AuthProvider>
-              {children}
-              <Toaster richColors position={dir === "rtl" ? "top-left" : "top-right"} />
-            </AuthProvider>
+            <NextIntlClientProvider messages={messages} locale={locale}>
+              <AuthProvider>
+                {children}
+                <Toaster richColors position={dir === "rtl" ? "top-left" : "top-right"} />
+              </AuthProvider>
+            </NextIntlClientProvider>
           </ThemeProvider>
-        </NextIntlClientProvider>
       </body>
     </html>
   );

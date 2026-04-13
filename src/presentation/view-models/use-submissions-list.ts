@@ -7,7 +7,7 @@ interface UseSubmissionsListReturn {
   submissions: Submission[];
   total: number;
   totalPages: number;
-  counts: { pending: number; viewed: number; needs_rewrite: number; total: number };
+  counts: { pending: number; draft: number; viewed: number; needs_rewrite: number; total: number };
   isLoading: boolean;
   error: string | null;
   fetchSubmissions: (page: number, status: string) => Promise<void>;
@@ -19,7 +19,7 @@ export function useSubmissionsList(): UseSubmissionsListReturn {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [counts, setCounts] = useState({ pending: 0, viewed: 0, needs_rewrite: 0, total: 0 });
+  const [counts, setCounts] = useState({ pending: 0, draft: 0, viewed: 0, needs_rewrite: 0, total: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,7 +63,10 @@ export function useSubmissionsList(): UseSubmissionsListReturn {
     });
     const json = await res.json();
     if (!json.success) throw new Error(json.error);
-    fetchCounts(); // Update counts locally since status changed
+    await fetchCounts(); // Update counts locally since status changed
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("submissions-updated"));
+    }
   };
 
   const deleteSubmission = async (id: string) => {

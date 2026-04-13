@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 export interface MediaResource {
   public_id: string;
@@ -16,6 +17,7 @@ export interface MediaResource {
 }
 
 export function useMediaManager() {
+  const t = useTranslations("media");
   const [resources, setResources] = useState<MediaResource[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPaginating, setIsPaginating] = useState(false);
@@ -23,10 +25,14 @@ export function useMediaManager() {
 
   const fetchMedia = useCallback(async (cursor?: string) => {
     try {
-      cursor ? setIsPaginating(true) : setIsLoading(true);
+      if (cursor) {
+        setIsPaginating(true);
+      } else {
+        setIsLoading(true);
+      }
       const url = cursor ? `/api/admin/media?cursor=${encodeURIComponent(cursor)}` : "/api/admin/media";
       const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed to load media");
+      if (!res.ok) throw new Error(t("loadError"));
       const json = await res.json();
       
       if (!json.success) throw new Error(json.error);
@@ -36,15 +42,16 @@ export function useMediaManager() {
       } else {
         setResources(json.data.resources);
       }
-      
+
       setNextCursor(json.data.next_cursor || null);
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : t("loadError");
+      toast.error(message);
     } finally {
       setIsLoading(false);
       setIsPaginating(false);
     }
-  }, []);
+  }, [t]);
 
   const loadMore = () => {
     if (nextCursor) {
@@ -53,21 +60,21 @@ export function useMediaManager() {
   };
 
   const deleteMedia = async (publicId: string) => {
-    if (!confirm("Are you sure you want to delete this media file? It will be permanently removed.")) return;
-    
-    const toastId = toast.loading("Deleting media...");
+    const toastId = toast.loading(t("deleting"));
     try {
       const res = await fetch(`/api/admin/media?publicId=${encodeURIComponent(publicId)}`, {
         method: "DELETE"
       });
-      if (!res.ok) throw new Error("Delete failed");
+      if (!res.ok) throw new Error(t("deleteError"));
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
 
       setResources(prev => prev.filter(r => r.public_id !== publicId));
-      toast.success("Media deleted", { id: toastId });
-    } catch (e: any) {
-      toast.error(e.message, { id: toastId });
+      toast.success(t("deleteSuccess"), { id: toastId });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : t("deleteError");
+      toast.error(message, { id: toastId });
+      throw e;
     }
   };
 

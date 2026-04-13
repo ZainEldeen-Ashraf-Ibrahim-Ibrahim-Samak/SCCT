@@ -3,6 +3,7 @@ import { redis } from "@/lib/redis";
 import { ADMIN_CHANNEL } from "@/lib/events/publisher";
 import { errorResponse } from "@/lib/api-response";
 import { logger } from "@/lib/dev-logger";
+import { auth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,11 @@ function parseEvent(raw: unknown): EventPayload | null {
 }
 
 export async function GET(request: Request) {
+  const session = await auth();
+  if (!session?.user) {
+    return errorResponse("Unauthorized", 401, "UNAUTHORIZED");
+  }
+  
   if (!redis) {
     return errorResponse("Notifications service unavailable", 503, "NOTIFICATIONS_UNAVAILABLE");
   }

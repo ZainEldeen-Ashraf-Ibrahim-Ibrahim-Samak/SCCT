@@ -18,7 +18,7 @@ export interface ISettingsConfiguration extends Document {
 const SettingsConfigurationSchema = new Schema<ISettingsConfiguration>({
   environmentVersion: { type: String, required: true, default: "1.0.0" },
   backup: {
-    destination: { type: String, enum: ["local", "cloud", "both"], default: "cloud" },
+    destination: { type: String, enum: ["local", "cloud", "both"], default: "local" },
     active: { type: Boolean, default: true },
     lastRunAt: { type: Date, default: null },
   },

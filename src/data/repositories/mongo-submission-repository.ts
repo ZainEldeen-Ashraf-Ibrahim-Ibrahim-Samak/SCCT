@@ -111,7 +111,7 @@ export class MongoSubmissionRepository implements SubmissionRepository {
     }
   }
 
-  async getCounts(): Promise<{ pending: number; viewed: number; needs_rewrite: number; total: number }> {
+  async getCounts(): Promise<{ pending: number; draft: number; viewed: number; needs_rewrite: number; total: number }> {
     try {
       return await CacheService.getSubmissionsCounts(async () => {
         await connectToDatabase();
@@ -119,7 +119,7 @@ export class MongoSubmissionRepository implements SubmissionRepository {
           { $group: { _id: "$status", count: { $sum: 1 } } },
         ]);
 
-        const result = { pending: 0, viewed: 0, needs_rewrite: 0, total: 0 };
+        const result = { draft: 0, pending: 0, viewed: 0, needs_rewrite: 0, total: 0 };
         for (const row of counts) {
           if (row._id in result) {
             (result as any)[row._id] = row.count;
@@ -169,18 +169,20 @@ export class MongoSubmissionRepository implements SubmissionRepository {
     }
   }
 
-  async resetStatusForResubmission(id: string): Promise<Submission | null> {
+  async resetStatusForResubmission(id: string, name?: string, contact?: string): Promise<Submission | null> {
     try {
       await connectToDatabase();
-      const doc = await SubmissionModel.findByIdAndUpdate(
-        id,
-        {
-          status: "pending",
-          rewriteComment: "",
-          lastResubmittedAt: new Date(),
-        },
-        { new: true }
-      ).lean();
+    const doc = await SubmissionModel.findByIdAndUpdate(
+      id,
+      {
+        status: "pending",
+        rewriteComment: "",
+        lastResubmittedAt: new Date(),
+        ...(name !== undefined ? { clientName: name } : {}),
+        ...(contact !== undefined ? { clientContact: contact } : {})
+      },
+      { new: true }
+    ).lean();
       if (doc) {
         await CacheService.invalidateSubmissionCache(doc.accessToken);
       }

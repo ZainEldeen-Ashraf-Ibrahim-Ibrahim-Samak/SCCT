@@ -128,10 +128,10 @@ export const updateFormTemplateSchema = z.object({
 export const fieldValueInputSchema = z.object({
   fieldDefinitionId: z.string().min(1),
   value: z.union([z.string(), z.number(), z.null()]).optional(),
-  mediaUrl: z.string().url().optional().nullable(),
+  mediaUrl: z.string().optional().nullable(),
   mediaPublicId: z.string().optional().nullable(),
   mediaItems: z.array(z.object({
-    url: z.string().url(),
+    url: z.string(),
     publicId: z.string()
   })).optional(),
 });

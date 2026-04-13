@@ -33,6 +33,10 @@ export function LiveNotifications() {
 
           const notification = data as AdminNotification;
 
+          if (notification.type === "NEW_SUBMISSION") {
+            window.dispatchEvent(new CustomEvent("submissions-updated"));
+          }
+
           toast.custom((toastId) => (
             <div className="flex items-start gap-4 p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg w-[350px]">
               <div className="bg-primary/10 text-primary p-2 rounded-full mt-0.5">

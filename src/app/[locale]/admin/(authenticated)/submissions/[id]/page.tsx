@@ -1,9 +1,13 @@
 import { SubmissionReview } from "@/presentation/components/admin/submission-review";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
-export const metadata: Metadata = {
-  title: "Review Submission — SCCT Admin",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("submissions");
+  return {
+    title: `${t("viewDetail")} — SCCT Admin`,
+  };
+}
 
 interface ReviewPageProps {
   params: Promise<{ id: string }>;

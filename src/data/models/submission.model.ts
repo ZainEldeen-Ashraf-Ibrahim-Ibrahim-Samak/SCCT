@@ -46,7 +46,7 @@ const submissionSchema = new Schema<ISubmission>(
     clientContact: { type: String, default: "", trim: true },
     status: {
       type: String,
-      enum: ["pending", "viewed", "needs_rewrite"],
+      enum: ["draft", "pending", "viewed", "needs_rewrite"],
       default: "pending",
       required: true,
     },
