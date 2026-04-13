@@ -187,7 +187,10 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
 
   const clientName = draft?.clientName || "";
   const clientContact = draft?.clientContact || "";
-  const contactRecords = draft?.contactRecords || [createEmptyContactRecord()];
+  const contactRecords =
+    draft?.contactRecords && draft.contactRecords.length > 0
+      ? draft.contactRecords
+      : [createEmptyContactRecord()];
   const formData = draft?.formData || {};
 
   // Use a ref to access draft state inside fetchContent without adding it as a dependency.

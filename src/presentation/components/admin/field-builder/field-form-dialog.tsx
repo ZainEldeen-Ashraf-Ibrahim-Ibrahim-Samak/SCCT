@@ -153,10 +153,10 @@ export function FieldFormDialog({ open, onOpenChange, field, onSave }: FieldForm
             </Label>
           </div>
 
-          {(inputType === "image" || inputType === "file" || inputType === "text" || inputType === "number") && (
+          {(inputType === "image" || inputType === "file" || inputType === "text" || inputType === "number" || inputType === "dropdown") && (
             <div className="flex items-center gap-2">
               <input
-                title="Allow multiple files to be uploaded"
+                title={inputType === "dropdown" ? "Allow selecting multiple options" : "Allow multiple values"}
                 type="checkbox"
                 id="isMultiple"
                 checked={isMultiple}

@@ -65,3 +65,29 @@ Expected:
 - no lint/type failures,
 - API smoke passes,
 - production build succeeds.
+
+## Verification Notes (2026-04-14)
+
+### Automated checks
+
+- `npm run lint` -> **failed** (29 errors, 31 warnings).
+  - Blocking errors are mostly pre-existing strict lint issues across scripts and admin/data utilities.
+  - Includes errors in `src/data/repositories/mongo-field-value-repository.ts` plus multiple unrelated files.
+- `npm run api:smoke` -> **failed** due missing required env vars:
+  - `MONGODB_URI`
+  - `AUTH_SECRET`
+  - `CRON_SECRET`
+- `npm run build` -> **passed** (Next.js 16.2.3 production build completed successfully).
+
+### Manual story verification status
+
+- US1 contact-record flow: **not executed in this session**.
+- US2 notification durability flow: **not executed in this session**.
+- US3 refresh reconciliation flow: **not executed in this session**.
+- US4 multi-select + site-name audit: **not executed in this session**.
+
+### Suggested follow-up for final closure
+
+1. Provide required env vars and rerun `npm run api:smoke`.
+2. Decide lint scope (feature-touched files only vs repo-wide cleanup), then rerun `npm run lint`.
+3. Execute US1-US4 manual scenarios and record pass/fail outcomes here.

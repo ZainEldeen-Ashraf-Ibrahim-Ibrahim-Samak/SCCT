@@ -16,7 +16,7 @@ function toEntity(doc: Record<string, unknown>): FieldValue {
       : (rawValue as FieldValue["value"]),
     mediaUrl: doc.mediaUrl as string | null,
     mediaPublicId: doc.mediaPublicId as string | null,
-    mediaItems: (doc.mediaItems as any) ?? [],
+    mediaItems: (doc.mediaItems as { url: string; publicId: string }[]) ?? [],
     createdAt: doc.createdAt as Date,
     updatedAt: doc.updatedAt as Date,
   };
@@ -44,7 +44,9 @@ export class MongoFieldValueRepository implements FieldValueRepository {
       },
     }));
     if (bulkOps.length > 0) {
-      await FieldValueModel.bulkWrite(bulkOps as any);
+      await FieldValueModel.bulkWrite(
+        bulkOps as unknown as Parameters<typeof FieldValueModel.bulkWrite>[0]
+      );
     }
   }
 

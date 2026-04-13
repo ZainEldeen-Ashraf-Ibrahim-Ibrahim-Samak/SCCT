@@ -124,7 +124,7 @@
 - [ ] T033 [P] Run User Story 3 manual verification steps (refresh reconciliation + dropped warning) and record results in `specs/007-fix-submission-form-sync/quickstart.md`
 - [ ] T034 [P] Run User Story 4 manual verification steps (multi-select + site-name audit) and record results in `specs/007-fix-submission-form-sync/quickstart.md`
 - [ ] T035 Execute `npm run lint` from `package.json` and resolve lint issues in `src/`
-- [ ] T036 Execute `npm run api:smoke` and `npm run build` from `package.json`, then document final verification notes in `specs/007-fix-submission-form-sync/quickstart.md`
+- [X] T036 Execute `npm run api:smoke` and `npm run build` from `package.json`, then document final verification notes in `specs/007-fix-submission-form-sync/quickstart.md`
 
 ---
 
