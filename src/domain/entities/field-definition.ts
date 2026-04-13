@@ -22,6 +22,7 @@ export interface FieldDefinition {
   nameAr: string;
   inputType: InputType;
   validationRules: ValidationRules;
+  isMultiple: boolean;
   dropdownOptionsEn: string[];
   dropdownOptionsAr: string[];
   sortOrder: number;
@@ -43,6 +44,7 @@ export type UpdateFieldDefinitionInput = Partial<
     | "nameEn"
     | "nameAr"
     | "inputType"
+    | "isMultiple"
     | "validationRules"
     | "dropdownOptionsEn"
     | "dropdownOptionsAr"

@@ -14,6 +14,7 @@ interface SubmitFormData {
     value?: string | number | null;
     mediaUrl?: string | null;
     mediaPublicId?: string | null;
+    mediaItems?: Array<{ url: string; publicId: string }>;
   }>;
 }
 
@@ -45,12 +46,13 @@ export class SubmitFormUseCase {
       if (field.validationRules?.required) {
         const submittedValue = data.fieldValues.find((v) => v.fieldDefinitionId === field.id);
         const hasMedia = submittedValue?.mediaUrl && submittedValue.mediaUrl.trim().length > 0;
+        const hasMediaItems = submittedValue?.mediaItems && submittedValue.mediaItems.length > 0;
         const hasTextValue =
           submittedValue?.value !== undefined &&
           submittedValue?.value !== null &&
           submittedValue.value.toString().trim().length > 0;
 
-        if (!hasMedia && !hasTextValue) {
+        if (!hasMedia && !hasTextValue && !hasMediaItems) {
           return { success: false, error: `Field '${field.nameEn}' is required` };
         }
       }
@@ -82,6 +84,7 @@ export class SubmitFormUseCase {
           value: fv.value ?? null,
           mediaUrl: fv.mediaUrl ?? null,
           mediaPublicId: fv.mediaPublicId ?? null,
+          mediaItems: fv.mediaItems ?? [],
         };
       })
       .filter(Boolean) as any[];
@@ -115,15 +118,16 @@ export class SubmitFormUseCase {
     for (const field of submission.formSnapshot) {
       if (field.validationRules?.required) {
         const submittedValue = data.fieldValues.find((v) => v.fieldDefinitionId === field.id);
-         const hasMedia = submittedValue?.mediaUrl && submittedValue.mediaUrl.trim().length > 0;
-         const hasTextValue =
-           submittedValue?.value !== undefined &&
-           submittedValue?.value !== null &&
-           submittedValue.value.toString().trim().length > 0;
+        const hasMedia = submittedValue?.mediaUrl && submittedValue.mediaUrl.trim().length > 0;
+        const hasMediaItems = submittedValue?.mediaItems && submittedValue.mediaItems.length > 0;
+        const hasTextValue =
+          submittedValue?.value !== undefined &&
+          submittedValue?.value !== null &&
+          submittedValue.value.toString().trim().length > 0;
 
-         if (!hasMedia && !hasTextValue) {
-           return { success: false, error: `Field '${field.nameEn}' is required` };
-         }
+        if (!hasMedia && !hasTextValue && !hasMediaItems) {
+          return { success: false, error: `Field '${field.nameEn}' is required` };
+        }
       }
     }
 
@@ -134,6 +138,7 @@ export class SubmitFormUseCase {
         value: fv.value ?? null,
         mediaUrl: fv.mediaUrl ?? null,
         mediaPublicId: fv.mediaPublicId ?? null,
+        mediaItems: fv.mediaItems ?? [],
       },
     }));
 

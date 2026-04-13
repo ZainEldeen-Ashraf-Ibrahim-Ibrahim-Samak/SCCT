@@ -29,6 +29,7 @@ export function FieldFormDialog({ open, onOpenChange, field, onSave }: FieldForm
   const [nameAr, setNameAr] = useState("");
   const [inputType, setInputType] = useState<InputType>("text");
   const [isRequired, setIsRequired] = useState(false);
+  const [isMultiple, setIsMultiple] = useState(false);
   const [dropdownOptionsEn, setDropdownOptionsEn] = useState<string[]>([""]);
   const [dropdownOptionsAr, setDropdownOptionsAr] = useState<string[]>([""]);
 
@@ -38,6 +39,7 @@ export function FieldFormDialog({ open, onOpenChange, field, onSave }: FieldForm
       setNameAr(field.nameAr);
       setInputType(field.inputType);
       setIsRequired(field.validationRules?.required ?? false);
+      setIsMultiple(field.isMultiple ?? false);
       setDropdownOptionsEn(
         field.dropdownOptionsEn.length > 0 ? field.dropdownOptionsEn : [""]
       );
@@ -49,6 +51,7 @@ export function FieldFormDialog({ open, onOpenChange, field, onSave }: FieldForm
       setNameAr("");
       setInputType("text");
       setIsRequired(false);
+      setIsMultiple(false);
       setDropdownOptionsEn([""]);
       setDropdownOptionsAr([""]);
     }
@@ -62,6 +65,7 @@ export function FieldFormDialog({ open, onOpenChange, field, onSave }: FieldForm
         nameEn: nameEn.trim(),
         nameAr: nameAr.trim(),
         inputType,
+        isMultiple,
         validationRules: { required: isRequired },
       };
 
@@ -147,6 +151,21 @@ export function FieldFormDialog({ open, onOpenChange, field, onSave }: FieldForm
               {t("isRequired")}
             </Label>
           </div>
+
+          {(inputType === "image" || inputType === "file" || inputType === "text" || inputType === "number") && (
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="isMultiple"
+                checked={isMultiple}
+                onChange={(e) => setIsMultiple(e.target.checked)}
+                className="rounded"
+              />
+              <Label htmlFor="isMultiple" className="cursor-pointer">
+                {t("allowMultiple")}
+              </Label>
+            </div>
+          )}
 
           {inputType === "dropdown" && (
             <>

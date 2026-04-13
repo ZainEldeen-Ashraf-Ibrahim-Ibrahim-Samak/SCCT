@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, Eye, AlertCircle, File, ArrowLeft } from "lucide-react";
+import { Clock, Eye, AlertCircle, File, ArrowLeft, ExternalLink } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { logger } from "@/lib/dev-logger";
 import { formatDate } from "@/lib/utils";
@@ -155,9 +155,40 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
                     <div key={field.id} className="space-y-2">
                       <Label className="text-base font-semibold text-foreground/80">{displayName}</Label>
                       <div className="bg-muted/30 p-4 rounded-lg border">
-                        {val?.mediaUrl ? (
+                        {val?.mediaItems && val.mediaItems.length > 0 ? (
+                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                             {val.mediaItems.map((item, idx) => (
+                               <div key={idx} className="relative group aspect-square rounded-md overflow-hidden bg-muted border">
+                                 {field.inputType === "image" ? (
+                                   <Image 
+                                     src={item.url} 
+                                     alt={`${displayName} ${idx + 1}`} 
+                                     fill 
+                                     className="object-cover transition-transform group-hover:scale-105" 
+                                     sizes="(max-width: 768px) 150px, 160px"
+                                   />
+                                 ) : (
+                                   <div className="flex flex-col items-center justify-center h-full p-2 text-center gap-2">
+                                     <File className="h-8 w-8 text-primary/60" />
+                                     <a href={item.url} target="_blank" rel="noreferrer" className="text-[10px] text-primary hover:underline truncate w-full px-1">
+                                       {item.url.split("/").pop()}
+                                     </a>
+                                   </div>
+                                 )}
+                                 <a 
+                                   href={item.url} 
+                                   target="_blank" 
+                                   rel="noreferrer" 
+                                   className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                 >
+                                   <ExternalLink className="h-5 w-5 text-white" />
+                                 </a>
+                               </div>
+                             ))}
+                           </div>
+                        ) : val?.mediaUrl ? (
                           field.inputType === "image" ? (
-                            <div className="relative h-64 w-full sm:w-96 rounded-md overflow-hidden bg-muted">
+                            <div className="relative h-64 w-full sm:w-96 rounded-md overflow-hidden bg-muted group">
                               <Image 
                                 src={val.mediaUrl} 
                                 alt={displayName} 
@@ -165,6 +196,9 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
                                 className="object-contain" 
                                 sizes="(max-width: 768px) 100vw, 384px"
                               />
+                              <a href={val.mediaUrl} target="_blank" rel="noreferrer" className="absolute top-2 right-2 bg-black/60 p-2 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                                <ExternalLink className="h-4 w-4" />
+                              </a>
                             </div>
                           ) : (
                             <div className="flex items-center gap-3">

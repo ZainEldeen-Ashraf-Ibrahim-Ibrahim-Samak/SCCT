@@ -13,8 +13,10 @@ interface FieldRendererProps {
   value?: string | number | null;
   mediaUrl?: string | null;
   mediaPublicId?: string | null;
+  mediaItems?: { url: string; publicId: string }[];
   onChangeValue: (val: string | number | null) => void;
   onChangeMedia: (url: string, publicId: string) => void;
+  onChangeMediaItems?: (items: { url: string; publicId: string }[]) => void;
   hasError?: boolean;
   disabled?: boolean;
 }
@@ -23,8 +25,10 @@ export function FieldRenderer({
   field,
   value,
   mediaUrl,
+  mediaItems = [],
   onChangeValue,
   onChangeMedia,
+  onChangeMediaItems,
   hasError = false,
   disabled = false,
 }: FieldRendererProps) {
@@ -35,7 +39,7 @@ export function FieldRenderer({
   const isRequired = field.validationRules?.required;
   const { minLength, maxLength, min, max } = field.validationRules ?? {};
 
-  const LabelComponent = () => (
+  const renderLabel = () => (
     <div className="flex items-center gap-1 mb-2">
       <Label htmlFor={field.id} className={`${hasError ? "text-destructive" : ""} text-base`}>
         {displayName}
@@ -50,7 +54,7 @@ export function FieldRenderer({
       if (!maxLength || maxLength > 100) {
         return (
           <div className="space-y-1">
-            <LabelComponent />
+            {renderLabel()}
             <Textarea
               id={field.id}
               value={(value as string) || ""}
@@ -67,7 +71,7 @@ export function FieldRenderer({
       }
       return (
         <div className="space-y-1">
-          <LabelComponent />
+          {renderLabel()}
           <Input
             id={field.id}
             value={(value as string) || ""}
@@ -85,7 +89,7 @@ export function FieldRenderer({
     case "number":
       return (
         <div className="space-y-1">
-          <LabelComponent />
+          {renderLabel()}
           <Input
             id={field.id}
             type="number"
@@ -104,7 +108,7 @@ export function FieldRenderer({
     case "date":
       return (
         <div className="space-y-1">
-          <LabelComponent />
+          {renderLabel()}
           <Input
             id={field.id}
             type="date"
@@ -131,7 +135,7 @@ export function FieldRenderer({
       // but the data model currently just saves the string. We'll save the localized string.
       return (
         <div className="space-y-1">
-          <LabelComponent />
+          {renderLabel()}
           <Select
             value={(value as string) || ""}
             onValueChange={(val) => onChangeValue(val)}
@@ -155,14 +159,18 @@ export function FieldRenderer({
     case "file":
       return (
         <div className="space-y-1">
-          <LabelComponent />
+          {renderLabel()}
           <MediaUpload
             type={field.inputType}
+            isMultiple={field.isMultiple}
             currentUrl={mediaUrl}
+            currentItems={mediaItems}
             onUpload={(url, pubId) => onChangeMedia(url, pubId)}
+            onItemsChange={(items) => onChangeMediaItems?.(items)}
             onRemove={() => {
               onChangeMedia("", "");
               onChangeValue(null);
+              onChangeMediaItems?.([]);
             }}
             maxFileSize={field.validationRules?.maxFileSize}
             disabled={disabled}

@@ -184,21 +184,26 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
                  return (
                    <div key={field.id} className="p-1">
                      <FieldRenderer
-                       field={field}
-                       value={currentVal?.value}
-                       mediaUrl={currentVal?.mediaUrl}
-                       mediaPublicId={currentVal?.mediaPublicId}
-                       onChangeValue={(v) => {
-                          setFieldValue(field.id, v);
-                          if (validationErrors[field.id]) setValidationErrors(prev => ({ ...prev, [field.id]: false }));
-                       }}
-                       onChangeMedia={(url, pid) => {
-                          setMediaValue(field.id, url, pid);
-                          if (validationErrors[field.id]) setValidationErrors(prev => ({ ...prev, [field.id]: false }));
-                       }}
-                       hasError={validationErrors[field.id]}
-                       disabled={isViewOnly}
-                     />
+                        field={field}
+                        value={currentVal?.value}
+                        mediaUrl={currentVal?.mediaUrl}
+                        mediaPublicId={currentVal?.mediaPublicId}
+                        mediaItems={currentVal?.mediaItems}
+                        onChangeValue={(v) => {
+                           setFieldValue(field.id, v);
+                           if (validationErrors[field.id]) setValidationErrors(prev => ({ ...prev, [field.id]: false }));
+                        }}
+                        onChangeMedia={(url, pid) => {
+                           setMediaValue(field.id, url, pid);
+                           if (validationErrors[field.id]) setValidationErrors(prev => ({ ...prev, [field.id]: false }));
+                        }}
+                        onChangeMediaItems={(items) => {
+                           setMediaItems(field.id, items);
+                           if (validationErrors[field.id]) setValidationErrors(prev => ({ ...prev, [field.id]: false }));
+                        }}
+                        hasError={validationErrors[field.id]}
+                        disabled={isViewOnly}
+                      />
                    </div>
                  );
               })}

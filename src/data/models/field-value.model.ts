@@ -8,6 +8,7 @@ export interface IFieldValue extends Document {
   value?: mongoose.Schema.Types.Mixed;
   mediaUrl?: string | null;
   mediaPublicId?: string | null;
+  mediaItems?: { url: string; publicId: string }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,6 +22,10 @@ const fieldValueSchema = new Schema<IFieldValue>(
     value: { type: Schema.Types.Mixed, default: null },
     mediaUrl: { type: String, default: null },
     mediaPublicId: { type: String, default: null },
+    mediaItems: [{
+      url: { type: String, required: true },
+      publicId: { type: String, required: true },
+    }],
   },
   {
     timestamps: true,

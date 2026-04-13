@@ -1,32 +1,31 @@
 # Implementation Plan: Production Readiness
 
-**Branch**: `003-production-readiness` | **Date**: 2026-04-13 | **Spec**: [specs/003-production-readiness/spec.md](spec.md)
-
+**Branch**: `003-production-readiness` | **Date**: 2026-04-13 | **Spec**: [Link to Spec](../003-production-readiness/spec.md)
 **Input**: Feature specification from `/specs/003-production-readiness/spec.md`
 
 ## Summary
 
-Establish 100% production readiness for Vercel deployment by removing all non-compliant system strings, replacing `console.log()` with a unified `dev-logger`, eliminating every instance of compilation compiler warnings, and deeply syncing `env.mjs` with `.env.example`. 
+This phase focuses on ensuring the application is production-ready for Vercel deployment. It involves removing all hard-coded English/Arabic text in favor of `next-intl`, resolving all build warnings (Zero-Warning Policy), replacing `console.log` with a custom `devlogger`, validating environment variables via `env.mjs` and `.env.example`, and implementing automated Jest integration tests for core API endpoints.
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.x / Next.js 14 App Router  
-**Primary Dependencies**: `next-intl` (localization), `zod` (env validation)
-**Storage**: N/A for this scope  
-**Testing**: `eslint`, `tsc`, `next build` validation, API smoke testing manually  
-**Target Platform**: Vercel (Edge computing / Node.js standard)  
-**Project Type**: Next.js Full Stack Platform Platform
-**Performance Goals**: N/A for this scope (compilation pass-rate is the target)
-**Constraints**: Code compilation output MUST be purely 0 warning messages.  
-**Scale/Scope**: System-wide check spanning across `/src` checking components and TS files.
+**Language/Version**: TypeScript / Node.js LTS
+**Primary Dependencies**: Next.js, next-intl, Jest, Zod (for env.mjs)
+**Storage**: N/A for this phase
+**Testing**: Jest (Integration testing for APIs)
+**Target Platform**: Vercel (Edge/Node runtimes)
+**Project Type**: Web Application
+**Performance Goals**: 100% build success rate on Vercel, zero warnings
+**Constraints**: Strict adherence to constitution Zero-Warning Policy, 100% translated strings
+**Scale/Scope**: System-wide codebase review and refactoring
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
-
-- **Zero-Warning Policy**: Applies aggressively. Action involves strict checking of CSS, TS, and rules over missing keys.
-- **Logging Rule**: Central `devlogger` must be utilized. `console.log` forbidden.
-- **i18n Sync Rules**: All hard-coded strings must be expelled to JSON mappings; validation driven by `npm run i18n:lint`.
+*GATE: Passed. All objectives explicitly align with Constitution Version 1.1.0 directives:*
+- **Zero-Warning Policy**: Mandated by constitution, explicitly targeted here.
+- **i18n & Theming**: Enforcing `next-intl` and using `npm run i18n:lint`.
+- **Logging Rule**: Explicitly replacing `console.log` with `devlogger`.
+- **Testing Strategy**: Implementing integration tests for API endpoints as required by the constitution.
 
 ## Project Structure
 
@@ -35,30 +34,28 @@ Establish 100% production readiness for Vercel deployment by removing all non-co
 ```text
 specs/003-production-readiness/
 ├── plan.md              # This file
-├── research.md          # Strategy and logging details
-├── data-model.md        # Environment schema modeling
-├── quickstart.md        # CLI testing commands
-└── contracts/           # API validation contract rules
+├── research.md          # Phase 0 output
+├── data-model.md        # Phase 1 output
+├── quickstart.md        # Phase 1 output
+├── contracts/           # Phase 1 output
+└── tasks.md             # Phase 2 output (to be generated)
 ```
 
-### Source Code
+### Source Code (repository root)
 
 ```text
 src/
-├── app/
-│   └── [locale]/
-│       ├── (UI files updated to eliminate static strings & warnings)
-│       └── api/ (Log replacements applied)
+├── env.mjs              # Environment schema validation
 ├── lib/
-│   └── dev-logger.ts    # [NEW]
-├── env.mjs              # [UPDATED]
-└── .env.example         # [UPDATED] globally
+│   └── devlogger.ts     # New logger utility
+├── [components/pages]   # Various files to be cleaned of console.log/hardcoded strings
+tests/
+└── integration/
+    └── api/             # Jest tests for core endpoints
 ```
 
-**Structure Decision**: The modifications span vertically through `src/app` replacing hard-coded strings, importing `dev-logger` in place of `console.log/error`, resolving `eslint`/`tsc` exceptions, and modifying the main environment schemas at the source level. Localized to existing structure; only introducing `src/lib/dev-logger.ts`.
+**Structure Decision**: The changes span across the existing Next.js web application structure, primarily touching `src/lib` for the new logger, `tests/integration/api` for new tests, and widespread component/page files for warning resolutions and string extractions.
 
 ## Complexity Tracking
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| *None* | Configuration compliance purely aligns to predefined standard | Standard maintenance track |
+None. All changes are standard maintenance and compliance tasks that reduce technical debt without introducing architectural complexity.

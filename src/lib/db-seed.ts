@@ -23,7 +23,7 @@ export async function seedAdminUser() {
       name: "System Admin",
       password: hashedPassword,
       role: "admin",
-      languagePreference: "en",
+      languagePreference: "ar",
       themePreference: "dark",
       emailVerified: new Date(),
     });

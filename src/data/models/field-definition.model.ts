@@ -14,6 +14,7 @@ export interface IFieldDefinition extends Document {
     maxFileSize?: number;
     allowedFileTypes?: string[];
   };
+  isMultiple: boolean;
   dropdownOptionsEn: string[];
   dropdownOptionsAr: string[];
   sortOrder: number;
@@ -49,6 +50,10 @@ const fieldDefinitionSchema = new Schema<IFieldDefinition>(
     validationRules: {
       type: Schema.Types.Mixed,
       default: {},
+    },
+    isMultiple: {
+      type: Boolean,
+      default: false,
     },
     dropdownOptionsEn: {
       type: [String],

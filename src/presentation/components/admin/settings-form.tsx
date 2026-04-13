@@ -10,6 +10,7 @@ export function SettingsForm() {
 
   useEffect(() => {
     if (settings) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocalState(settings);
     }
   }, [settings]);

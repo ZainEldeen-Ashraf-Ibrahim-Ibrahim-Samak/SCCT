@@ -50,6 +50,7 @@ export const createFieldDefinitionSchema = z
       .min(1)
       .max(200, "Arabic name must be 200 characters or fewer"),
     inputType: InputTypeEnum,
+    isMultiple: z.boolean().optional().default(false),
     validationRules: validationRulesSchema.optional().default({}),
     dropdownOptionsEn: z.array(z.string()).optional().default([]),
     dropdownOptionsAr: z.array(z.string()).optional().default([]),
@@ -89,6 +90,7 @@ export const updateFieldDefinitionSchema = z.object({
   nameEn: z.string().min(1).max(200).optional(),
   nameAr: z.string().min(1).max(200).optional(),
   inputType: InputTypeEnum.optional(),
+  isMultiple: z.boolean().optional(),
   validationRules: validationRulesSchema.optional(),
   dropdownOptionsEn: z.array(z.string()).optional(),
   dropdownOptionsAr: z.array(z.string()).optional(),

@@ -45,7 +45,7 @@ const userSchema = new Schema<IUser>(
     languagePreference: {
       type: String,
       enum: ["en", "ar"],
-      default: "en",
+      default: "ar",
     },
     themePreference: {
       type: String,

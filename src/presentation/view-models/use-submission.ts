@@ -11,6 +11,7 @@ interface FormFieldData {
   value?: string | number | null;
   mediaUrl?: string | null;
   mediaPublicId?: string | null;
+  mediaItems?: { url: string; publicId: string }[];
 }
 
 interface DraftState {
@@ -36,6 +37,7 @@ interface UseSubmissionReturn {
   setClientContact: (contact: string) => void;
   setFieldValue: (id: string, value: string | number | null) => void;
   setMediaValue: (id: string, url: string, publicId: string) => void;
+  setMediaItems: (id: string, items: { url: string; publicId: string }[]) => void;
   submitForm: () => Promise<void>;
   resubmitForm: () => Promise<void>;
 }
@@ -108,6 +110,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
               value: matchedVal?.value,
               mediaUrl: matchedVal?.mediaUrl,
               mediaPublicId: matchedVal?.mediaPublicId,
+              mediaItems: matchedVal?.mediaItems || [],
             };
           });
           updateDraft({ 
@@ -137,6 +140,16 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       formData: {
         ...draft.formData,
         [id]: { ...draft.formData[id], value, fieldDefinitionId: id },
+      }
+    });
+  };
+
+  const setMediaItems = (id: string, items: { url: string; publicId: string }[]) => {
+    updateDraft({
+      ...draft,
+      formData: {
+        ...draft.formData,
+        [id]: { ...draft.formData[id], mediaItems: items, fieldDefinitionId: id },
       }
     });
   };
@@ -225,6 +238,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
     setClientContact,
     setFieldValue,
     setMediaValue,
+    setMediaItems,
     submitForm,
     resubmitForm,
   };

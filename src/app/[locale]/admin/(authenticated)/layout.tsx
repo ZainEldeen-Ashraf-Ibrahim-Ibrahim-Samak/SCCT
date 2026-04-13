@@ -4,7 +4,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { LanguageSwitcher } from "@/presentation/components/shared/language-switcher";
 import { ThemeToggle } from "@/presentation/components/shared/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, FileText, LogOut, Settings, Image, Users } from "lucide-react";
+import { LayoutDashboard, FileText, LogOut, Settings, Image, Users, Database } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { signOut } from "@/lib/auth";
 import { LiveNotifications } from "@/presentation/components/admin/live-notifications";
@@ -63,6 +63,15 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
             >
               <Users className="h-4 w-4" />
               Team
+            </Link>
+          )}
+          {(session.user as any).role === "admin" && (
+            <Link
+              href="/admin/cache"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+            >
+              <Database className="h-4 w-4" />
+              Cache Manager
             </Link>
           )}
           <Link

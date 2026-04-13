@@ -17,6 +17,7 @@ function toEntity(doc: Record<string, unknown>): FieldDefinition {
     nameAr: doc.nameAr as string,
     inputType: doc.inputType as FieldDefinition["inputType"],
     validationRules: (doc.validationRules as FieldDefinition["validationRules"]) ?? {},
+    isMultiple: (doc.isMultiple as boolean) ?? false,
     dropdownOptionsEn: (doc.dropdownOptionsEn as string[]) ?? [],
     dropdownOptionsAr: (doc.dropdownOptionsAr as string[]) ?? [],
     sortOrder: doc.sortOrder as number,

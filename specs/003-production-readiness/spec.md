@@ -5,6 +5,11 @@
 **Status**: Draft  
 **Input**: User description: "the phase well be the test and reivew pahse that not any hard coded text all coponents are usabel and make the devlogger replased woth the conlose log , reivew any erros ,warrings style or code  and test all end points  reivew if missing env varibale not added in exmables and make it production ready for vercel"
 
+## Clarifications
+
+### Session 2026-04-13
+- Q: What is the required approach for testing all endpoints to ensure Vercel production readiness? → A: Automated integration tests (e.g., Jest) for all core endpoints
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Quality Assurance & Hard-coded String Removal (Priority: P1)
@@ -73,7 +78,7 @@ Administrators and DevOps verify that all requested environment variables exist 
 - **FR-001**: System MUST be entirely free of hard-coded UX strings, exclusively utilizing `next-intl` translation structures for English and Arabic.
 - **FR-002**: Project MUST substitute raw `console.log()` and `console.error()` invocations with a custom `devlogger` module to centralize trace formatting.
 - **FR-003**: The source codebase MUST compile via `npm run build` with zero Next.js, ESLint, TypeScript, and CSS Tailwind warnings.
-- **FR-004**: System MUST comprehensively test and validate all core endpoints for proper error handling and functional responses.
+- **FR-004**: System MUST comprehensively test and validate all core endpoints for proper error handling and functional responses using automated integration tests (e.g., Jest).
 - **FR-005**: All deployed environment variables consumed globally across the platform MUST reflect identically within `.env.example` templates for strict parity.
 - **FR-006**: The platform MUST effectively pass all Vercel Production deployment checks, meaning no unverified Edge/Node runtime conflicts exist.
 
@@ -93,4 +98,4 @@ Administrators and DevOps verify that all requested environment variables exist 
 ## Assumptions
 
 - We are assuming `devlogger` will just be a simple wrapper implementation locally bridging `console` in development but structured for potential production dropping.
-- The standard API smoke tests are manual or lightweight jest tests ensuring boundary 200 HTTP code success on valid requests for Vercel assurance.
+- Automated integration tests (e.g., Jest) ensure boundary HTTP code success on valid requests for Vercel assurance, rather than relying solely on manual smoke tests.

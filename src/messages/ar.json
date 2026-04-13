@@ -51,7 +51,8 @@
     "dashboard": "لوحة التحكم",
     "forms": "النماذج",
     "submissions": "الطلبات",
-    "settings": "الإعدادات"
+    "settings": "الإعدادات",
+    "logout": "تسجيل الخروج"
   },
   "dashboard": {
     "title": "لوحة مراجعة الطلبات",
@@ -93,6 +94,7 @@
     "validationRules": "قواعد التحقق",
     "isRequired": "حقل مطلوب",
     "sortOrder": "ترتيب العرض",
+    "allowMultiple": "السماح بقيم متعددة (معرض/قائمة)",
     "dropdownOptions": "خيارات القائمة المنسدلة",
     "dropdownOptionsEn": "الخيارات (إنجليزي)",
     "dropdownOptionsAr": "الخيارات (عربي)",
@@ -184,5 +186,18 @@
     "validation": "يرجى التحقق من المدخلات والمحاولة مرة أخرى",
     "networkError": "خطأ في الشبكة. يرجى التحقق من اتصالك.",
     "serverError": "خطأ في الخادم. يرجى المحاولة لاحقاً."
+  },
+  "cache": {
+    "title": "إدارة التخزين المؤقت",
+    "subtitle": "تحليل وإدارة أداء التطبيق",
+    "status": "حالة Redis",
+    "connected": "متصل",
+    "disconnected": "غير متصل",
+    "totalKeys": "إجمالي المفاتيح",
+    "clearAll": "مسح كل التخزين المؤقت",
+    "clearForms": "مسح ذاكرة النماذج",
+    "clearSubmissions": "مسح ذاكرة الطلبات",
+    "confirmClear": "هل أنت متأكد من مسح هذا الجزء من التخزين المؤقت؟",
+    "stats": "توزيع التخزين المؤقت"
   }
 }
