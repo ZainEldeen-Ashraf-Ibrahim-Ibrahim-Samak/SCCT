@@ -33,35 +33,42 @@ export async function getTeamMembers() {
 }
 
 export async function createTeamMember(data: { name: string; email: string; role: "admin" | "user"; password?: string }) {
-  await checkAdmin();
-  const UserModel = await getUserModel();
+  try {
+    await checkAdmin();
+    const UserModel = await getUserModel();
 
-  const normalizedEmail = normalizeEmail(data.email);
-  const normalizedName = data.name.trim();
-  const rawPassword = data.password?.trim() || "password123";
+    const normalizedEmail = normalizeEmail(data.email);
+    const normalizedName = data.name.trim();
+    const rawPassword = data.password?.trim() || "password123";
 
-  const existingUser = await UserModel.findOne({ email: normalizedEmail });
-  if (existingUser) {
-    throw new Error("User with this email already exists");
+    const existingUser = await UserModel.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      return { error: "User with this email already exists" };
+    }
+
+    const hashedPassword = await bcrypt.hash(rawPassword, 10);
+
+    const newUser = await UserModel.create({
+      name: normalizedName,
+      email: normalizedEmail,
+      role: data.role,
+      password: hashedPassword,
+    });
+
+    // Convert to lean object to safely cross Server Boundary
+    const safeUser = {
+      id: newUser._id.toString(),
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
+    };
+
+    revalidatePath("/admin/team");
+    
+    return { data: safeUser };
+  } catch (error: unknown) {
+    return { error: error instanceof Error ? error.message : "Failed to create team member" };
   }
-
-  const hashedPassword = await bcrypt.hash(rawPassword, 10);
-
-  const newUser = await UserModel.create({
-    name: normalizedName,
-    email: normalizedEmail,
-    role: data.role,
-    password: hashedPassword,
-  });
-
-  revalidatePath("/admin/team");
-  
-  return {
-    id: newUser._id.toString(),
-    name: newUser.name,
-    email: newUser.email,
-    role: newUser.role,
-  };
 }
 
 export async function updateTeamMember(
@@ -72,78 +79,92 @@ export async function updateTeamMember(
     password?: string;
   },
 ) {
-  await checkAdmin();
-  const UserModel = await getUserModel();
+  try {
+    await checkAdmin();
+    const UserModel = await getUserModel();
 
-  const user = await UserModel.findById(userId);
-  if (!user) {
-    throw new Error("User not found");
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      return { error: "User not found" };
+    }
+
+    const normalizedEmail = normalizeEmail(data.email);
+    const normalizedName = data.name.trim();
+
+    const existingUser = await UserModel.findOne({
+      email: normalizedEmail,
+      _id: { $ne: userId },
+    });
+    if (existingUser) {
+      return { error: "User with this email already exists" };
+    }
+
+    user.name = normalizedName;
+    user.email = normalizedEmail;
+
+    const nextPassword = data.password?.trim();
+    if (nextPassword) {
+      user.password = await bcrypt.hash(nextPassword, 10);
+    }
+
+    await user.save();
+
+    revalidatePath("/admin/team");
+
+    return {
+      data: {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      }
+    };
+  } catch (error: unknown) {
+    return { error: error instanceof Error ? error.message : "Failed to update team member" };
   }
-
-  const normalizedEmail = normalizeEmail(data.email);
-  const normalizedName = data.name.trim();
-
-  const existingUser = await UserModel.findOne({
-    email: normalizedEmail,
-    _id: { $ne: userId },
-  });
-  if (existingUser) {
-    throw new Error("User with this email already exists");
-  }
-
-  user.name = normalizedName;
-  user.email = normalizedEmail;
-
-  const nextPassword = data.password?.trim();
-  if (nextPassword) {
-    user.password = await bcrypt.hash(nextPassword, 10);
-  }
-
-  await user.save();
-
-  revalidatePath("/admin/team");
-
-  return {
-    id: user._id.toString(),
-    name: user.name,
-    email: user.email,
-    role: user.role,
-  };
 }
 
 export async function updateTeamMemberRole(userId: string, newRole: "admin" | "user") {
-  const session = await checkAdmin();
-  
-  if (userId === session.user.id) {
-    throw new Error("You cannot change your own role");
+  try {
+    const session = await checkAdmin();
+    
+    if (userId === session.user.id) {
+      return { error: "You cannot change your own role" };
+    }
+
+    const UserModel = await getUserModel();
+    const user = await UserModel.findById(userId);
+    
+    if (!user) {
+      return { error: "User not found" };
+    }
+
+    user.role = newRole;
+    await user.save();
+
+    revalidatePath("/admin/team");
+    
+    return { success: true };
+  } catch (error: unknown) {
+    return { error: error instanceof Error ? error.message : "Failed to update role" };
   }
-
-  const UserModel = await getUserModel();
-  const user = await UserModel.findById(userId);
-  
-  if (!user) {
-    throw new Error("User not found");
-  }
-
-  user.role = newRole;
-  await user.save();
-
-  revalidatePath("/admin/team");
-  
-  return { success: true };
 }
 
 export async function deleteTeamMember(userId: string) {
-  const session = await checkAdmin();
-  
-  if (userId === session.user.id) {
-    throw new Error("You cannot delete your own account");
+  try {
+    const session = await checkAdmin();
+    
+    if (userId === session.user.id) {
+      return { error: "You cannot delete your own account" };
+    }
+
+    const UserModel = await getUserModel();
+    await UserModel.findByIdAndDelete(userId);
+
+    revalidatePath("/admin/team");
+    
+    return { success: true };
+  } catch (error: unknown) {
+    return { error: error instanceof Error ? error.message : "Failed to delete team member" };
   }
-
-  const UserModel = await getUserModel();
-  await UserModel.findByIdAndDelete(userId);
-
-  revalidatePath("/admin/team");
-  
-  return { success: true };
 }

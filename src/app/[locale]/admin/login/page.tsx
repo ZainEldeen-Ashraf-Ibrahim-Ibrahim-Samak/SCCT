@@ -39,7 +39,11 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError(t("loginError"));
+        if (result.error === "AccessDenied" || result.error.includes("AccessDenied")) {
+          setError(t("userAccessDenied"));
+        } else {
+          setError(t("loginError"));
+        }
       } else {
         router.push("/admin/dashboard");
       }

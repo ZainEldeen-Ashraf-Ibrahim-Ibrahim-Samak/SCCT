@@ -108,6 +108,7 @@ function SortableMediaItem({ item, type, disabled, onRemove }: SortableItemProps
 }
 
 interface MediaUploadProps {
+  inputId?: string;
   type: "image" | "file";
   isMultiple?: boolean;
   currentUrl?: string | null;
@@ -120,6 +121,7 @@ interface MediaUploadProps {
 }
 
 export function MediaUpload({
+  inputId,
   type,
   isMultiple = false,
   currentUrl,
@@ -309,6 +311,7 @@ export function MediaUpload({
                   onDrop={onDrop}
                 >
                   <input
+                    id={inputId}
                     title={t("addMore")}
                     type="file"
                     multiple={isMultiple}
@@ -367,6 +370,7 @@ export function MediaUpload({
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-[9999]">
             <div className="relative">
               <input
+                id={inputId}
                 type="file"
                 title={tc("edit")}
                 onChange={handleChange}
@@ -410,6 +414,7 @@ export function MediaUpload({
       onDrop={onDrop}
     >
       <input
+        id={inputId}
         title={t("addMore")}
         type="file"
         onChange={handleChange}

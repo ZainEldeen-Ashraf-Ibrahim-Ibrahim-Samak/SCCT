@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -34,14 +35,25 @@ export function FieldRenderer({
 }: FieldRendererProps) {
   const locale = useLocale();
   const tc = useTranslations("common");
+  const hasInitializedDateRef = useRef(false);
+
+  useEffect(() => {
+    if (!disabled && field.inputType === "date" && !hasInitializedDateRef.current) {
+      if (!value) {
+        const today = new Date().toISOString().split("T")[0];
+        onChangeValue(today);
+      }
+      hasInitializedDateRef.current = true;
+    }
+  }, [disabled, field.inputType, value, onChangeValue]);
 
   const displayName = locale === "ar" ? field.nameAr : field.nameEn;
   const isRequired = field.validationRules?.required;
   const { minLength, maxLength } = field.validationRules ?? {};
 
-  const renderLabel = () => (
+  const renderLabel = (targetId?: string) => (
     <div className="flex items-center gap-1 mb-2">
-      <Label htmlFor={field.id} className={`${hasError ? "text-destructive" : ""} text-base`}>
+      <Label htmlFor={targetId} className={`${hasError ? "text-destructive" : ""} text-base`}>
         {displayName}
       </Label>
       {isRequired && <span className="text-destructive font-bold">*</span>}
@@ -79,7 +91,7 @@ export function FieldRenderer({
       if (!maxLength || maxLength > 100) {
         return (
           <div className="space-y-1">
-            {renderLabel()}
+            {renderLabel(field.id)}
             <Textarea
               id={field.id}
               value={textValue}
@@ -96,7 +108,7 @@ export function FieldRenderer({
       }
       return (
         <div className="space-y-1">
-          {renderLabel()}
+          {renderLabel(field.id)}
           <Input
             id={field.id}
             value={textValue}
@@ -128,7 +140,7 @@ export function FieldRenderer({
 
       return (
         <div className="space-y-1">
-          {renderLabel()}
+          {renderLabel(field.id)}
           <Input
             id={field.id}
             type="text"
@@ -166,7 +178,7 @@ export function FieldRenderer({
 
       return (
         <div className="space-y-1">
-          {renderLabel()}
+          {renderLabel(field.id)}
           <Input
             id={field.id}
             type="date"
@@ -196,13 +208,16 @@ export function FieldRenderer({
       const options = locale === "ar" ? field.dropdownOptionsAr : field.dropdownOptionsEn;
       return (
         <div className="space-y-1">
-          {renderLabel()}
+          {renderLabel(field.id)}
           <Select
             value={dropdownValue}
             onValueChange={(val) => onChangeValue(val)}
             disabled={disabled}
           >
-            <SelectTrigger className={hasError ? "border-destructive ring-destructive" : ""}>
+            <SelectTrigger
+              id={field.id}
+              className={hasError ? "border-destructive ring-destructive" : ""}
+            >
               <SelectValue placeholder={tc("optional")} />
             </SelectTrigger>
             <SelectContent>
@@ -232,8 +247,9 @@ export function FieldRenderer({
 
       return (
         <div className="space-y-1">
-          {renderLabel()}
+          {renderLabel(disabled ? undefined : field.id)}
           <MediaUpload
+            inputId={field.id}
             type={field.inputType}
             isMultiple={field.isMultiple}
             currentUrl={mediaUrl}

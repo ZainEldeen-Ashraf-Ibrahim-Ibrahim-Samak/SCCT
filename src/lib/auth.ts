@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import { MongoClient } from "mongodb";
@@ -34,6 +34,10 @@ declare module "next-auth/jwt" {
     role?: string;
     id?: string;
   }
+}
+
+class AccessDeniedError extends CredentialsSignin {
+  code = "AccessDenied";
 }
 
 // MongoDB client for Auth.js adapter
@@ -110,6 +114,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (!isPasswordValid) {
           return null;
+        }
+
+        if (user.role === "user") {
+          throw new AccessDeniedError();
         }
 
         return {

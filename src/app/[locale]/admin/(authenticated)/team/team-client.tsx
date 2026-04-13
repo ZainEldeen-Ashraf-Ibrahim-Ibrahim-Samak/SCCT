@@ -87,11 +87,17 @@ export function TeamClient({
     setIsCreating(true);
     try {
       const result = await createTeamMember(newMember);
-      setMembers([result, ...members]);
-      setIsCreateOpen(false);
-      setNewMember({ name: "", email: "", role: "user", password: "" });
-      toast.success(t("createSuccess"));
-      router.refresh();
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+      if (result.data) {
+        setMembers([result.data, ...members]);
+        setIsCreateOpen(false);
+        setNewMember({ name: "", email: "", role: "user", password: "" });
+        toast.success(t("createSuccess"));
+        router.refresh();
+      }
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, t("createError")));
     } finally {
@@ -104,7 +110,11 @@ export function TeamClient({
 
     setIsDeleting(id);
     try {
-      await deleteTeamMember(id);
+      const result = await deleteTeamMember(id);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
       setMembers(members.filter((m) => m.id !== id));
       toast.success(t("deleteSuccess"));
       router.refresh();
@@ -117,7 +127,11 @@ export function TeamClient({
 
   const handleRoleChange = async (id: string, newRole: "admin" | "user") => {
     try {
-      await updateTeamMemberRole(id, newRole);
+      const result = await updateTeamMemberRole(id, newRole);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
       setMembers(
         members.map((m) => (m.id === id ? { ...m, role: newRole } : m)),
       );
@@ -150,23 +164,29 @@ export function TeamClient({
     setIsUpdating(true);
     try {
       const updated = await updateTeamMember(editingMemberId, editingMember);
-      setMembers(
-        members.map((member) =>
-          member.id === editingMemberId
-            ? {
-                ...member,
-                name: updated.name,
-                email: updated.email,
-                role: updated.role,
-              }
-            : member,
-        ),
-      );
-      setIsEditOpen(false);
-      setEditingMemberId(null);
-      setEditingMember({ name: "", email: "", password: "" });
-      toast.success(t("updateSuccess"));
-      router.refresh();
+      if (updated.error) {
+        toast.error(updated.error);
+        return;
+      }
+      if (updated.data) {
+        setMembers(
+          members.map((member) =>
+            member.id === editingMemberId
+              ? {
+                  ...member,
+                  name: updated.data.name,
+                  email: updated.data.email,
+                  role: updated.data.role,
+                }
+              : member,
+          ),
+        );
+        setIsEditOpen(false);
+        setEditingMemberId(null);
+        setEditingMember({ name: "", email: "", password: "" });
+        toast.success(t("updateSuccess"));
+        router.refresh();
+      }
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, t("updateError")));
     } finally {
