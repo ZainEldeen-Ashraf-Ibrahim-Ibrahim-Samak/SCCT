@@ -27,7 +27,7 @@ export function LogoutButton({ variant = "ghost", showLabel = true }: LogoutButt
       <Button 
         variant={variant} 
         size="icon" 
-        className="h-9 w-9" 
+        className="h-9 w-9 text-red-500" 
         onClick={handleLogout}
         title={t("logout")}
       >
@@ -40,7 +40,7 @@ export function LogoutButton({ variant = "ghost", showLabel = true }: LogoutButt
     <Button 
       variant={variant} 
       size="sm" 
-      className="w-full justify-start gap-2"
+      className="w-full justify-start gap-2 text-red-500"
       onClick={handleLogout}
     >
       <LogOut className="h-4 w-4" />
