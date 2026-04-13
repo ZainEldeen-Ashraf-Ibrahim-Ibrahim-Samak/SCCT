@@ -97,7 +97,7 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
     );
   }
 
-  const getStatusBadge = (status: string) => {
+    const getStatusBadge = (status: string) => {
     switch (status) {
       case "draft":
         return <Badge variant="outline" className="text-muted-foreground border-dashed">{t("statuses.draft")}</Badge>;
@@ -110,6 +110,17 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
       default:
         return <Badge>{status}</Badge>;
     }
+  };
+
+  const getLatestViewer = (sub: Submission) => {
+    if (sub.status === "viewed" && sub.auditTrail && sub.auditTrail.length > 0) {
+      // Find the most recent audit entry where newStatus is "viewed"
+      const viewEntries = [...sub.auditTrail].reverse().find(entry => entry.newStatus === "viewed");
+      if (viewEntries) {
+        return viewEntries.adminName;
+      }
+    }
+    return null;
   };
 
   return (
@@ -126,45 +137,57 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
             </TableRow>
           </TableHeader>
           <TableBody>
-            {submissions.map((sub) => (
-              <TableRow key={sub.id} className="cursor-pointer group" onClick={() => router.push(`/admin/submissions/${sub.id}`)}>
-                <TableCell className="font-medium group-hover:text-primary transition-colors">
-                  {sub.clientName || t("unnamedSubmission")}
-                </TableCell>
-                <TableCell>{sub.clientContact || "—"}</TableCell>
-                <TableCell>{getStatusBadge(sub.status)}</TableCell>
-                <TableCell className="text-muted-foreground text-sm">
-                  <span title={formatDate(sub.submittedAt)}>{formatDate(sub.submittedAt)}</span>
-                  {sub.lastResubmittedAt && (
-                    <span className="block text-xs text-amber-600/80 mt-0.5">
-                      {t("resubmittedAt", { date: formatDate(sub.lastResubmittedAt) })}
-                    </span>
-                  )}
-                </TableCell>
-                <TableCell className="text-end" onClick={(e) => e.stopPropagation()}>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger nativeButton={true} render={<Button variant="ghost" className="h-8 w-8 p-0" />}>
-                      <span className="sr-only">{t("openMenu")}</span>
-                      <MoreHorizontal className="h-4 w-4" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => router.push(`/admin/submissions/${sub.id}`)}>
-                        <Eye className="me-2 h-4 w-4" />
-                        {t("viewDetail")}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleCopyLink(sub.accessToken)}>
-                        <Copy className="me-2 h-4 w-4" />
-                        {t("copyLink")}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteClick(sub.id)}>
-                        <Trash2 className="me-2 h-4 w-4" />
-                        {t("deleteSubmission")}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
+            {submissions.map((sub) => {
+              const latestViewer = getLatestViewer(sub);
+              return (
+                <TableRow key={sub.id} className="cursor-pointer group" onClick={() => router.push(`/admin/submissions/${sub.id}`)}>
+                  <TableCell className="font-medium group-hover:text-primary transition-colors">
+                    {sub.clientName || t("unnamedSubmission")}
+                  </TableCell>
+                  <TableCell>{sub.clientContact || "—"}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col items-start gap-1">
+                      {getStatusBadge(sub.status)}
+                      {latestViewer && (
+                        <span className="text-[10px] text-muted-foreground whitespace-nowrap bg-muted/60 px-1.5 py-0.5 rounded">
+                           {t("viewedBy", { name: latestViewer })}
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    <span title={formatDate(sub.submittedAt)}>{formatDate(sub.submittedAt)}</span>
+                    {sub.lastResubmittedAt && (
+                      <span className="block text-xs text-amber-600/80 mt-0.5">
+                        {t("resubmittedAt", { date: formatDate(sub.lastResubmittedAt) })}
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-end" onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger nativeButton={true} render={<Button variant="ghost" className="h-8 w-8 p-0" />}>
+                        <span className="sr-only">{t("openMenu")}</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => router.push(`/admin/submissions/${sub.id}`)}>
+                          <Eye className="me-2 h-4 w-4" />
+                          {t("viewDetail")}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleCopyLink(sub.accessToken)}>
+                          <Copy className="me-2 h-4 w-4" />
+                          {t("copyLink")}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteClick(sub.id)}>
+                          <Trash2 className="me-2 h-4 w-4" />
+                          {t("deleteSubmission")}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
