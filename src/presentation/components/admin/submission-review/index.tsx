@@ -280,9 +280,14 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
                  <p className="text-sm text-muted-foreground italic">{tc("noResults")}</p>
                ) : (
                  <div className="space-y-4">
-                   {submission.auditTrail.slice().reverse().map((entry, i) => (
+                   {submission.auditTrail.slice().reverse().map((entry, i) => {
+                     let dotColor = "bg-primary";
+                     if (entry.newStatus === "needs_rewrite") dotColor = "bg-destructive";
+                     if (entry.newStatus === "viewed") dotColor = "bg-emerald-500";
+                     if (entry.newStatus === "pending") dotColor = "bg-amber-500";
+                     return (
                      <div key={i} className="text-sm relative pl-4 border-l-2 border-muted">
-                        <div className="absolute w-2 h-2 rounded-full bg-primary -left-[5px] top-1.5 ring-4 ring-background" />
+                        <div className={`absolute w-2 h-2 rounded-full ${dotColor} -left-[5px] top-1.5 ring-4 ring-background`} />
                         <p className="font-medium">
                           {t("auditEntry", { admin: entry.adminName, oldStatus: t(`statuses.${entry.oldStatus}`), newStatus: t(`statuses.${entry.newStatus}`) })}
                         </p>
@@ -293,7 +298,7 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
                           </div>
                         )}
                      </div>
-                   ))}
+                   )})}
                  </div>
                )}
             </CardContent>
