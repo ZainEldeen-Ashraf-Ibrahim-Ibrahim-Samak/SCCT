@@ -6,6 +6,7 @@ import { destroyAssets } from "@/data/services/cloudinary-service";
 import { connectToDatabase } from "@/lib/db";
 import { CacheService } from "@/data/services/cache-service";
 import { logger } from "@/lib/dev-logger";
+import { NotificationPublisher } from "@/lib/events/publisher";
 
 function toEntity(doc: Record<string, unknown>): Submission {
   return {
@@ -161,6 +162,8 @@ export class MongoSubmissionRepository implements SubmissionRepository {
       const leanDoc = await SubmissionModel.findById(id).lean();
       if (leanDoc) {
         await CacheService.invalidateSubmissionCache(leanDoc.accessToken);
+        // SIGNAL CLIENT (NEW)
+        await NotificationPublisher.notifyClientStatusChange(leanDoc.accessToken, leanDoc.status);
       }
       return leanDoc ? toEntity(leanDoc) : null;
     } catch (error) {
@@ -185,6 +188,8 @@ export class MongoSubmissionRepository implements SubmissionRepository {
     ).lean();
       if (doc) {
         await CacheService.invalidateSubmissionCache(doc.accessToken);
+        // SIGNAL CLIENT (NEW)
+        await NotificationPublisher.notifyClientStatusChange(doc.accessToken, "pending");
       }
       return doc ? toEntity(doc) : null;
     } catch (error) {

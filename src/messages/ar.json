@@ -162,7 +162,8 @@
     },
     "noSubmissionsFound": "لم يتم العثور على طلبات.",
     "resubmittedAt": "تمت إعادة الإرسال في {date}",
-    "openMenu": "فتح القائمة"
+    "openMenu": "فتح القائمة",
+    "unnamedSubmission": "طلب بدون اسم"
   },
   "client": {
     "formTitle": "نموذج تقديم البيانات",

@@ -162,7 +162,8 @@
     },
     "noSubmissionsFound": "No submissions found.",
     "resubmittedAt": "Resubmitted {date}",
-    "openMenu": "Open menu"
+    "openMenu": "Open menu",
+    "unnamedSubmission": "Unnamed Submission"
   },
   "client": {
     "formTitle": "Data Submission Form",

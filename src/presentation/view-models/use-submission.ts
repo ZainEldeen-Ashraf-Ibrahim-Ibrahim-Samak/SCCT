@@ -132,7 +132,42 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
 
   useEffect(() => {
     fetchContent();
-  }, [fetchContent]);
+
+    // Listen for real-time status updates via SSE
+    if (!tokenOrId) return;
+
+    let reconnectTimeout: NodeJS.Timeout;
+    let eventSource: EventSource | null = null;
+
+    function connect() {
+      if (eventSource) eventSource.close();
+      
+      eventSource = new EventSource(`/api/submissions/${tokenOrId}/events`);
+      
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === "STATUS_CHANGED") {
+             fetchContent();
+          }
+        } catch (e) {
+          // silent fail for heartbeat/ping
+        }
+      };
+
+      eventSource.onerror = () => {
+        if (eventSource) eventSource.close();
+        reconnectTimeout = setTimeout(connect, 5000); // Reconnect after 5s
+      };
+    }
+
+    connect();
+
+    return () => {
+      clearTimeout(reconnectTimeout);
+      if (eventSource) eventSource.close();
+    };
+  }, [fetchContent, tokenOrId]);
 
   const setClientName = (name: string) => updateDraft(prev => ({ ...prev, clientName: name }));
   const setClientContact = (contact: string) => updateDraft(prev => ({ ...prev, clientContact: contact }));

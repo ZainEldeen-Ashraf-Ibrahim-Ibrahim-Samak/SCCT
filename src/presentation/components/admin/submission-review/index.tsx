@@ -129,7 +129,7 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-2xl">{submission.clientName}</CardTitle>
+                  <CardTitle className="text-2xl">{submission.clientName || t("unnamedSubmission")}</CardTitle>
                   <CardDescription className="text-base mt-1">
                     {submission.clientContact || t("noContactInfoProvided")}
                   </CardDescription>

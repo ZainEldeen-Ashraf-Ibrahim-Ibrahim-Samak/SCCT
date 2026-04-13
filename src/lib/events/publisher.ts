@@ -31,5 +31,25 @@ export const NotificationPublisher = {
     } catch (error) {
       logger.error("Failed to publish notification to Upstash Redis", error);
     }
+  },
+
+  async notifyClientStatusChange(token: string, status: string) {
+    if (!redis) return;
+    
+    const channel = `submission_updates:${token}`;
+    const payload = {
+      type: "STATUS_CHANGED",
+      status,
+      timestamp: new Date().toISOString(),
+    };
+
+    try {
+      await redis.rpush(channel, JSON.stringify(payload));
+      await redis.ltrim(channel, -10, -1); // Keep only last few for the specific client
+      // Set expiration so we don't leak memory in Redis
+      await redis.expire(channel, 60 * 60 * 24); // 24 hours
+    } catch (error) {
+      logger.error("Failed to publish client update signal", { token, error });
+    }
   }
 };

@@ -108,7 +108,9 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
         <TableBody>
           {submissions.map((sub) => (
             <TableRow key={sub.id} className="cursor-pointer group" onClick={() => router.push(`/admin/submissions/${sub.id}`)}>
-              <TableCell className="font-medium group-hover:text-primary transition-colors">{sub.clientName}</TableCell>
+              <TableCell className="font-medium group-hover:text-primary transition-colors">
+                {sub.clientName || t("unnamedSubmission")}
+              </TableCell>
               <TableCell>{sub.clientContact || "—"}</TableCell>
               <TableCell>{getStatusBadge(sub.status)}</TableCell>
               <TableCell className="text-muted-foreground text-sm">
