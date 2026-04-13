@@ -36,8 +36,10 @@ declare module "next-auth/jwt" {
 const clientPromise = (async () => {
   try {
     const client = new MongoClient(env.MONGODB_URI!, {
-      serverSelectionTimeoutMS: 5000,
-      connectTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000,
+      connectTimeoutMS: 10000,
+      tls: true,
+      retryWrites: true,
     });
     await client.connect();
     return client;

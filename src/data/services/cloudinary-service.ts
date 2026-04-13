@@ -30,13 +30,14 @@ export interface SignUploadResult {
  * Sign an upload request for Cloudinary.
  */
 export function signUploadRequest(params: SignUploadParams): SignUploadResult {
-  const timestamp = Math.round(new Date().getTime() / 1000);
+  const timestamp = params.timestamp || Math.round(new Date().getTime() / 1000);
   const apiSecret = env.CLOUDINARY_API_SECRET;
   
   if (!apiSecret) {
     throw new Error("CLOUDINARY_API_SECRET is not configured");
   }
 
+  // Ensure timestamp is in the signature params
   const signature = cloudinary.utils.api_sign_request(
     { ...params, timestamp },
     apiSecret

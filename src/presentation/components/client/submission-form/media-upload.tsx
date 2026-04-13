@@ -39,6 +39,7 @@ interface SortableItemProps {
 }
 
 function SortableMediaItem({ item, type, disabled, onRemove }: SortableItemProps) {
+  const tc = useTranslations("common");
   const {
     attributes,
     listeners,
@@ -56,13 +57,13 @@ function SortableMediaItem({ item, type, disabled, onRemove }: SortableItemProps
   };
 
   return (
-    <div 
-      ref={setNodeRef} 
-      style={style} 
-      className="relative group rounded-lg border bg-card overflow-hidden w-full aspect-square sm:w-40 sm:h-40 shadow-sm transition-shadow hover:shadow-md"
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="relative group rounded-lg border bg-card overflow-hidden w-full aspect-square shadow-sm transition-shadow hover:shadow-md"
     >
-      <div 
-        {...attributes} 
+      <div
+        {...attributes}
         {...listeners}
         className="absolute top-1 start-1 z-10 p-1 rounded bg-background/80 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing transition-opacity"
       >
@@ -89,15 +90,18 @@ function SortableMediaItem({ item, type, disabled, onRemove }: SortableItemProps
       )}
 
       {!disabled && (
-        <Button
+        <button
           type="button"
-          variant="destructive"
-          size="icon"
-          className="absolute top-1 end-1 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity z-20"
-          onClick={() => onRemove(item.publicId)}
+          className="absolute top-1 end-1 h-8 w-8 rounded-full bg-red-600 text-white flex items-center justify-center shadow-2xl z-50 hover:bg-red-700 active:scale-90"
+          onPointerDownCapture={(e) => e.stopPropagation()}
+          onClickCapture={(e) => {
+            e.stopPropagation();
+            onRemove(item.publicId);
+          }}
+          title={tc("delete")}
         >
-          <X className="h-3 w-3" />
-        </Button>
+          <X className="h-4 w-4" />
+        </button>
       )}
     </div>
   );
@@ -128,9 +132,13 @@ export function MediaUpload({
 }: MediaUploadProps) {
   const t = useTranslations("client");
   const tc = useTranslations("common");
-  
+
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -164,27 +172,25 @@ export function MediaUpload({
           continue;
         }
 
-        // 1. Get signature
         const signRes = await fetch("/api/cloudinary/sign", {
           method: "POST",
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             folder: "submissions",
             timestamp: Math.round(new Date().getTime() / 1000)
           }),
         });
-        
+
         const signData = await signRes.json();
         if (!signRes.ok || !signData.success) {
           throw new Error("Failed to get upload signature");
         }
 
-        const { signature, timestamp, apikey, cloudname } = signData.data;
+        const { signature, timestamp: signedTimestamp, apikey, cloudname } = signData.data;
 
-        // 2. Upload to Cloudinary
         const formData = new FormData();
         formData.append("file", file);
         formData.append("api_key", apikey);
-        formData.append("timestamp", timestamp.toString());
+        formData.append("timestamp", signedTimestamp.toString());
         formData.append("signature", signature);
         formData.append("folder", "submissions");
 
@@ -197,7 +203,7 @@ export function MediaUpload({
         });
 
         const data = await res.json();
-        
+
         if (!res.ok) {
           logger.error("Cloudinary upload error", data);
           toast.error(data.error?.message || t("uploadError"));
@@ -221,10 +227,6 @@ export function MediaUpload({
 
       if (uploadedItems.length > 0 || (!isMultiple && !hasUploadFailure)) {
         toast.success(t("uploadSuccess"));
-      }
-
-      if (hasUploadFailure && uploadedItems.length === 0) {
-        toast.error(t("uploadError"));
       }
     } catch (err) {
       logger.error("Upload error", err);
@@ -275,30 +277,29 @@ export function MediaUpload({
     }
   }, [currentItems, onItemsChange]);
 
-  // Multiple view
   if (isMultiple) {
     return (
       <div className="space-y-4">
-        <DndContext 
-          sensors={sensors} 
-          collisionDetection={closestCenter} 
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
-          <SortableContext 
-            items={currentItems.map(i => i.publicId)} 
+          <SortableContext
+            items={currentItems.map(i => i.publicId)}
             strategy={rectSortingStrategy}
           >
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {currentItems.map((item) => (
-                <SortableMediaItem 
-                  key={item.publicId} 
-                  item={item} 
-                  type={type} 
-                  disabled={disabled} 
+                <SortableMediaItem
+                  key={item.publicId}
+                  item={item}
+                  type={type}
+                  disabled={disabled}
                   onRemove={handleRemoveItem}
                 />
               ))}
-              
+
               {!disabled && (
                 <div
                   className="relative aspect-square sm:w-40 sm:h-40"
@@ -336,15 +337,14 @@ export function MediaUpload({
             </div>
           </SortableContext>
         </DndContext>
-        
+
         {currentItems.length === 0 && !disabled && (
-           <p className="text-sm text-muted-foreground italic">{t("noFilesUploaded")}</p>
+          <p className="text-sm text-muted-foreground italic">{t("noFilesUploaded")}</p>
         )}
       </div>
     );
   }
 
-  // Single view
   if (currentUrl) {
     return (
       <div className="relative group rounded-lg border bg-muted/30 overflow-hidden w-fit max-w-full">
@@ -364,22 +364,45 @@ export function MediaUpload({
           </div>
         )}
         {!disabled && (
-          <Button
-            type="button"
-            variant="destructive"
-            size="icon"
-            className="absolute top-2 end-2 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={onRemove}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-[9999]">
+            <div className="relative">
+              <input
+                type="file"
+                title={tc("edit")}
+                onChange={handleChange}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                disabled={isUploading}
+                accept={type === "image" ? "image/*" : undefined}
+              />
+              <Button type="button" size="sm" variant="secondary" className="gap-2 shadow-xl whitespace-nowrap">
+                <UploadCloud className="h-4 w-4" />
+                {tc("edit")}
+              </Button>
+            </div>
+            
+            <Button
+              type="button"
+              size="sm"
+              variant="destructive"
+              className="gap-2 shadow-xl whitespace-nowrap"
+              onPointerDownCapture={(e) => e.stopPropagation()}
+              onClickCapture={(e) => {
+                logger.info("Removing single media");
+                e.stopPropagation();
+                onRemove();
+              }}
+            >
+              <X className="h-4 w-4" />
+              {tc("delete")}
+            </Button>
+          </div>
         )}
       </div>
     );
   }
 
   return (
-    <div 
+    <div
       className="relative w-full sm:w-auto overflow-hidden"
       onDragEnter={onDrag}
       onDragOver={onDrag}

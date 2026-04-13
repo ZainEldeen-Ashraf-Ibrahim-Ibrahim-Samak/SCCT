@@ -2,30 +2,42 @@ import { v2 as cloudinary } from "cloudinary";
 import { env } from "@/env.mjs";
 import { logger } from "@/lib/dev-logger";
 
-// Configure Cloudinary
-if (env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SECRET) {
-  cloudinary.config({
-    cloud_name: env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-    api_key: env.CLOUDINARY_API_KEY,
-    api_secret: env.CLOUDINARY_API_SECRET,
-    secure: true,
-  });
-}
-
 export class ManageMediaUseCase {
+  constructor() {
+    if (env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SECRET) {
+      cloudinary.config({
+        cloud_name: env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+        api_key: env.CLOUDINARY_API_KEY,
+        api_secret: env.CLOUDINARY_API_SECRET,
+        secure: true,
+      });
+    }
+  }
+
   async getMediaFiles(nextCursor?: string, maxResults = 30) {
     try {
-      // Fetch both images and raw files (PDFs, etc.)
-      // Note: Cloudinary API only allows one resource_type at a time in search/list.
-      // We will default to images first, then maybe combine if needed, 
-      // but for most common use cases, 'image' is what's requested.
+      // Use search API for better filtering if available, or resources listing.
+      // Search allows multiple resource types but needs indexing enabled.
+      // We will try listing resources in 'submissions' folder.
       
       const result = await cloudinary.api.resources({
         type: "upload",
-        prefix: "submissions/",
+        prefix: "submissions", // No trailing slash sometimes works better/different
         max_results: maxResults,
         next_cursor: nextCursor,
       });
+
+      // If no results in prefix, try without prefix to see if data exists elsewhere
+      if (result.resources.length === 0 && !nextCursor) {
+        const globalResult = await cloudinary.api.resources({
+          type: "upload",
+          max_results: maxResults,
+        });
+        return {
+          resources: globalResult.resources,
+          next_cursor: globalResult.next_cursor
+        };
+      }
 
       return {
         resources: result.resources,

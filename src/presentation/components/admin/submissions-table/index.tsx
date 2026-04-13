@@ -121,7 +121,7 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
               </TableCell>
               <TableCell className="text-end" onClick={(e) => e.stopPropagation()}>
                 <DropdownMenu>
-                  <DropdownMenuTrigger nativeButton={false} render={<Button variant="ghost" className="h-8 w-8 p-0" />}>
+                  <DropdownMenuTrigger nativeButton={true} render={<Button variant="ghost" className="h-8 w-8 p-0" />}>
                     <span className="sr-only">{t("openMenu")}</span>
                     <MoreHorizontal className="h-4 w-4" />
                   </DropdownMenuTrigger>

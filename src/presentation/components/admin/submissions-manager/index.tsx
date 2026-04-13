@@ -29,6 +29,16 @@ export function SubmissionsManager() {
     fetchSubmissions(page, statusFilter);
   }, [page, statusFilter, fetchSubmissions]);
 
+  // Sync with real-time updates
+  useEffect(() => {
+    const handleUpdate = () => {
+      fetchSubmissions(page, statusFilter);
+    };
+
+    window.addEventListener("submissions-updated", handleUpdate);
+    return () => window.removeEventListener("submissions-updated", handleUpdate);
+  }, [page, statusFilter, fetchSubmissions]);
+
   const handleFilterChange = (val: string | null) => {
     if (val) {
       setStatusFilter(val);
