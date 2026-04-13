@@ -108,23 +108,25 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
 
   let statusAlert = null;
   if (submission && !isNeedsRewrite && !isDraft) {
+     const liveClass = statusChangedLive ? "animate-pulse ring-4 ring-primary/50" : "";
      statusAlert = (
-       <Alert className="mb-6 bg-primary/5 border-primary/20">
-         <CheckCircle2 className="h-4 w-4 text-primary" />
-         <AlertTitle>{t("submissionSuccess")}</AlertTitle>
-         <AlertDescription className="text-muted-foreground">
+       <Alert className={`mb-6 p-6 border-2 shadow-sm bg-primary/5 border-primary/30 transition-all duration-500 ${liveClass}`}>
+         <CheckCircle2 className="h-6 w-6 text-primary" />
+         <AlertTitle className="text-xl font-bold text-primary">{t("submissionSuccess")}</AlertTitle>
+         <AlertDescription className="text-base mt-2 font-medium">
            {submission.status === "viewed" ? t("statusViewed") : t("statusPending")}
          </AlertDescription>
        </Alert>
      );
   } else if (isNeedsRewrite) {
+    const liveClass = statusChangedLive ? "animate-pulse ring-4 ring-destructive/50" : "";
     statusAlert = (
-      <Alert variant="destructive" className="mb-6">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>{t("needsRewriteTitle")}</AlertTitle>
-        <AlertDescription className="mt-2">
+      <Alert variant="destructive" className={`mb-6 p-6 border-2 transition-all duration-500 ${liveClass}`}>
+        <AlertCircle className="h-6 w-6" />
+        <AlertTitle className="text-xl font-bold">{t("needsRewriteTitle")}</AlertTitle>
+        <AlertDescription className="mt-4 text-base">
           <p>{t("needsRewriteMessage")}</p>
-          <div className="mt-2 text-sm italic border-s-2 border-destructive/50 ps-3">
+          <div className="mt-3 text-sm italic border-s-4 border-destructive/60 bg-destructive/10 p-3 rounded-r-md">
             &quot;{submission?.rewriteComment}&quot;
           </div>
         </AlertDescription>
@@ -136,7 +138,7 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
     <div className="max-w-3xl mx-auto py-8 px-4">
       {statusAlert}
 
-      <Card className="shadow-lg border-t-4 border-t-primary">
+      <Card className={`shadow-lg border-t-4 ${isViewOnly ? "border-t-muted opacity-80" : "border-t-primary"}`}>
         <CardHeader className="space-y-4 pb-8">
           <div>
             <CardTitle className="text-3xl font-extrabold">{formName}</CardTitle>

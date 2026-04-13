@@ -127,13 +127,16 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
 
   // Stable fetchContent — depends only on tokenOrId and draftLoaded.
   // Reads draft state via ref to avoid recreating the callback on every keystroke.
-  const fetchContent = useCallback(async () => {
+  const fetchContent = useCallback(async (background = false) => {
     if (!draftLoaded) return;
 
-    setIsLoading(true);
+    if (!background) setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/submissions/${tokenOrId}`);
+      // If we used window.history.pushState, tokenOrId might still reflect the old token
+      // We must grab the actual token from the URL for the fetch if it changed
+      const currentToken = window.location.pathname.split("/").pop() || tokenOrId;
+      const res = await fetch(`/api/submissions/${currentToken}`);
       if (!res.ok) {
         if (res.status === 404) throw new Error("not_found");
         throw new Error("server_error");
@@ -224,7 +227,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
               // Trigger live-update animation flag
               setStatusChangedLive(true);
               setTimeout(() => setStatusChangedLive(false), 2000);
-              fetchContent();
+              fetchContent(true);
             }
           }
         } catch (e) {
@@ -280,8 +283,11 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       clearDraft();
       isEditingRef.current = false;
       pendingSSERef.current = [];
-      // Client-side navigation — no full-page reload
-      router.push(`/submit/${json.data.accessToken}`);
+      // Client-side navigation via history API prevents full component remount
+      const newUrl = `/${locale}/submit/${json.data.accessToken}`;
+      window.history.pushState(null, "", newUrl);
+      // Silently refresh data to get 'isViewOnly=true' without flashing skeletons
+      await fetchContent(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Submission failed");
     } finally {
@@ -314,9 +320,8 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       clearDraft();
       isEditingRef.current = false;
       pendingSSERef.current = [];
-      // Let Next.js re-render server components with updated submission status.
-      // This shows the success confirmation view cleanly.
-      router.refresh();
+      // Silently refresh data without flashing skeletons
+      await fetchContent(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Resubmission failed");
     } finally {

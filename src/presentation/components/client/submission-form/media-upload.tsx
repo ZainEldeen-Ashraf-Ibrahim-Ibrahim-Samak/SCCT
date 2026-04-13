@@ -350,7 +350,7 @@ export function MediaUpload({
       <div className="relative group rounded-lg border bg-muted/30 overflow-hidden w-fit max-w-full">
         {type === "image" ? (
           <div className="relative h-48 w-48 sm:h-64 sm:w-64">
-            <Image src={currentUrl} alt="Upload" fill className="object-cover" />
+            <Image src={currentUrl} alt="Upload" fill className="object-cover" sizes="(max-width: 768px) 100vw, 256px" />
           </div>
         ) : (
           <div className="flex items-center gap-3 p-4 min-w-[200px]">
