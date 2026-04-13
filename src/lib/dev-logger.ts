@@ -15,12 +15,31 @@ const LOG_METHODS: Record<LogLevel, "info" | "warn" | "error" | "debug"> = {
   debug: "debug",
 };
 
-function shouldLog(level: LogLevel): boolean {
-  if (process.env.NODE_ENV === "production") {
-    return level === "warn" || level === "error";
+const LOG_LEVEL_ORDER: LogLevel[] = ["debug", "info", "warn", "error"];
+
+function resolveMinLogLevel(): LogLevel {
+  const configuredLevel = (
+    process.env.NEXT_PUBLIC_LOG_LEVEL || process.env.LOG_LEVEL || ""
+  ).toLowerCase();
+
+  if (
+    configuredLevel === "debug" ||
+    configuredLevel === "info" ||
+    configuredLevel === "warn" ||
+    configuredLevel === "error"
+  ) {
+    return configuredLevel;
   }
 
-  return true;
+  // In production we keep info/warn/error visible for operational diagnostics.
+  return process.env.NODE_ENV === "production" ? "info" : "debug";
+}
+
+function shouldLog(level: LogLevel): boolean {
+  return (
+    LOG_LEVEL_ORDER.indexOf(level) >=
+    LOG_LEVEL_ORDER.indexOf(resolveMinLogLevel())
+  );
 }
 
 function write(level: LogLevel, message: string, context?: LogContext): void {
