@@ -197,7 +197,7 @@
     "fieldRequired": "هذا الحقل مطلوب",
     "yourName": "اسمك",
     "contactInfo": "معلومات الاتصال",
-    "contactPlaceholder": "البريد الإلكتروني أو الهاتف"
+    "contactPlaceholder": "الهاتف"
   },
   "notifications": {
     "viewDetails": "عرض التفاصيل ←"

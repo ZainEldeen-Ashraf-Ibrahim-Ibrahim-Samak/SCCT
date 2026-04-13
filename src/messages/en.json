@@ -197,7 +197,7 @@
     "fieldRequired": "This field is required",
     "yourName": "Your Name",
     "contactInfo": "Contact Information",
-    "contactPlaceholder": "Email or Phone"
+    "contactPlaceholder": "Phone"
   },
   "notifications": {
     "viewDetails": "View Details →"
