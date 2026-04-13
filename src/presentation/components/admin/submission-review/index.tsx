@@ -38,7 +38,7 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
   useEffect(() => {
     const fetchSubmission = async () => {
       try {
-        const fetchRes = await fetch(`/api/submissions/${id}`);
+        const fetchRes = await fetch(`/api/submissions/${id}`, { cache: "no-store" });
         const json = await fetchRes.json();
         
         if (json.success && !json.data.isNew) {
@@ -60,7 +60,7 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
     fetchSubmission();
   }, [id, updateStatus]);
 
-  const handleStatusChange = async (status: string) => {
+  const handleStatusChange = async (status: Submission["status"]) => {
     if (status === "needs_rewrite" && !rewriteComment.trim()) return;
     
     setIsUpdating(true);
@@ -70,13 +70,13 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
         if (!prev) return prev;
         const newTrack = [...prev.auditTrail, {
           oldStatus: prev.status,
-          newStatus: status as any,
+          newStatus: status,
           comment: status === "needs_rewrite" ? rewriteComment : undefined,
           adminId: "optimistic",
           adminName: t("optimisticAdminName"),
           timestamp: new Date()
         }];
-        return { ...prev, status: status as any, auditTrail: newTrack };
+        return { ...prev, status, auditTrail: newTrack };
       });
       if (status !== "needs_rewrite") {
         setRewriteComment(""); // Clear comment if moving away from needs_rewrite
@@ -179,6 +179,8 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
                                    href={item.url} 
                                    target="_blank" 
                                    rel="noreferrer" 
+                                   title="Open media"
+                                   aria-label="Open media"
                                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                                  >
                                    <ExternalLink className="h-5 w-5 text-white" />
@@ -196,7 +198,14 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
                                 className="object-contain" 
                                 sizes="(max-width: 768px) 100vw, 384px"
                               />
-                              <a href={val.mediaUrl} target="_blank" rel="noreferrer" className="absolute top-2 right-2 bg-black/60 p-2 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                              <a
+                                href={val.mediaUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                title="Open media"
+                                aria-label="Open media"
+                                className="absolute top-2 right-2 bg-black/60 p-2 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
                                 <ExternalLink className="h-4 w-4" />
                               </a>
                             </div>
@@ -253,7 +262,7 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
                   value={rewriteComment}
                   onChange={(e) => setRewriteComment(e.target.value)}
                   placeholder={t("rewriteCommentPlaceholder")}
-                  className="min-h-[100px] resize-none"
+                  className="min-h-25 resize-none"
                 />
                 <Button 
                   variant={submission.status === "needs_rewrite" ? "secondary" : "destructive"}
@@ -287,7 +296,7 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
                      if (entry.newStatus === "pending") dotColor = "bg-amber-500";
                      return (
                      <div key={i} className="text-sm relative pl-4 border-l-2 border-muted">
-                        <div className={`absolute w-2 h-2 rounded-full ${dotColor} -left-[5px] top-1.5 ring-4 ring-background`} />
+                        <div className={`absolute w-2 h-2 rounded-full ${dotColor} -left-1.25 top-1.5 ring-4 ring-background`} />
                         <p className="font-medium">
                           {t("auditEntry", { admin: entry.adminName, oldStatus: t(`statuses.${entry.oldStatus}`), newStatus: t(`statuses.${entry.newStatus}`) })}
                         </p>

@@ -3,8 +3,10 @@ import { FieldValueRepository } from "@/domain/repositories/field-value-reposito
 import { FormTemplateRepository } from "@/domain/repositories/form-template-repository";
 import { FieldDefinitionRepository } from "@/domain/repositories/field-definition-repository";
 import { Submission } from "@/domain/entities/submission";
+import { CreateFieldValueInput } from "@/domain/entities/field-value";
 import { generateAccessToken } from "@/lib/utils";
 import { NotificationPublisher } from "@/lib/events/publisher";
+import { logger } from "@/lib/dev-logger";
 
 interface SubmitFormData {
   clientName: string;
@@ -18,6 +20,8 @@ interface SubmitFormData {
   }>;
 }
 
+const OBJECT_ID_PATTERN = /^[a-f0-9]{24}$/i;
+
 /**
  * Use case for client form submission (P1).
  * Validates fields against the currently active form and creates the submission + field values.
@@ -30,8 +34,19 @@ export class SubmitFormUseCase {
     private fieldDefRepo: FieldDefinitionRepository
   ) {}
 
-  async execute(data: SubmitFormData): Promise<{ success: boolean; submission?: Submission; error?: string }> {
-    const activeForm = await this.formTemplateRepo.findActive();
+  async execute(
+    data: SubmitFormData,
+    options?: { tokenOrFormId?: string },
+  ): Promise<{ success: boolean; submission?: Submission; error?: string }> {
+    const tokenOrFormId = options?.tokenOrFormId?.trim();
+
+    let targetForm = null;
+    if (tokenOrFormId && OBJECT_ID_PATTERN.test(tokenOrFormId)) {
+      targetForm = await this.formTemplateRepo.findById(tokenOrFormId);
+    }
+
+    const activeForm = targetForm ?? (await this.formTemplateRepo.findActive());
+
     if (!activeForm) {
       return { success: false, error: "No active form template found" };
     }
@@ -40,6 +55,13 @@ export class SubmitFormUseCase {
     if (activeFields.length === 0) {
       return { success: false, error: "Active form has no fields" };
     }
+
+    logger.info("Submit form context resolved", {
+      tokenOrFormId,
+      resolvedFormId: activeForm.id,
+      resolvedFieldCount: activeFields.length,
+      providedFieldValues: data.fieldValues?.length ?? 0,
+    });
 
     if (!data.fieldValues || data.fieldValues.length === 0) {
       return { success: false, error: "Submission must contain field values" };
@@ -75,12 +97,11 @@ export class SubmitFormUseCase {
     );
 
     // 3. Extract and map Field Values
-    const fieldValuesToCreate = data.fieldValues
-      .map((fv) => {
+    const fieldValuesToCreate: CreateFieldValueInput[] = data.fieldValues.flatMap((fv) => {
         const def = activeFields.find((f) => f.id === fv.fieldDefinitionId);
-        if (!def) return null; // Ignore extra fields
+        if (!def) return []; // Ignore extra fields
 
-        return {
+        const mapped: CreateFieldValueInput = {
           submissionId: submission.id,
           fieldDefinitionId: def.id,
           fieldNameSnapshot: def.nameEn, // Defaulting to English snapshot, display maps appropriately
@@ -90,8 +111,15 @@ export class SubmitFormUseCase {
           mediaPublicId: fv.mediaPublicId ?? null,
           mediaItems: fv.mediaItems ?? [],
         };
-      })
-      .filter(Boolean) as any[];
+        return [mapped];
+      });
+
+    logger.info("Submit field mapping completed", {
+      submissionId: submission.id,
+      totalReceived: data.fieldValues.length,
+      totalPersistable: fieldValuesToCreate.length,
+      ignoredFieldValues: data.fieldValues.length - fieldValuesToCreate.length,
+    });
 
     if (fieldValuesToCreate.length > 0) {
       await this.fieldValueRepo.createMany(fieldValuesToCreate);
@@ -139,18 +167,36 @@ export class SubmitFormUseCase {
       }
     }
 
-    // 2. Update Field Values
-    const updates = data.fieldValues.map((fv) => ({
-      fieldDefinitionId: fv.fieldDefinitionId,
-      data: {
-        value: fv.value ?? null,
-        mediaUrl: fv.mediaUrl ?? null,
-        mediaPublicId: fv.mediaPublicId ?? null,
-        mediaItems: fv.mediaItems ?? [],
-      },
-    }));
+    // 2. Replace Field Values to support draft tokens that do not yet have rows.
+    // updateMany alone cannot create missing field-value records for freshly provisioned drafts.
+    const fieldValuesToCreate: CreateFieldValueInput[] = data.fieldValues.flatMap((fv) => {
+        const def = submission.formSnapshot.find((f) => f.id === fv.fieldDefinitionId);
+        if (!def) return [];
 
-    await this.fieldValueRepo.updateMany(submission.id, updates);
+        const mapped: CreateFieldValueInput = {
+          submissionId: submission.id,
+          fieldDefinitionId: def.id,
+          fieldNameSnapshot: def.nameEn,
+          fieldTypeSnapshot: def.inputType,
+          value: fv.value ?? null,
+          mediaUrl: fv.mediaUrl ?? null,
+          mediaPublicId: fv.mediaPublicId ?? null,
+          mediaItems: fv.mediaItems ?? [],
+        };
+        return [mapped];
+      });
+
+    await this.fieldValueRepo.deleteBySubmissionId(submission.id);
+    if (fieldValuesToCreate.length > 0) {
+      await this.fieldValueRepo.createMany(fieldValuesToCreate);
+    }
+
+    logger.info("Resubmission field replacement completed", {
+      submissionId: submission.id,
+      totalReceived: data.fieldValues.length,
+      totalPersisted: fieldValuesToCreate.length,
+      ignoredFieldValues: data.fieldValues.length - fieldValuesToCreate.length,
+    });
 
     // 3. Reset submission status to pending and update details
     const updatedSubmission = await this.submissionRepo.resetStatusForResubmission(

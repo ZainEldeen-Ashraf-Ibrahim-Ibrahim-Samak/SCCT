@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import type { Submission } from "@/domain/entities/submission";
 
 interface UseSubmissionsListReturn {
@@ -25,7 +25,7 @@ export function useSubmissionsList(): UseSubmissionsListReturn {
 
   const fetchCounts = async () => {
     try {
-      const res = await fetch("/api/admin/submissions/counts");
+      const res = await fetch("/api/admin/submissions/counts", { cache: "no-store" });
       const json = await res.json();
       if (json.success) setCounts(json.data);
     } catch {
@@ -38,7 +38,7 @@ export function useSubmissionsList(): UseSubmissionsListReturn {
     setError(null);
     try {
       const url = `/api/admin/submissions?page=${page}&status=${encodeURIComponent(status)}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { cache: "no-store" });
       const json = await res.json();
 
       if (!json.success) throw new Error(json.error);

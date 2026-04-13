@@ -38,6 +38,7 @@ export function useDraftAutosave<T>(storageKey: string, initialValue: T) {
   const clearDraft = () => {
     try {
       localStorage.removeItem(storageKey);
+      setDraft(initialValue);
     } catch (error) {
       logger.warn("Failed to clear draft from localStorage", error);
     }

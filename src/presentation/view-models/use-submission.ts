@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocale } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
 import type { FieldDefinition } from "@/domain/entities/field-definition";
 import type { Submission } from "@/domain/entities/submission";
 import type { FieldValue } from "@/domain/entities/field-value";
@@ -22,6 +21,61 @@ interface DraftState {
   clientName: string;
   clientContact: string;
   formData: Record<string, FormFieldData>;
+}
+
+interface SubmissionFieldPayload {
+  fieldDefinitionId: string;
+  value: string | number | null;
+  mediaUrl: string | null;
+  mediaPublicId: string | null;
+  mediaItems: { url: string; publicId: string }[];
+}
+
+function normalizeSubmissionFieldValues(
+  formData: Record<string, FormFieldData>,
+  fields: FieldDefinition[],
+): SubmissionFieldPayload[] {
+  return fields.map((field) => {
+    const raw = formData[field.id];
+    return {
+      fieldDefinitionId: field.id,
+      value: raw?.value ?? null,
+      mediaUrl: raw?.mediaUrl ?? null,
+      mediaPublicId: raw?.mediaPublicId ?? null,
+      mediaItems: Array.isArray(raw?.mediaItems) ? raw.mediaItems : [],
+    };
+  });
+}
+
+function summarizeFieldPayload(fieldValues: SubmissionFieldPayload[]) {
+  return {
+    total: fieldValues.length,
+    withText: fieldValues.filter(
+      (fv) => fv.value !== null && fv.value !== undefined && String(fv.value).trim().length > 0,
+    ).length,
+    withMediaUrl: fieldValues.filter((fv) => !!fv.mediaUrl).length,
+    withMediaItems: fieldValues.filter((fv) => fv.mediaItems.length > 0).length,
+    ids: fieldValues.map((fv) => fv.fieldDefinitionId),
+  };
+}
+
+function hasMeaningfulDraftData(draft: DraftState | undefined): boolean {
+  if (!draft) return false;
+
+  if (draft.clientName.trim().length > 0 || draft.clientContact.trim().length > 0) {
+    return true;
+  }
+
+  return Object.values(draft.formData || {}).some((field) => {
+    const hasText =
+      field?.value !== undefined &&
+      field?.value !== null &&
+      String(field.value).trim().length > 0;
+    const hasMedia = !!field?.mediaUrl && field.mediaUrl.trim().length > 0;
+    const hasMediaItems = Array.isArray(field?.mediaItems) && field.mediaItems.length > 0;
+
+    return hasText || hasMedia || hasMediaItems;
+  });
 }
 
 interface UseSubmissionReturn {
@@ -50,7 +104,6 @@ interface UseSubmissionReturn {
 
 export function useSubmission(tokenOrId: string): UseSubmissionReturn {
   const locale = useLocale();
-  const router = useRouter();
   const [isNew, setIsNew] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -136,7 +189,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       // If we used window.history.pushState, tokenOrId might still reflect the old token
       // We must grab the actual token from the URL for the fetch if it changed
       const currentToken = window.location.pathname.split("/").pop() || tokenOrId;
-      const res = await fetch(`/api/submissions/${currentToken}`);
+      const res = await fetch(`/api/submissions/${currentToken}`, { cache: "no-store" });
       if (!res.ok) {
         if (res.status === 404) throw new Error("not_found");
         throw new Error("server_error");
@@ -149,7 +202,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
 
       // Read draft via ref — no reactive dependency
       const currentDraft = draftRef.current;
-      const hasDraftData = currentDraft.clientName.trim() !== "" || Object.keys(currentDraft.formData).length > 0;
+      const hasDraftData = hasMeaningfulDraftData(currentDraft);
 
       if (data.isNew) {
         setFormName(data.formTemplate?.name || "");
@@ -169,7 +222,10 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
         setValues(data.values || []);
         setFields(data.fields || []);
 
-        if (!hasDraftData) {
+        // Existing submissions should reflect DB state after reload/admin updates.
+        // Keep local draft only while user is actively editing and there is meaningful draft content.
+        const shouldHydrateFromServer = !isEditingRef.current || !hasDraftData;
+        if (shouldHydrateFromServer) {
           const initialForm: Record<string, FormFieldData> = {};
           data.fields.forEach((f: FieldDefinition) => {
             const matchedVal = data.values?.find((v: FieldValue) => v.fieldDefinitionId === f.id);
@@ -185,6 +241,10 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
             clientName: data.submission?.clientName || "", 
             clientContact: data.submission?.clientContact || "", 
             formData: initialForm 
+          });
+        } else {
+          logger.debug("Preserving in-progress local draft over server payload", {
+            tokenOrId: currentToken,
           });
         }
       }
@@ -230,7 +290,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
               fetchContent(true);
             }
           }
-        } catch (e) {
+        } catch {
           // silent fail for heartbeat/ping
         }
       };
@@ -258,31 +318,52 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
     
     // Prefer explicitly passed reactive formData to resolve boundary scope bypasses during hydration
     const resolvedFormData = explicitFormData || currentDraft.formData;
-    const fieldValues = Object.values(resolvedFormData);
+    const fieldValues = normalizeSubmissionFieldValues(resolvedFormData, fields);
+    const fieldSummary = summarizeFieldPayload(fieldValues);
     
-    if (!currentDraft.clientName.trim() && fieldValues.length === 0) {
-      logger.warn("Submit attempt with empty draft", { tokenOrId });
+    if (
+      !currentDraft.clientName.trim() &&
+      fieldSummary.withText === 0 &&
+      fieldSummary.withMediaUrl === 0 &&
+      fieldSummary.withMediaItems === 0
+    ) {
+      logger.warn("Submit attempt with empty draft", { tokenOrId, fieldSummary });
       setError("Please fill out the form before submitting.");
       setIsSubmitting(false);
       return;
     }
 
     try {
+      const currentToken = window.location.pathname.split("/").pop() || tokenOrId;
+      const endpoint = `/api/submissions/${currentToken}`;
       const payload = {
         clientName: currentDraft.clientName,
         clientContact: currentDraft.clientContact,
         fieldValues,
       };
 
-      logger.info("Submitting form", { payload });
+      logger.info("Submitting form payload prepared", {
+        endpoint,
+        tokenOrId: currentToken,
+        clientNameLength: currentDraft.clientName.length,
+        clientContactLength: currentDraft.clientContact.length,
+        fieldSummary,
+      });
 
-      const res = await fetch("/api/submissions/new", {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       const json = await res.json();
+      logger.info("Submission API response received", {
+        endpoint,
+        ok: res.ok,
+        status: res.status,
+        success: !!json?.success,
+        hasAccessToken: !!json?.data?.accessToken,
+      });
       if (!json.success) throw new Error(json.error || "Failed to submit");
       clearDraft();
       isEditingRef.current = false;
@@ -305,7 +386,10 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
     try {
       const currentDraft = draftRef.current;
       const resolvedFormData = explicitFormData || currentDraft.formData;
-      const fieldValues = Object.values(resolvedFormData);
+      const fieldValues = normalizeSubmissionFieldValues(resolvedFormData, fields);
+      const fieldSummary = summarizeFieldPayload(fieldValues);
+      const currentToken = window.location.pathname.split("/").pop() || tokenOrId;
+      const endpoint = `/api/submissions/${currentToken}`;
       
       const payload = {
         clientName: currentDraft.clientName,
@@ -313,15 +397,27 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
         fieldValues,
       };
 
-      logger.info("Resubmitting form", { payload });
+      logger.info("Resubmitting form payload prepared", {
+        endpoint,
+        tokenOrId: currentToken,
+        clientNameLength: currentDraft.clientName.length,
+        clientContactLength: currentDraft.clientContact.length,
+        fieldSummary,
+      });
 
-      const res = await fetch(`/api/submissions/${tokenOrId}`, {
+      const res = await fetch(endpoint, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       const json = await res.json();
+      logger.info("Resubmission API response received", {
+        endpoint,
+        ok: res.ok,
+        status: res.status,
+        success: !!json?.success,
+      });
       if (!json.success) throw new Error(json.error || "Failed to resubmit");
       clearDraft();
       isEditingRef.current = false;

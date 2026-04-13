@@ -26,6 +26,27 @@ const viewUseCase = new ViewSubmissionUseCase(
   fieldDefRepo
 );
 
+export const dynamic = "force-dynamic";
+
+function summarizeFieldValues(
+  fieldValues: Array<{
+    fieldDefinitionId: string;
+    value?: string | number | null;
+    mediaUrl?: string | null;
+    mediaItems?: Array<{ url: string; publicId: string }>;
+  }>,
+) {
+  return {
+    total: fieldValues.length,
+    withText: fieldValues.filter(
+      (fv) => fv.value !== null && fv.value !== undefined && String(fv.value).trim().length > 0,
+    ).length,
+    withMediaUrl: fieldValues.filter((fv) => !!fv.mediaUrl).length,
+    withMediaItems: fieldValues.filter((fv) => (fv.mediaItems?.length ?? 0) > 0).length,
+    ids: fieldValues.map((fv) => fv.fieldDefinitionId),
+  };
+}
+
 export async function GET(request: Request, { params }: { params: Promise<{ token: string }> }) {
   try {
     const { token } = await params;
@@ -42,24 +63,51 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ token: string }> },
+) {
   try {
+    const { token } = await params;
     const body = await request.json();
     const parsed = createSubmissionSchema.safeParse(body);
 
     if (!parsed.success) {
+      logger.warn("Submission validation failed", {
+        token,
+        issues: parsed.error.flatten(),
+      });
       return errorResponse("Validation error", 400, "VALIDATION_ERROR", parsed.error.flatten());
     }
+
+    logger.info("Submission POST accepted", {
+      token,
+      clientNameLength: parsed.data.clientName.length,
+      clientContactLength: parsed.data.clientContact?.length ?? 0,
+      fieldSummary: summarizeFieldValues(parsed.data.fieldValues),
+    });
 
     const result = await submitUseCase.execute({
       clientName: parsed.data.clientName,
       clientContact: parsed.data.clientContact,
       fieldValues: parsed.data.fieldValues,
+    }, {
+      tokenOrFormId: token,
     });
 
     if (!result.success || !result.submission) {
+      logger.warn("Submission POST rejected by use-case", {
+        token,
+        reason: result.error ?? "Unknown",
+      });
       return errorResponse(result.error ?? "Invalid submission", 400, "SUBMISSION_INVALID");
     }
+
+    logger.info("Submission POST persisted", {
+      token,
+      submissionId: result.submission.id,
+      accessToken: result.submission.accessToken,
+    });
 
     // Notify admins
     await NotificationPublisher.notifyAdmins({
@@ -83,8 +131,19 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ to
     const parsed = createSubmissionSchema.safeParse(body);
 
     if (!parsed.success) {
+      logger.warn("Resubmission validation failed", {
+        token,
+        issues: parsed.error.flatten(),
+      });
       return errorResponse("Validation error", 400, "VALIDATION_ERROR", parsed.error.flatten());
     }
+
+    logger.info("Submission PATCH accepted", {
+      token,
+      clientNameLength: parsed.data.clientName.length,
+      clientContactLength: parsed.data.clientContact?.length ?? 0,
+      fieldSummary: summarizeFieldValues(parsed.data.fieldValues),
+    });
 
     const result = await submitUseCase.resubmit(token, {
       clientName: parsed.data.clientName,
@@ -93,8 +152,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ to
     });
 
     if (!result.success || !result.submission) {
+      logger.warn("Submission PATCH rejected by use-case", {
+        token,
+        reason: result.error ?? "Unknown",
+      });
       return errorResponse(result.error ?? "Invalid resubmission", 400, "RESUBMISSION_INVALID");
     }
+
+    logger.info("Submission PATCH persisted", {
+      token,
+      submissionId: result.submission.id,
+    });
 
     // Notify admins
     await NotificationPublisher.notifyAdmins({
