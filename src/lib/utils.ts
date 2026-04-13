@@ -24,6 +24,7 @@ export function generateAccessToken(): string {
 export function formatDate(date: Date | string, locale: string = "en"): string {
   const d = typeof date === "string" ? new Date(date) : date;
   return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", {
+    weekday: "short",
     year: "numeric",
     month: "short",
     day: "numeric",

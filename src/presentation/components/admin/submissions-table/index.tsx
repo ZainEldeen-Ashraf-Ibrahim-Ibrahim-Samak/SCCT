@@ -66,21 +66,24 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead><Skeleton className="h-4 w-24" /></TableHead>
-              <TableHead><Skeleton className="h-4 w-24" /></TableHead>
-              <TableHead><Skeleton className="h-4 w-24" /></TableHead>
-              <TableHead><Skeleton className="h-4 w-24" /></TableHead>
-              <TableHead><Skeleton className="h-4 w-8" /></TableHead>
+              <TableHead className="whitespace-nowrap"><Skeleton className="h-4 w-24" /></TableHead>
+              <TableHead className="hidden md:table-cell whitespace-nowrap"><Skeleton className="h-4 w-24" /></TableHead>
+              <TableHead className="whitespace-nowrap"><Skeleton className="h-4 w-24" /></TableHead>
+              <TableHead className="hidden sm:table-cell whitespace-nowrap"><Skeleton className="h-4 w-24" /></TableHead>
+              <TableHead className="text-end whitespace-nowrap"><Skeleton className="h-4 w-8 inline-block" /></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
              {[1, 2, 3, 4, 5].map((i) => (
                 <TableRow key={i}>
-                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell className="w-full sm:w-auto">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-20 mt-2 md:hidden" />
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                  <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell className="text-end"><Skeleton className="h-8 w-8 inline-block" /></TableCell>
                 </TableRow>
              ))}
           </TableBody>
@@ -129,11 +132,11 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t("clientName")}</TableHead>
-              <TableHead>{t("clientContact")}</TableHead>
-              <TableHead>{tc("status")}</TableHead>
-              <TableHead>{t("submittedAt")}</TableHead>
-              <TableHead className="text-end">{tc("actions")}</TableHead>
+              <TableHead className="whitespace-nowrap">{t("clientName")}</TableHead>
+              <TableHead className="hidden md:table-cell whitespace-nowrap">{t("clientContact")}</TableHead>
+              <TableHead className="whitespace-nowrap">{tc("status")}</TableHead>
+              <TableHead className="hidden sm:table-cell whitespace-nowrap">{t("submittedAt")}</TableHead>
+              <TableHead className="text-end whitespace-nowrap">{tc("actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -141,10 +144,13 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
               const latestUpdater = getLatestUpdater(sub);
               return (
                 <TableRow key={sub.id} className="cursor-pointer group" onClick={() => router.push(`/admin/submissions/${sub.id}`)}>
-                  <TableCell className="font-medium group-hover:text-primary transition-colors">
+                  <TableCell className="font-medium group-hover:text-primary transition-colors break-words">
                     {sub.clientName || t("unnamedSubmission")}
+                    <div className="md:hidden mt-1 text-xs text-muted-foreground break-all">
+                      {sub.clientContact || "—"}
+                    </div>
                   </TableCell>
-                  <TableCell>{sub.clientContact || "—"}</TableCell>
+                  <TableCell className="hidden md:table-cell break-all">{sub.clientContact || "—"}</TableCell>
                   <TableCell>
                     <div className="flex flex-col items-start gap-1">
                       {getStatusBadge(sub.status)}
@@ -155,7 +161,7 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
+                  <TableCell className="hidden sm:table-cell text-muted-foreground text-sm whitespace-nowrap">
                     <span title={formatDate(sub.submittedAt)}>{formatDate(sub.submittedAt)}</span>
                     {sub.lastResubmittedAt && (
                       <span className="block text-xs text-amber-600/80 mt-0.5">
