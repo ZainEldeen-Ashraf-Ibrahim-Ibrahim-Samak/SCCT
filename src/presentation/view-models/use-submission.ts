@@ -133,7 +133,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
   useEffect(() => {
     fetchContent();
 
-    // Listen for real-time status updates via SSE
+    // Listen for real-time status updates via SSE (Just Event)
     if (!tokenOrId) return;
 
     let reconnectTimeout: NodeJS.Timeout;
@@ -163,8 +163,16 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
 
     connect();
 
+    // Background polling fallback (10s) to ensure status sync
+    const interval = setInterval(() => {
+      if (!isSubmitting && !isLoading) {
+        fetchContent();
+      }
+    }, 10000);
+
     return () => {
       clearTimeout(reconnectTimeout);
+      clearInterval(interval);
       if (eventSource) eventSource.close();
     };
   }, [fetchContent, tokenOrId]);

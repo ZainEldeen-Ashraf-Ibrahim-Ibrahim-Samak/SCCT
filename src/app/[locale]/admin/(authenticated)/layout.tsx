@@ -9,6 +9,7 @@ import { Link } from "@/i18n/navigation";
 import { signOut } from "@/lib/auth";
 import { LiveNotifications } from "@/presentation/components/admin/live-notifications";
 import { SidebarNav } from "@/presentation/components/admin/sidebar-nav";
+import { LogoutButton } from "@/presentation/components/admin/logout-button";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -43,17 +44,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
             <LanguageSwitcher />
             <ThemeToggle />
           </div>
-          <form
-            action={async () => {
-              "use server";
-              await signOut({ redirectTo: "/admin/login" });
-            }}
-          >
-            <Button variant="ghost" size="sm" className="w-full justify-start gap-2">
-              <LogOut className="h-4 w-4" />
-              {t("logout")}
-            </Button>
-          </form>
+          <LogoutButton />
         </div>
       </aside>
 
@@ -64,6 +55,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
           <div className="flex items-center gap-1">
             <LanguageSwitcher />
             <ThemeToggle />
+            <LogoutButton showLabel={false} />
           </div>
         </header>
 

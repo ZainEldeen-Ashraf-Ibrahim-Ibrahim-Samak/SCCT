@@ -42,7 +42,7 @@ const submissionSchema = new Schema<ISubmission>(
   {
     accessToken: { type: String, required: true, unique: true },
     formTemplateId: { type: Schema.Types.ObjectId, ref: "FormTemplate", required: true, index: true },
-    clientName: { type: String, required: true, trim: true, maxlength: 200 },
+    clientName: { type: String, default: "", trim: true, maxlength: 200 },
     clientContact: { type: String, default: "", trim: true },
     status: {
       type: String,
