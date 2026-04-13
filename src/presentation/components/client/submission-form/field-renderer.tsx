@@ -92,13 +92,19 @@ export function FieldRenderer({
           {renderLabel()}
           <Input
             id={field.id}
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={value === null || value === undefined ? "" : value}
-            onChange={(e) => onChangeValue(e.target.value ? Number(e.target.value) : null)}
+            onChange={(e) => {
+              const val = e.target.value;
+              // Allow only digits to simulate number input but preserve leading zeros
+              if (val === "" || /^[0-9]*$/.test(val)) {
+                onChangeValue(val || null);
+              }
+            }}
             placeholder={"0"}
             required={isRequired}
-            min={min}
-            max={max}
             disabled={disabled}
             className={hasError ? "border-destructive focus-visible:ring-destructive" : ""}
           />
