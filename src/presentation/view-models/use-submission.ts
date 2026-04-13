@@ -6,6 +6,7 @@ import type { FieldDefinition } from "@/domain/entities/field-definition";
 import type { Submission } from "@/domain/entities/submission";
 import type { FieldValue } from "@/domain/entities/field-value";
 import { useDraftAutosave } from "./use-draft-autosave";
+import { logger } from "@/lib/dev-logger";
 
 interface FormFieldData {
   fieldDefinitionId: string;
@@ -127,64 +128,66 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [tokenOrId, draftLoaded]);
+  }, [tokenOrId, draftLoaded, draft.clientName, draft.formData, updateDraft]);
 
   useEffect(() => {
     fetchContent();
-    
-    // Auto-refresh status every 10 seconds for real-time status updates (P1 request)
-    // Only poll if we are not currently submitting and are on an existing submission
-    const interval = setInterval(() => {
-      if (!isSubmitting && !isLoading) {
-        fetchContent();
-      }
-    }, 10000);
+  }, [fetchContent]);
 
-    return () => clearInterval(interval);
-  }, [fetchContent, isSubmitting, isLoading]);
-
-  const setClientName = (name: string) => updateDraft({ ...draft, clientName: name });
-  const setClientContact = (contact: string) => updateDraft({ ...draft, clientContact: contact });
+  const setClientName = (name: string) => updateDraft(prev => ({ ...prev, clientName: name }));
+  const setClientContact = (contact: string) => updateDraft(prev => ({ ...prev, clientContact: contact }));
 
   const setFieldValue = (id: string, value: string | number | null) => {
-    updateDraft({
-      ...draft,
+    updateDraft(prev => ({
+      ...prev,
       formData: {
-        ...draft.formData,
-        [id]: { ...draft.formData[id], value, fieldDefinitionId: id },
+        ...prev.formData,
+        [id]: { ...prev.formData[id], value, fieldDefinitionId: id },
       }
-    });
+    }));
   };
 
   const setMediaItems = (id: string, items: { url: string; publicId: string }[]) => {
-    updateDraft({
-      ...draft,
+    updateDraft(prev => ({
+      ...prev,
       formData: {
-        ...draft.formData,
-        [id]: { ...draft.formData[id], mediaItems: items, fieldDefinitionId: id },
+        ...prev.formData,
+        [id]: { ...prev.formData[id], mediaItems: items, fieldDefinitionId: id },
       }
-    });
+    }));
   };
 
   const setMediaValue = (id: string, url: string, publicId: string) => {
-    updateDraft({
-      ...draft,
+    updateDraft(prev => ({
+      ...prev,
       formData: {
-        ...draft.formData,
-        [id]: { ...draft.formData[id], mediaUrl: url, mediaPublicId: publicId, fieldDefinitionId: id },
+        ...prev.formData,
+        [id]: { ...prev.formData[id], mediaUrl: url, mediaPublicId: publicId, fieldDefinitionId: id },
       }
-    });
+    }));
   };
 
   const submitForm = async () => {
     setIsSubmitting(true);
     setError(null);
+    
+    // Safety check for empty submissions
+    const fieldValues = Object.values(draft.formData);
+    if (!draft.clientName.trim() && fieldValues.length === 0) {
+      logger.warn("Submit attempt with empty draft", { tokenOrId });
+      setError("Please fill out the form before submitting.");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const payload = {
-        clientName,
-        clientContact,
-        fieldValues: Object.values(formData),
+        clientName: draft.clientName,
+        clientContact: draft.clientContact,
+        fieldValues,
       };
+
+      logger.info("Submitting form", { payload });
 
       const res = await fetch("/api/submissions/new", {
         method: "POST",
@@ -208,11 +211,14 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
     setIsSubmitting(true);
     setError(null);
     try {
+      const fieldValues = Object.values(draft.formData);
       const payload = {
-        clientName,
-        clientContact,
-        fieldValues: Object.values(formData),
+        clientName: draft.clientName,
+        clientContact: draft.clientContact,
+        fieldValues,
       };
+
+      logger.info("Resubmitting form", { payload });
 
       const res = await fetch(`/api/submissions/${tokenOrId}`, {
         method: "PATCH",

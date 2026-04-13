@@ -33,7 +33,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ for
     const token = generateAccessToken();
     const submission = await submissionRepo.create({
       formTemplateId: formId,
-      clientName: "New Submission", // Professional placeholder
+      clientName: "", // Empty so the localized placeholder shows up for the client
       clientContact: "",
       formSnapshot: fields,
     }, token);

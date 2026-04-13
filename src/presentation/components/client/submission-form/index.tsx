@@ -164,6 +164,7 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
                       if (validationErrors.clientName) setValidationErrors(prev => ({ ...prev, clientName: false }));
                     }}
                     disabled={isViewOnly}
+                    placeholder={t("namePlaceholder")}
                     className={validationErrors.clientName ? "border-destructive" : ""}
                   />
                   {validationErrors.clientName && <p className="text-xs text-destructive">{t("fieldRequired")}</p>}

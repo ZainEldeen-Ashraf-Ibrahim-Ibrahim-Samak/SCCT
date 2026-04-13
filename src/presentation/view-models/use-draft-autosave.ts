@@ -19,14 +19,19 @@ export function useDraftAutosave<T>(storageKey: string, initialValue: T) {
     }
   }, [storageKey]);
 
-  // Update draft and local storage
-  const updateDraft = (newDraft: T) => {
-    setDraft(newDraft);
+  // Sync draft to local storage whenever it changes
+  useEffect(() => {
+    if (!isLoaded) return;
     try {
-      localStorage.setItem(storageKey, JSON.stringify(newDraft));
+      localStorage.setItem(storageKey, JSON.stringify(draft));
     } catch (error) {
       logger.warn("Failed to save draft to localStorage", error);
     }
+  }, [storageKey, draft, isLoaded]);
+
+  // Update draft (supports functional updates)
+  const updateDraft = (update: T | ((prev: T) => T)) => {
+    setDraft(update);
   };
 
   // Clear draft

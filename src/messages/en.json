@@ -196,6 +196,7 @@
     "invalidLink": "This submission link is invalid or has expired",
     "fieldRequired": "This field is required",
     "yourName": "Your Name",
+    "namePlaceholder": "Enter your name",
     "contactInfo": "Contact Information",
     "contactPlaceholder": "Phone"
   },

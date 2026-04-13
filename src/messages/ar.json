@@ -196,6 +196,7 @@
     "invalidLink": "رابط الطلب هذا غير صالح أو منتهي الصلاحية",
     "fieldRequired": "هذا الحقل مطلوب",
     "yourName": "اسمك",
+    "namePlaceholder": "أدخل اسمك",
     "contactInfo": "معلومات الاتصال",
     "contactPlaceholder": "الهاتف"
   },
