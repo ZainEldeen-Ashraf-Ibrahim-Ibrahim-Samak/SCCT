@@ -16,18 +16,58 @@ const LOG_METHODS: Record<LogLevel, "info" | "warn" | "error" | "debug"> = {
 };
 
 const LOG_LEVEL_ORDER: LogLevel[] = ["debug", "info", "warn", "error"];
+const CLIENT_LOG_LEVEL_KEY = "SCCT_LOG_LEVEL";
+
+function normalizeLogLevel(level: string | null | undefined): LogLevel | null {
+  if (!level) return null;
+
+  const normalized = level.toLowerCase();
+  if (
+    normalized === "debug" ||
+    normalized === "info" ||
+    normalized === "warn" ||
+    normalized === "error"
+  ) {
+    return normalized;
+  }
+
+  return null;
+}
+
+function resolveClientRuntimeLogLevel(): LogLevel | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const fromStorage = normalizeLogLevel(
+      window.localStorage.getItem(CLIENT_LOG_LEVEL_KEY),
+    );
+    if (fromStorage) {
+      return fromStorage;
+    }
+  } catch {
+    // Ignore localStorage access issues (privacy mode/sandbox).
+  }
+
+  const fromGlobal = normalizeLogLevel(
+    (window as Window & { __SCCT_LOG_LEVEL?: string }).__SCCT_LOG_LEVEL,
+  );
+
+  return fromGlobal;
+}
 
 function resolveMinLogLevel(): LogLevel {
-  const configuredLevel = (
-    process.env.NEXT_PUBLIC_LOG_LEVEL || process.env.LOG_LEVEL || ""
-  ).toLowerCase();
+  const runtimeClientLevel = resolveClientRuntimeLogLevel();
+  if (runtimeClientLevel) {
+    return runtimeClientLevel;
+  }
 
-  if (
-    configuredLevel === "debug" ||
-    configuredLevel === "info" ||
-    configuredLevel === "warn" ||
-    configuredLevel === "error"
-  ) {
+  const configuredLevel = normalizeLogLevel(
+    process.env.NEXT_PUBLIC_LOG_LEVEL || process.env.LOG_LEVEL || "",
+  );
+
+  if (configuredLevel) {
     return configuredLevel;
   }
 

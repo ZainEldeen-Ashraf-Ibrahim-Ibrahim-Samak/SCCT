@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import type { Submission } from "@/domain/entities/submission";
+import { logger } from "@/lib/dev-logger";
 
 interface UseSubmissionsListReturn {
   submissions: Submission[];
@@ -25,11 +26,16 @@ export function useSubmissionsList(): UseSubmissionsListReturn {
 
   const fetchCounts = async () => {
     try {
+      logger.debug("Fetching admin submission counts");
       const res = await fetch("/api/admin/submissions/counts", { cache: "no-store" });
       const json = await res.json();
-      if (json.success) setCounts(json.data);
+      if (json.success) {
+        setCounts(json.data);
+        logger.debug("Admin submission counts fetched", json.data);
+      }
     } catch {
       // Background count fetch failure is non-fatal
+      logger.warn("Failed to fetch admin submission counts");
     }
   };
 
@@ -38,6 +44,7 @@ export function useSubmissionsList(): UseSubmissionsListReturn {
     setError(null);
     try {
       const url = `/api/admin/submissions?page=${page}&status=${encodeURIComponent(status)}`;
+      logger.info("Fetching admin submissions", { page, status });
       const res = await fetch(url, { cache: "no-store" });
       const json = await res.json();
 
@@ -46,16 +53,24 @@ export function useSubmissionsList(): UseSubmissionsListReturn {
       setSubmissions(json.data.submissions);
       setTotal(json.data.total);
       setTotalPages(json.data.totalPages);
+      logger.info("Admin submissions fetched", {
+        page,
+        status,
+        total: json.data.total,
+        pageSize: json.data.submissions.length,
+      });
 
       fetchCounts();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load submissions");
+      logger.error("Failed to fetch admin submissions", err);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   const updateStatus = async (id: string, status: string, comment?: string) => {
+    logger.info("Updating admin submission status", { id, status });
     const res = await fetch(`/api/admin/submissions/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -63,6 +78,7 @@ export function useSubmissionsList(): UseSubmissionsListReturn {
     });
     const json = await res.json();
     if (!json.success) throw new Error(json.error);
+    logger.info("Admin submission status updated", { id, status });
     await fetchCounts(); // Update counts locally since status changed
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("submissions-updated"));
@@ -70,11 +86,13 @@ export function useSubmissionsList(): UseSubmissionsListReturn {
   };
 
   const deleteSubmission = async (id: string) => {
+    logger.info("Deleting admin submission", { id });
     const res = await fetch(`/api/admin/submissions/${id}`, {
       method: "DELETE",
     });
     const json = await res.json();
     if (!json.success) throw new Error(json.error);
+    logger.info("Admin submission deleted", { id });
   };
 
   return {
