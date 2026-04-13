@@ -3,6 +3,7 @@ import { redirect } from "@/i18n/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { LanguageSwitcher } from "@/presentation/components/shared/language-switcher";
 import { ThemeToggle } from "@/presentation/components/shared/theme-toggle";
+import { Logo } from "@/presentation/components/shared/logo";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { LiveNotifications } from "@/presentation/components/admin/live-notifications";
@@ -28,10 +29,10 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
-      <aside className="hidden md:flex w-64 flex-col border-e bg-card">
+      <aside className="hidden md:flex w-64 flex-col border-e bg-card relative">
         <div className="p-6">
-          <h1 className="text-xl font-bold text-primary">SCCT</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <Logo className="mb-2 hover:opacity-80 transition-opacity" />
+          <p className="text-sm text-muted-foreground truncate" title={session.user.name || ""}>
             {session.user.name}
           </p>
         </div>
@@ -59,17 +60,19 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
               >
                 <Menu className="h-5 w-5" />
               </SheetTrigger>
-              <SheetContent side="left" className="w-72 p-0">
+              <SheetContent side={locale === "ar" ? "right" : "left"} className="w-72 p-0 flex flex-col">
                 <div className="p-6 border-b">
-                  <h2 className="text-xl font-bold text-primary">SCCT</h2>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <Logo className="mb-2" />
+                  <p className="text-sm text-muted-foreground truncate" title={session.user.name || ""}>
                     {session.user.name}
                   </p>
                 </div>
-                <SidebarNav userRole={userRole} />
+                <div className="flex-1 overflow-y-auto">
+                  <SidebarNav userRole={userRole} />
+                </div>
               </SheetContent>
             </Sheet>
-            <h1 className="text-lg font-bold text-primary">SCCT</h1>
+            <Logo className="scale-90 transform origin-left rtl:origin-right" />
           </div>
           <div className="flex items-center gap-1">
             <LanguageSwitcher />
