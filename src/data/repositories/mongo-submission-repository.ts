@@ -1,6 +1,7 @@
 import { SubmissionRepository } from "@/domain/repositories/submission-repository";
 import { Submission, CreateSubmissionInput, UpdateSubmissionStatusInput } from "@/domain/entities/submission";
 import { SubmissionModel } from "@/data/models/submission.model";
+import mongoose from "mongoose";
 import { FieldValueModel } from "@/data/models/field-value.model";
 import { destroyAssets } from "@/data/services/cloudinary-service";
 import { connectToDatabase } from "@/lib/db";
@@ -17,8 +18,8 @@ function toEntity(doc: Record<string, unknown>): Submission {
     clientContact: doc.clientContact as string,
     status: doc.status as Submission["status"],
     rewriteComment: doc.rewriteComment as string,
-    formSnapshot: (doc.formSnapshot as any) ?? [],
-    auditTrail: (doc.auditTrail as any) ?? [],
+    formSnapshot: (doc.formSnapshot as unknown as Submission["formSnapshot"]) ?? [],
+    auditTrail: (doc.auditTrail as unknown as Submission["auditTrail"]) ?? [],
     submittedAt: doc.submittedAt as Date,
     lastResubmittedAt: doc.lastResubmittedAt as Date | null,
     updatedAt: doc.updatedAt as Date,
@@ -82,30 +83,56 @@ export class MongoSubmissionRepository implements SubmissionRepository {
   async listPaginated(
     page: number,
     limit: number,
-    status?: string
+    status?: string,
+    adminName?: string
   ): Promise<{ submissions: Submission[]; total: number; totalPages: number }> {
     try {
       const compute = async () => {
         await connectToDatabase();
-        const filter = status && status !== "all" ? { status } : {};
+        
+        const filter: mongoose.FilterQuery<Record<string, unknown>> = {};
+        
+        if (status && status !== "all") {
+          filter.status = status;
+        }
+
         const skip = (page - 1) * limit;
 
+        // Base query
+        const query = SubmissionModel.find(filter);
+
         const [docs, total] = await Promise.all([
-          SubmissionModel.find(filter).sort({ submittedAt: -1 }).skip(skip).limit(limit).lean(),
+          query.sort({ submittedAt: -1 }).skip(skip).limit(limit).lean(),
           SubmissionModel.countDocuments(filter),
         ]);
 
+        let results = docs.map(toEntity);
+
+        if (adminName && adminName !== "all") {
+          // If filtering by a specific admin updater, apply post-processing since we
+          // need to find where the LAST relevant audit trail matches the status logic.
+          results = results.filter((sub) => {
+            if (sub.auditTrail && sub.auditTrail.length > 0) {
+              const updatedEntries = [...sub.auditTrail].reverse().find(entry => entry.newStatus === sub.status);
+              if (updatedEntries) {
+                return updatedEntries.adminName === adminName;
+              }
+            }
+            return false;
+          });
+        }
+
         return {
-          submissions: docs.map(toEntity),
+          submissions: results,
           total,
           totalPages: Math.ceil(total / limit),
         };
       };
 
-      if (!status || status === "all") {
+      if ((!status || status === "all") && (!adminName || adminName === "all")) {
         return await CacheService.getSubmissionsList("all", page, compute);
       }
-      return await CacheService.getSubmissionsList(status, page, compute);
+      return await CacheService.getSubmissionsList(`${status || "all"}_${adminName || "all"}`, page, compute);
     } catch (error) {
       logger.error("Failed to list paginated submissions", { page, limit, status, error });
       throw error;
@@ -123,7 +150,7 @@ export class MongoSubmissionRepository implements SubmissionRepository {
         const result = { draft: 0, pending: 0, viewed: 0, needs_rewrite: 0, total: 0 };
         for (const row of counts) {
           if (row._id in result) {
-            (result as any)[row._id] = row.count;
+            (result as Record<string, number>)[row._id as string] = row.count;
             result.total += row.count;
           }
         }
@@ -145,7 +172,7 @@ export class MongoSubmissionRepository implements SubmissionRepository {
         oldStatus: submission.status,
         newStatus: input.status,
         comment: input.comment || "",
-        adminId: input.admin.id as any,
+        adminId: new mongoose.Types.ObjectId(input.admin.id as string),
         adminName: input.admin.name,
         timestamp: new Date(),
       };

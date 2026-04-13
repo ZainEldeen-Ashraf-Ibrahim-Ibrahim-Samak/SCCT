@@ -11,7 +11,7 @@ interface UseSubmissionsListReturn {
   counts: { pending: number; draft: number; viewed: number; needs_rewrite: number; total: number };
   isLoading: boolean;
   error: string | null;
-  fetchSubmissions: (page: number, status: string) => Promise<void>;
+  fetchSubmissions: (page: number, status: string, admin?: string) => Promise<void>;
   updateStatus: (id: string, status: string, comment?: string) => Promise<void>;
   deleteSubmission: (id: string) => Promise<void>;
 }
@@ -39,12 +39,15 @@ export function useSubmissionsList(): UseSubmissionsListReturn {
     }
   };
 
-  const fetchSubmissions = useCallback(async (page: number, status: string) => {
+  const fetchSubmissions = useCallback(async (page: number, status: string, admin?: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const url = `/api/admin/submissions?page=${page}&status=${encodeURIComponent(status)}`;
-      logger.info("Fetching admin submissions", { page, status });
+      let url = `/api/admin/submissions?page=${page}&status=${encodeURIComponent(status)}`;
+      if (admin && admin !== "all") {
+        url += `&admin=${encodeURIComponent(admin)}`;
+      }
+      logger.info("Fetching admin submissions", { page, status, admin });
       const res = await fetch(url, { cache: "no-store" });
       const json = await res.json();
 

@@ -24,26 +24,43 @@ export function SubmissionsManager() {
   const [adminFilter, setAdminFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [uniqueAdmins, setUniqueAdmins] = useState<string[]>([]);
 
   useEffect(() => {
     // In a real app, search might be a separate API param. 
     // For now we use the existing fetchSubmissions which might only filter by status.
-    fetchSubmissions(page, statusFilter);
-  }, [page, statusFilter, fetchSubmissions]);
+    fetchSubmissions(page, statusFilter, adminFilter);
+  }, [page, statusFilter, adminFilter, fetchSubmissions]);
 
   // Sync with real-time updates
   useEffect(() => {
+    fetch("/api/admin/submissions/admins")
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && Array.isArray(json.data)) {
+          setUniqueAdmins(json.data);
+        }
+      })
+      .catch((err) => console.error("Failed to load admins list", err));
+
     const handleUpdate = () => {
-      fetchSubmissions(page, statusFilter);
+      fetchSubmissions(page, statusFilter, adminFilter);
     };
 
     window.addEventListener("submissions-updated", handleUpdate);
     return () => window.removeEventListener("submissions-updated", handleUpdate);
-  }, [page, statusFilter, fetchSubmissions]);
+  }, [page, statusFilter, adminFilter, fetchSubmissions]);
 
   const handleFilterChange = (val: string | null) => {
     if (val) {
       setStatusFilter(val);
+      setPage(1);
+    }
+  };
+
+  const handleAdminFilterChange = (val: string | null) => {
+    if (val) {
+      setAdminFilter(val);
       setPage(1);
     }
   };
@@ -58,17 +75,10 @@ export function SubmissionsManager() {
     return null;
   };
 
-  const uniqueAdmins = Array.from(new Set(submissions.map(getLatestUpdater).filter(Boolean))) as string[];
-
   const filteredSubmissions = submissions.filter(sub => {
-    const matchesSearch = search 
+    return search 
       ? (sub.clientName?.toLowerCase().includes(search.toLowerCase()) || sub.clientContact?.toLowerCase().includes(search.toLowerCase())) 
       : true;
-    
-    const latestUpdater = getLatestUpdater(sub);
-    const matchesAdmin = adminFilter === "all" ? true : latestUpdater === adminFilter;
-
-    return matchesSearch && matchesAdmin;
   });
 
   return (
@@ -140,7 +150,7 @@ export function SubmissionsManager() {
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <span className="text-sm font-medium whitespace-nowrap">{t("filterByAdmin") || "Admin"}:</span>
-            <Select value={adminFilter} onValueChange={(val) => val && setAdminFilter(val)}>
+            <Select value={adminFilter} onValueChange={handleAdminFilterChange}>
               <SelectTrigger className="w-full sm:w-[150px]">
                 <SelectValue placeholder={t("allAdmins") || "All Admins"} />
               </SelectTrigger>

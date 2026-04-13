@@ -53,7 +53,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
           <div className="flex items-center gap-2">
             <Sheet>
               <SheetTrigger
-                nativeButton={false}
+                nativeButton={true}
                 render={
                   <Button variant="ghost" size="icon-sm" aria-label="Open menu" />
                 }

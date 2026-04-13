@@ -1,107 +1,105 @@
-# Implementation Plan: [FEATURE]
+# Implementation Plan: Fix Submission Form Sync
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
-
-**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
+**Branch**: `main` | **Date**: 2026-04-14 | **Spec**: [specs/007-fix-submission-form-sync/spec.md](./spec.md)
+**Input**: Feature specification from `/specs/007-fix-submission-form-sync/spec.md`
 
 ## Summary
 
-[Extract from feature spec: primary requirement + technical approach from research]
+Implement four coordinated updates in the existing submission workflow: (1) make contact records editable with add/remove controls while enforcing a minimum of one record, (2) make admin resubmission requests reliably visible to the target user and persist request visibility for later admin review, (3) ensure token-based users refresh into the latest published form structure while preserving matching unsaved values and warning on dropped values, and (4) support multi-select sector values plus a reusable site-name element set to "SCCT" across all site-name displays.
 
 ## Technical Context
 
-<!--
-  ACTION REQUIRED: Replace the content in this section with the technical details
-  for the project. The structure here is presented in advisory capacity to guide
-  the iteration process.
--->
-
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
-**Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]  
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Language/Version**: TypeScript 5.x on Node.js LTS  
+**Primary Dependencies**: Next.js App Router, React 19, next-intl, next-auth, Zod, Mongoose, Upstash Redis, ShadCN UI  
+**Storage**: MongoDB (submissions/field definitions/field values), Upstash Redis (notifications + short-lived event streams), Cloudinary (media)  
+**Testing**: Jest + Testing Library (unit/integration), API smoke script, targeted manual browser flow verification  
+**Target Platform**: Web application (SSR + client hydration) on Vercel/Docker/Cloud Run  
+**Project Type**: Web application (admin + tokenized client submission flows)  
+**Performance Goals**: User sees admin status updates quickly in active sessions; refresh always renders latest form layout; no data-loss path when carrying matching unsaved values across layout updates  
+**Constraints**: Enforce at least one contact record; keep offline resubmission notifications pending for 7 days; preserve i18n/RTL compatibility; use existing API surface where possible; defer heavy build/e2e to final verification step  
+**Scale/Scope**: Affects client submission view model + renderer, admin review/status flow, notification event persistence, shared branding usage, and validation schemas (roughly 8-14 source files)
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-- [ ] I. Clean Architecture (MVVM) compliance?
-- [ ] II. Technology Stack Mandate followed?
-- [ ] V. Internationalization (AR/EN) & RTL support planned?
-- [ ] VIII. Heavy processes (build, e2e, migrations) deferred to the final phase?
+- [x] I. Clean Architecture (MVVM) compliance? — Changes stay in existing layer boundaries: domain entities/use-cases, data repositories/models, and presentation view-model/components.
+- [x] II. Technology Stack Mandate followed? — Uses mandated stack only (Next.js, MongoDB/Mongoose, Cloudinary, Upstash Redis, ShadCN, next-intl).
+- [x] V. Internationalization (AR/EN) & RTL support planned? — All new/updated user-facing text is planned through translation keys; no hardcoded locale text.
+- [x] VIII. Heavy processes (build, e2e, migrations) deferred to the final phase? — Planning and targeted implementation first; full build/e2e reserved for final verification.
 
 ## Project Structure
 
 ### Documentation (this feature)
 
 ```text
-specs/[###-feature]/
-├── plan.md              # This file (/speckit.plan command output)
-├── research.md          # Phase 0 output (/speckit.plan command)
-├── data-model.md        # Phase 1 output (/speckit.plan command)
-├── quickstart.md        # Phase 1 output (/speckit.plan command)
-├── contracts/           # Phase 1 output (/speckit.plan command)
-└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
+specs/007-fix-submission-form-sync/
+├── plan.md
+├── research.md
+├── data-model.md
+├── quickstart.md
+├── contracts/
+│   ├── README.md
+│   └── submissions-and-fields.md
+└── tasks.md               # Generated by /speckit.tasks
 ```
 
 ### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
 
 ```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
 src/
-├── models/
-├── services/
-├── cli/
-└── lib/
-
-tests/
-├── contract/
-├── integration/
-└── unit/
-
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
+├── app/
+│   ├── api/
+│   │   ├── admin/
+│   │   │   ├── submissions/[id]/route.ts
+│   │   │   └── fields/reorder/route.ts
+│   │   └── submissions/[token]/
+│   │       ├── route.ts
+│   │       └── events/route.ts
+│   └── [locale]/
+│       └── ...page.tsx files using site name metadata
+├── components/
+│   └── shared/
+│       └── logo.tsx (+ planned reusable site-name element)
+├── presentation/
+│   ├── components/client/submission-form/
+│   │   ├── index.tsx
+│   │   └── field-renderer.tsx
+│   └── view-models/
+│       └── use-submission.ts
+├── lib/
+│   ├── validations.ts
+│   └── events/publisher.ts
+├── domain/entities/
+│   └── field-definition.ts
+└── data/
+    ├── models/
+    │   ├── submission.model.ts
+    │   └── field-definition.model.ts
+    └── repositories/
+        └── mongo-submission-repository.ts
 ```
 
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
+**Structure Decision**: Keep the existing single-project Next.js structure and implement targeted in-place updates. No new top-level packages or architectural reshaping are required.
+
+## Phase 0 - Research Output
+
+Research completed in `research.md` with explicit decisions for contact-record minimum enforcement, notification retention semantics, draft-to-latest form reconciliation, multi-select sector representation, and reusable site-name standardization.
+
+## Phase 1 - Design Output
+
+- Data model specification completed in `data-model.md`
+- Interface contracts documented in `contracts/submissions-and-fields.md`
+- Implementation + verification runbook documented in `quickstart.md`
+- Agent context update scheduled via `.specify/scripts/powershell/update-agent-context.ps1 -AgentType opencode`
+
+## Post-Design Constitution Check
+
+- [x] I. Clean Architecture (MVVM) compliance remains intact after design decisions.
+- [x] II. Technology Stack Mandate remains intact; no non-mandated services introduced.
+- [x] V. i18n/RTL requirements remain explicitly covered for all user-facing text additions.
+- [x] VIII. Heavy processing still deferred to final verification section of quickstart.
 
 ## Complexity Tracking
 
-> **Fill ONLY if Constitution Check has violations that must be justified**
-
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+No constitution violations or complexity exceptions identified.

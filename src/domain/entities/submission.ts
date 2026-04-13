@@ -8,6 +8,33 @@ import { User } from "./user";
 
 export type SubmissionStatus = "draft" | "pending" | "viewed" | "needs_rewrite";
 
+export type ResubmissionRequestStatus =
+  | "pending_delivery"
+  | "delivered"
+  | "seen"
+  | "expired";
+
+export interface ContactRecord {
+  id: string;
+  name: string;
+  contact?: string;
+  role?: string;
+  notes?: string;
+}
+
+export interface ResubmissionRequest {
+  id: string;
+  targetAccessToken: string;
+  requestedByAdminId: string;
+  requestedByAdminName: string;
+  comment?: string;
+  status: ResubmissionRequestStatus;
+  createdAt: Date;
+  expiresAt: Date;
+  deliveredAt?: Date | null;
+  seenAt?: Date | null;
+}
+
 export interface AuditEntry {
   oldStatus: SubmissionStatus;
   newStatus: SubmissionStatus;
@@ -25,8 +52,10 @@ export interface Submission {
   clientContact: string;
   status: SubmissionStatus;
   rewriteComment: string;
+  contactRecords: ContactRecord[];
   formSnapshot: ReadonlyArray<FieldDefinition>;
   auditTrail: AuditEntry[];
+  resubmissionRequest?: ResubmissionRequest | null;
   submittedAt: Date;
   lastResubmittedAt?: Date | null;
   updatedAt: Date;
@@ -34,7 +63,11 @@ export interface Submission {
 
 export type CreateSubmissionInput = Pick<
   Submission,
-  "clientName" | "clientContact" | "formTemplateId" | "formSnapshot"
+  | "clientName"
+  | "clientContact"
+  | "contactRecords"
+  | "formTemplateId"
+  | "formSnapshot"
 >;
 
 export type UpdateSubmissionStatusInput = {

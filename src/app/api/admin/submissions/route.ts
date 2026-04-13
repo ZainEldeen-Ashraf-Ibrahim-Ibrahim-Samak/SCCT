@@ -17,9 +17,10 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1", 10);
     const status = searchParams.get("status") || "all";
+    const adminName = searchParams.get("admin") || "all";
     const limit = 10;
 
-    const result = await repo.listPaginated(page, limit, status);
+    const result = await repo.listPaginated(page, limit, status, adminName);
     return successResponse(result);
   } catch (error) {
     logger.error("Failed to fetch admin submissions", error);

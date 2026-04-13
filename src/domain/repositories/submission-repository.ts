@@ -12,7 +12,8 @@ export interface SubmissionRepository {
   listPaginated(
     page: number,
     limit: number,
-    status?: string
+    status?: string,
+    adminName?: string
   ): Promise<{ submissions: Submission[]; total: number; totalPages: number }>;
   getCounts(): Promise<{ pending: number; draft: number; viewed: number; needs_rewrite: number; total: number }>;
   updateStatus(id: string, input: UpdateSubmissionStatusInput): Promise<Submission | null>;
