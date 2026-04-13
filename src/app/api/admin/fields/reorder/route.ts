@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { MongoFieldDefinitionRepository } from "@/data/repositories/mongo-field-definition-repository";
 import { ManageFieldsUseCase } from "@/domain/use-cases/admin/manage-fields";
 import { reorderFieldsSchema } from "@/lib/validations";
+import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
+import { logger } from "@/lib/dev-logger";
 
 const repo = new MongoFieldDefinitionRepository();
 const useCase = new ManageFieldsUseCase(repo);
@@ -10,7 +11,7 @@ const useCase = new ManageFieldsUseCase(repo);
 export async function PATCH(request: Request) {
   const session = await auth();
   if (!session?.user) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    return unauthorizedResponse();
   }
 
   try {
@@ -18,15 +19,13 @@ export async function PATCH(request: Request) {
     const parsed = reorderFieldsSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { success: false, error: "Validation failed", details: parsed.error.flatten() },
-        { status: 400 }
-      );
+      return errorResponse("Validation failed", 400, "VALIDATION_FAILED", parsed.error.flatten());
     }
 
     await useCase.reorderFields(parsed.data.formTemplateId, parsed.data.fieldOrder);
-    return NextResponse.json({ success: true, message: "Field order updated" });
-  } catch {
-    return NextResponse.json({ success: false, error: "Failed to reorder fields" }, { status: 500 });
+    return successResponse({ message: "Field order updated" });
+  } catch (error) {
+    logger.error("Failed to reorder fields", error);
+    return errorResponse("Failed to reorder fields", 500, "FIELDS_REORDER_FAILED");
   }
 }

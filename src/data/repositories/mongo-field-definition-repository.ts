@@ -31,7 +31,7 @@ export class MongoFieldDefinitionRepository implements FieldDefinitionRepository
     await connectToDatabase();
     const doc = await FieldDefinitionModel.create(input);
     await CacheService.invalidateFieldsCache(input.formTemplateId);
-    return toEntity(doc.toObject());
+    return toEntity(doc.toObject() as unknown as Record<string, unknown>);
   }
 
   async findById(id: string): Promise<FieldDefinition | null> {

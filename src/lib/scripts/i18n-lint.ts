@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { logger } from "@/lib/dev-logger";
 
 const MESSAGES_DIR = path.join(process.cwd(), "src", "messages");
 const EN_PATH = path.join(MESSAGES_DIR, "en.json");
@@ -30,14 +31,14 @@ function main() {
   let failed = false;
 
   if (missingInAr.length > 0) {
-    console.error(`Missing keys in ar.json:`);
-    missingInAr.forEach(k => console.error(` - ${k}`));
+    logger.error("Missing keys in ar.json:");
+    missingInAr.forEach((key) => logger.error(` - ${key}`));
     failed = true;
   }
 
   if (missingInEn.length > 0) {
-    console.error(`Orphaned keys in ar.json (not in en.json):`);
-    missingInEn.forEach(k => console.error(` - ${k}`));
+    logger.error("Orphaned keys in ar.json (not in en.json):");
+    missingInEn.forEach((key) => logger.error(` - ${key}`));
     failed = true;
   }
 
@@ -48,7 +49,7 @@ function main() {
         if (typeof obj[key] === "object" && obj[key] !== null) {
             checkStubs(obj[key], `${prefix}${key}.`);
         } else if (typeof obj[key] === "string" && obj[key].startsWith("[AR]")) {
-            console.warn(`! Stubbed (untranslated) key: ${prefix}${key}`);
+            logger.warn(`Stubbed (untranslated) key: ${prefix}${key}`);
             stubbedCount++;
             failed = true;
         }
@@ -58,10 +59,14 @@ function main() {
   checkStubs(ar);
 
   if (failed) {
-    console.error(`\nLint failed. Run 'npm run i18n:sync' or translate stubbed keys.`);
+    logger.error("Lint failed. Run 'npm run i18n:sync' or translate stubbed keys.", {
+      stubbedCount,
+      missingInAr: missingInAr.length,
+      missingInEn: missingInEn.length,
+    });
     process.exit(1);
   } else {
-    console.log("i18n Lint passed.");
+    logger.info("i18n Lint passed.");
   }
 }
 

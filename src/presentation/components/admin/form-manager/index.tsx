@@ -77,11 +77,9 @@ export function FormManager() {
           <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              {t("createForm")}
-            </Button>
+          <DialogTrigger render={<Button />}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t("createForm")}
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -165,10 +163,8 @@ export function FormManager() {
                     </Button>
                   )}
                   <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon" className="ms-auto text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                    <AlertDialogTrigger render={<Button variant="ghost" size="icon" className="ms-auto text-destructive" />}>
+                      <Trash2 className="h-4 w-4" />
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>

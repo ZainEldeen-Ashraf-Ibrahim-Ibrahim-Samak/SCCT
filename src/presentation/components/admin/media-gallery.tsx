@@ -63,6 +63,7 @@ export function MediaGallery() {
                     <ExternalLink className="w-4 h-4" />
                   </a>
                   <button 
+                    aria-label="Delete media file"
                     onClick={() => deleteMedia(res.public_id)}
                     className="bg-red-500/80 hover:bg-red-600 p-2 rounded-full text-white backdrop-blur-sm transition-colors"
                   >

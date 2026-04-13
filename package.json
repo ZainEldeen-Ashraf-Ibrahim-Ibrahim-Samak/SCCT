@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "i18n:sync": "tsx src/lib/scripts/i18n-sync.ts",
-    "i18n:lint": "tsx src/lib/scripts/i18n-lint.ts"
+    "i18n:lint": "tsx src/lib/scripts/i18n-lint.ts",
+    "api:smoke": "tsx src/lib/scripts/api-smoke.ts"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.11.1",

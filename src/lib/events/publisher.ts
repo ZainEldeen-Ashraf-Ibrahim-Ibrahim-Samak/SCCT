@@ -1,4 +1,5 @@
 import { redis } from "@/lib/redis";
+import { logger } from "@/lib/dev-logger";
 
 export interface AdminNotification {
   type: "NEW_SUBMISSION" | "SYSTEM_ALERT";
@@ -13,7 +14,7 @@ export const ADMIN_CHANNEL = "admin_notifications";
 export const NotificationPublisher = {
   async notifyAdmins(notification: Omit<AdminNotification, "timestamp">) {
     if (!redis) {
-      console.warn("Redis client not configured. Notifications disabled.");
+      logger.warn("Redis client not configured. Notifications disabled.");
       return;
     }
 
@@ -28,7 +29,7 @@ export const NotificationPublisher = {
       // Keep only last 100 notifications
       await redis.ltrim(ADMIN_CHANNEL, -100, -1);
     } catch (error) {
-      console.error("Failed to publish notification to Upstash Redis", error);
+      logger.error("Failed to publish notification to Upstash Redis", error);
     }
   }
 };

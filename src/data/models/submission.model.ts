@@ -17,7 +17,7 @@ export interface ISubmission extends Document {
   clientContact: string;
   status: SubmissionStatus;
   rewriteComment: string;
-  formSnapshot: any[]; // Frozen representation of FieldDefinitions
+  formSnapshot: Record<string, unknown>[]; // Frozen representation of FieldDefinitions
   auditTrail: IAuditEntry[];
   submittedAt: Date;
   lastResubmittedAt?: Date | null;
@@ -36,6 +36,8 @@ const auditEntrySchema = new Schema<IAuditEntry>(
   { _id: false }
 );
 
+const formSnapshotItemSchema = new Schema<Record<string, unknown>>({}, { _id: false, strict: false });
+
 const submissionSchema = new Schema<ISubmission>(
   {
     accessToken: { type: String, required: true, unique: true },
@@ -49,7 +51,7 @@ const submissionSchema = new Schema<ISubmission>(
       required: true,
     },
     rewriteComment: { type: String, default: "" },
-    formSnapshot: { type: [Schema.Types.Mixed], required: true },
+    formSnapshot: { type: [formSnapshotItemSchema], required: true },
     auditTrail: [auditEntrySchema],
     submittedAt: { type: Date, default: Date.now },
     lastResubmittedAt: { type: Date, default: null },

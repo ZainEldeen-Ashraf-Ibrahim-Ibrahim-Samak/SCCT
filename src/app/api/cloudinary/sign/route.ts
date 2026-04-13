@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { signUploadRequest } from "@/data/services/cloudinary-service";
+import { badRequestResponse, errorResponse } from "@/lib/api-response";
+import { logger } from "@/lib/dev-logger";
 
 export async function POST(request: Request) {
   try {
@@ -7,10 +9,7 @@ export async function POST(request: Request) {
     const { timestamp, folder, eager, public_id } = body;
 
     if (!timestamp) {
-      return NextResponse.json(
-        { success: false, error: "Timestamp is required" },
-        { status: 400 }
-      );
+      return badRequestResponse("Timestamp is required");
     }
 
     const result = signUploadRequest({
@@ -21,10 +20,8 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(result);
-  } catch {
-    return NextResponse.json(
-      { success: false, error: "Failed to sign upload request" },
-      { status: 500 }
-    );
+  } catch (error) {
+    logger.error("Failed to sign upload request", error);
+    return errorResponse("Failed to sign upload request", 500, "SIGN_UPLOAD_FAILED");
   }
 }

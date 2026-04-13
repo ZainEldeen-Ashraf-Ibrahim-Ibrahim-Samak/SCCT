@@ -1,15 +1,14 @@
 import { Redis } from "@upstash/redis";
 
 import { env } from "@/env.mjs";
+import { logger } from "@/lib/dev-logger";
 
 const UPSTASH_REDIS_REST_URL = env.UPSTASH_REDIS_REST_URL;
 const UPSTASH_REDIS_REST_TOKEN = env.UPSTASH_REDIS_REST_TOKEN;
 
 function createRedisClient(): Redis | null {
   if (!UPSTASH_REDIS_REST_URL || !UPSTASH_REDIS_REST_TOKEN) {
-    console.warn(
-      "Upstash Redis not configured. Caching and rate limiting will be disabled."
-    );
+    logger.warn("Upstash Redis not configured. Caching and rate limiting will be disabled.");
     return null;
   }
 
@@ -76,7 +75,7 @@ export async function cacheInvalidatePattern(pattern: string): Promise<void> {
   if (!redis) return;
 
   try {
-    let cursor = 0;
+    let cursor = "0";
     do {
       const [nextCursor, keys] = await redis.scan(cursor, {
         match: pattern,
@@ -86,7 +85,7 @@ export async function cacheInvalidatePattern(pattern: string): Promise<void> {
       if (keys.length > 0) {
         await Promise.all(keys.map((key) => redis!.del(key)));
       }
-    } while (cursor !== 0);
+    } while (cursor !== "0");
   } catch {
     // Redis unavailable, silently continue
   }

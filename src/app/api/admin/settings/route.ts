@@ -1,28 +1,31 @@
-import { NextResponse } from "next/server";
 import { ManageSettingsUseCase } from "@/domain/use-cases/admin/manage-settings";
 import { auth } from "@/lib/auth"; // Assume auth check
+import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
+import { logger } from "@/lib/dev-logger";
 
 const useCase = new ManageSettingsUseCase();
 
 export async function GET() {
   try {
     const session = await auth();
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session?.user) {
+      return unauthorizedResponse();
     }
 
     const settings = await useCase.getSettings();
-    return NextResponse.json({ success: true, data: settings || {} });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return successResponse(settings || {});
+  } catch (error: unknown) {
+    logger.error("Failed to fetch admin settings", error);
+    const message = error instanceof Error ? error.message : "Failed to fetch settings";
+    return errorResponse(message, 500, "SETTINGS_FETCH_FAILED");
   }
 }
 
 export async function PATCH(request: Request) {
   try {
     const session = await auth();
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session?.user) {
+      return unauthorizedResponse();
     }
 
     const body = await request.json();
@@ -33,8 +36,10 @@ export async function PATCH(request: Request) {
       cron: body.cron,
     });
 
-    return NextResponse.json({ success: true, data: updated });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return successResponse(updated);
+  } catch (error: unknown) {
+    logger.error("Failed to update admin settings", error);
+    const message = error instanceof Error ? error.message : "Failed to update settings";
+    return errorResponse(message, 500, "SETTINGS_UPDATE_FAILED");
   }
 }

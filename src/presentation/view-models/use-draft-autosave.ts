@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { logger } from "@/lib/dev-logger";
 
 export function useDraftAutosave<T>(storageKey: string, initialValue: T) {
   const [draft, setDraft] = useState<T>(initialValue);
@@ -12,7 +13,7 @@ export function useDraftAutosave<T>(storageKey: string, initialValue: T) {
         setDraft(JSON.parse(stored));
       }
     } catch (error) {
-      console.warn("Failed to load draft from localStorage", error);
+      logger.warn("Failed to load draft from localStorage", error);
     } finally {
       setIsLoaded(true);
     }
@@ -24,7 +25,7 @@ export function useDraftAutosave<T>(storageKey: string, initialValue: T) {
     try {
       localStorage.setItem(storageKey, JSON.stringify(newDraft));
     } catch (error) {
-      console.warn("Failed to save draft to localStorage", error);
+      logger.warn("Failed to save draft to localStorage", error);
     }
   };
 
@@ -33,7 +34,7 @@ export function useDraftAutosave<T>(storageKey: string, initialValue: T) {
     try {
       localStorage.removeItem(storageKey);
     } catch (error) {
-      console.warn("Failed to clear draft from localStorage", error);
+      logger.warn("Failed to clear draft from localStorage", error);
     }
   };
 

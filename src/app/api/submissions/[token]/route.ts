@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
 import { MongoSubmissionRepository } from "@/data/repositories/mongo-submission-repository";
 import { MongoFieldValueRepository } from "@/data/repositories/mongo-field-value-repository";
 import { MongoFormTemplateRepository } from "@/data/repositories/mongo-form-template-repository";
 import { MongoFieldDefinitionRepository } from "@/data/repositories/mongo-field-definition-repository";
 import { createSubmissionSchema } from "@/lib/validations";
 import { SubmitFormUseCase, ViewSubmissionUseCase } from "@/domain/use-cases/client";
+import { errorResponse, successResponse } from "@/lib/api-response";
+import { logger } from "@/lib/dev-logger";
 
 const submissionRepo = new MongoSubmissionRepository();
 const fieldValueRepo = new MongoFieldValueRepository();
@@ -30,12 +31,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
     const result = await viewUseCase.execute(token);
 
     if (!result) {
-      return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+      return errorResponse("Not found", 404, "NOT_FOUND");
     }
 
-    return NextResponse.json({ success: true, data: result });
-  } catch {
-    return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });
+    return successResponse(result);
+  } catch (error) {
+    logger.error("Failed to fetch submission by token", { error, url: request.url });
+    return errorResponse("Server error", 500, "SUBMISSION_FETCH_FAILED");
   }
 }
 
@@ -45,10 +47,7 @@ export async function POST(request: Request) {
     const parsed = createSubmissionSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { success: false, error: "Validation error", details: parsed.error.flatten() },
-        { status: 400 }
-      );
+      return errorResponse("Validation error", 400, "VALIDATION_ERROR", parsed.error.flatten());
     }
 
     const result = await submitUseCase.execute({
@@ -58,12 +57,13 @@ export async function POST(request: Request) {
     });
 
     if (!result.success) {
-      return NextResponse.json({ success: false, error: result.error }, { status: 400 });
+      return errorResponse(result.error ?? "Invalid submission", 400, "SUBMISSION_INVALID");
     }
 
-    return NextResponse.json({ success: true, data: result.submission }, { status: 201 });
-  } catch {
-    return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });
+    return successResponse(result.submission, 201);
+  } catch (error) {
+    logger.error("Failed to submit form", error);
+    return errorResponse("Server error", 500, "SUBMISSION_CREATE_FAILED");
   }
 }
 
@@ -74,10 +74,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ to
     const parsed = createSubmissionSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { success: false, error: "Validation error", details: parsed.error.flatten() },
-        { status: 400 }
-      );
+      return errorResponse("Validation error", 400, "VALIDATION_ERROR", parsed.error.flatten());
     }
 
     const result = await submitUseCase.resubmit(token, {
@@ -87,11 +84,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ to
     });
 
     if (!result.success) {
-      return NextResponse.json({ success: false, error: result.error }, { status: 400 });
+      return errorResponse(result.error ?? "Invalid resubmission", 400, "RESUBMISSION_INVALID");
     }
 
-    return NextResponse.json({ success: true, data: result.submission });
-  } catch {
-    return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });
+    return successResponse(result.submission);
+  } catch (error) {
+    logger.error("Failed to resubmit form", error);
+    return errorResponse("Server error", 500, "SUBMISSION_RESUBMIT_FAILED");
   }
 }

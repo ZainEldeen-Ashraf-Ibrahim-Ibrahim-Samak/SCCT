@@ -119,11 +119,9 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
               </TableCell>
               <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                      <span className="sr-only">Open menu</span>
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
+                  <DropdownMenuTrigger render={<Button variant="ghost" className="h-8 w-8 p-0" />}>
+                    <span className="sr-only">Open menu</span>
+                    <MoreHorizontal className="h-4 w-4" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => router.push(`/admin/submissions/${sub.id}`)}>
@@ -135,11 +133,9 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
                       {t("copyLink")}
                     </DropdownMenuItem>
                     <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          {t("deleteSubmission")}
-                        </DropdownMenuItem>
+                      <AlertDialogTrigger render={<DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive" />}>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        {t("deleteSubmission")}
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>

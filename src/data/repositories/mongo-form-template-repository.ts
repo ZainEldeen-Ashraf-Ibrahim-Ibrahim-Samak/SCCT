@@ -25,7 +25,7 @@ export class MongoFormTemplateRepository implements FormTemplateRepository {
       isActive: true,
     });
     await CacheService.invalidateFormCache();
-    return toEntity(doc.toObject());
+    return toEntity(doc.toObject() as unknown as Record<string, unknown>);
   }
 
   async findById(id: string): Promise<FormTemplate | null> {

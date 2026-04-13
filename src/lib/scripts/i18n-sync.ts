@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { logger } from "@/lib/dev-logger";
 
 // Run from root, so path is src/messages
 const MESSAGES_DIR = path.join(process.cwd(), "src", "messages");
@@ -19,18 +20,18 @@ function syncKeys(source: any, target: any, prefix = ""): any {
       result[key] = syncResult.result;
       added += syncResult.added;
     } else {
-      if (result[key] === undefined) {
-        result[key] = `[AR] ${source[key]}`;
-        added++;
-        console.log(`+ Added missing key: ${prefix}${key}`);
+        if (result[key] === undefined) {
+          result[key] = `[AR] ${source[key]}`;
+          added++;
+          logger.info(`Added missing key: ${prefix}${key}`);
+        }
       }
-    }
   }
   
   // Remove keys in target that don't exist in source to keep perfectly synced
   for (const key in result) {
      if (source[key] === undefined) {
-        console.log(`- Removed orphaned key: ${prefix}${key}`);
+        logger.info(`Removed orphaned key: ${prefix}${key}`);
         delete result[key];
      }
   }
@@ -39,9 +40,9 @@ function syncKeys(source: any, target: any, prefix = ""): any {
 }
 
 function main() {
-  console.log("Syncing i18n JSON configurations...");
+  logger.info("Syncing i18n JSON configurations...");
   if (!fs.existsSync(EN_PATH)) {
-    console.error("en.json not found!");
+    logger.error("en.json not found!");
     process.exit(1);
   }
 
@@ -57,7 +58,7 @@ function main() {
 
   fs.writeFileSync(AR_PATH, JSON.stringify(result, null, 2) + "\n");
 
-  console.log(`Synchronization complete. ${added} keys added. orphans removed.`);
+  logger.info(`Synchronization complete. ${added} keys added. orphans removed.`);
 }
 
 main();

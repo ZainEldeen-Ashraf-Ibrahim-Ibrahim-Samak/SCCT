@@ -10,7 +10,7 @@ function toEntity(doc: Record<string, unknown>): FieldValue {
     fieldDefinitionId: doc.fieldDefinitionId?.toString() ?? "",
     fieldNameSnapshot: doc.fieldNameSnapshot as string,
     fieldTypeSnapshot: doc.fieldTypeSnapshot as FieldValue["fieldTypeSnapshot"],
-    value: doc.value,
+    value: doc.value as FieldValue["value"],
     mediaUrl: doc.mediaUrl as string | null,
     mediaPublicId: doc.mediaPublicId as string | null,
     createdAt: doc.createdAt as Date,
@@ -22,7 +22,7 @@ export class MongoFieldValueRepository implements FieldValueRepository {
   async createMany(inputs: CreateFieldValueInput[]): Promise<FieldValue[]> {
     await connectToDatabase();
     const docs = await FieldValueModel.insertMany(inputs);
-    return docs.map((doc) => toEntity(doc.toObject()));
+    return docs.map((doc) => toEntity(doc.toObject() as unknown as Record<string, unknown>));
   }
 
   async findBySubmissionId(submissionId: string): Promise<FieldValue[]> {
@@ -36,11 +36,11 @@ export class MongoFieldValueRepository implements FieldValueRepository {
     const bulkOps = updates.map((update) => ({
       updateOne: {
         filter: { submissionId, fieldDefinitionId: update.fieldDefinitionId },
-        update: { $set: update.data },
+        update: { $set: update.data as Record<string, unknown> },
       },
     }));
     if (bulkOps.length > 0) {
-      await FieldValueModel.bulkWrite(bulkOps);
+      await FieldValueModel.bulkWrite(bulkOps as any);
     }
   }
 

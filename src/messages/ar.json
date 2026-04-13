@@ -24,6 +24,7 @@
     "yes": "نعم",
     "no": "لا",
     "close": "إغلاق",
+    "download": "تنزيل",
     "copy": "نسخ",
     "copied": "تم النسخ!",
     "error": "خطأ",
@@ -138,6 +139,8 @@
     "deleteWarning": "سيتم إزالة جميع البيانات والملفات المرفوعة وسجل المراجعة. لا يمكن التراجع عن هذا الإجراء.",
     "auditTrail": "سجل المراجعة",
     "auditEntry": "{admin} غيّر الحالة من {oldStatus} إلى {newStatus}",
+    "noContactInfoProvided": "لا توجد معلومات اتصال",
+    "optimisticAdminName": "أنت",
     "statusChanged": "تم تحديث الحالة بنجاح",
     "submissionDeleted": "تم حذف الطلب بنجاح",
     "generateLink": "إنشاء رابط طلب جديد",
@@ -165,9 +168,13 @@
     "uploadProgress": "جارٍ الرفع...",
     "uploadSuccess": "اكتمل الرفع",
     "uploadError": "فشل الرفع. يرجى المحاولة مرة أخرى.",
+    "maxSizeLabel": "الحد الأقصى للحجم: {size}",
     "fileTooLarge": "الملف يتجاوز الحد الأقصى للحجم {maxSize}",
     "invalidLink": "رابط الطلب هذا غير صالح أو منتهي الصلاحية",
     "fieldRequired": "هذا الحقل مطلوب"
+  },
+  "notifications": {
+    "viewDetails": "عرض التفاصيل ←"
   },
   "errors": {
     "generic": "حدث خطأ. يرجى المحاولة مرة أخرى.",

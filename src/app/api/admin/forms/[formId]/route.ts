@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { MongoFormTemplateRepository } from "@/data/repositories/mongo-form-template-repository";
 import { ManageFormsUseCase } from "@/domain/use-cases/admin/manage-forms";
 import { updateFormTemplateSchema } from "@/lib/validations";
+import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
+import { logger } from "@/lib/dev-logger";
 
 const repo = new MongoFormTemplateRepository();
 const useCase = new ManageFormsUseCase(repo);
@@ -14,25 +15,26 @@ interface RouteParams {
 export async function GET(_request: Request, { params }: RouteParams) {
   const session = await auth();
   if (!session?.user) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    return unauthorizedResponse();
   }
 
   try {
     const { formId } = await params;
     const form = await useCase.getForm(formId);
     if (!form) {
-      return NextResponse.json({ success: false, error: "Form not found" }, { status: 404 });
+      return errorResponse("Form not found", 404, "NOT_FOUND");
     }
-    return NextResponse.json({ success: true, data: form });
-  } catch {
-    return NextResponse.json({ success: false, error: "Failed to fetch form" }, { status: 500 });
+    return successResponse(form);
+  } catch (error) {
+    logger.error("Failed to fetch form", error);
+    return errorResponse("Failed to fetch form", 500, "FORM_FETCH_FAILED");
   }
 }
 
 export async function PATCH(request: Request, { params }: RouteParams) {
   const session = await auth();
   if (!session?.user) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    return unauthorizedResponse();
   }
 
   try {
@@ -41,39 +43,35 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     const parsed = updateFormTemplateSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { success: false, error: "Validation failed", details: parsed.error.flatten() },
-        { status: 400 }
-      );
+      return errorResponse("Validation failed", 400, "VALIDATION_FAILED", parsed.error.flatten());
     }
 
     const form = await useCase.updateForm(formId, parsed.data);
     if (!form) {
-      return NextResponse.json({ success: false, error: "Form not found" }, { status: 404 });
+      return errorResponse("Form not found", 404, "NOT_FOUND");
     }
-    return NextResponse.json({ success: true, data: form });
-  } catch {
-    return NextResponse.json({ success: false, error: "Failed to update form" }, { status: 500 });
+    return successResponse(form);
+  } catch (error) {
+    logger.error("Failed to update form", error);
+    return errorResponse("Failed to update form", 500, "FORM_UPDATE_FAILED");
   }
 }
 
 export async function DELETE(_request: Request, { params }: RouteParams) {
   const session = await auth();
   if (!session?.user) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    return unauthorizedResponse();
   }
 
   try {
     const { formId } = await params;
     const result = await useCase.deleteForm(formId);
     if (!result.success) {
-      return NextResponse.json(
-        { success: false, error: result.error },
-        { status: 400 }
-      );
+      return errorResponse(result.error ?? "Failed to delete form", 400, "FORM_DELETE_FAILED");
     }
-    return NextResponse.json({ success: true, message: "Form deleted" });
-  } catch {
-    return NextResponse.json({ success: false, error: "Failed to delete form" }, { status: 500 });
+    return successResponse({ message: "Form deleted" });
+  } catch (error) {
+    logger.error("Failed to delete form", error);
+    return errorResponse("Failed to delete form", 500, "FORM_DELETE_FAILED");
   }
 }

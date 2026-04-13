@@ -20,9 +20,11 @@ export function AdminDashboard() {
     fetchSubmissions(page, statusFilter);
   }, [page, statusFilter, fetchSubmissions]);
 
-  const handleFilterChange = (val: string) => {
-    setStatusFilter(val);
-    setPage(1); // Reset page on filter change
+  const handleFilterChange = (val: string | null) => {
+    if (val) {
+      setStatusFilter(val);
+      setPage(1); // Reset page on filter change
+    }
   };
 
   return (

@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Bell } from "lucide-react";
 import { AdminNotification } from "@/lib/events/publisher";
 import Link from "next/link";
+import { logger } from "@/lib/dev-logger";
 
 export function LiveNotifications() {
   const eventSourceRef = useRef<EventSource | null>(null);
+  const t = useTranslations("notifications");
 
   useEffect(() => {
     let reconnectTimeout: NodeJS.Timeout;
@@ -25,13 +28,12 @@ export function LiveNotifications() {
           const data = JSON.parse(event.data);
           
           if (data.type === "CONNECTION_ESTABLISHED") {
-            // console.log("SSE connected");
             return;
           }
 
           const notification = data as AdminNotification;
 
-          toast.custom((t) => (
+          toast.custom((toastId) => (
             <div className="flex items-start gap-4 p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg w-[350px]">
               <div className="bg-primary/10 text-primary p-2 rounded-full mt-0.5">
                 <Bell className="w-5 h-5" />
@@ -44,10 +46,10 @@ export function LiveNotifications() {
                   <div className="pt-2">
                     <Link 
                       href={notification.link}
-                      onClick={() => toast.dismiss(t)} 
+                      onClick={() => toast.dismiss(toastId)} 
                       className="text-xs font-medium text-primary hover:underline"
                     >
-                      View Details &rarr;
+                      {t("viewDetails")}
                     </Link>
                   </div>
                 )}
@@ -56,13 +58,13 @@ export function LiveNotifications() {
           ), { duration: 6000 });
 
         } catch (e) {
-          console.error("Failed to parse SSE event", e);
+          logger.error("Failed to parse SSE event", e);
         }
       };
 
-      eventSource.onerror = (err) => {
+      eventSource.onerror = () => {
         eventSource.close();
-        // Reconnect after 3s
+        logger.warn("SSE connection dropped, reconnecting in 3 seconds");
         reconnectTimeout = setTimeout(connect, 3000);
       };
     }

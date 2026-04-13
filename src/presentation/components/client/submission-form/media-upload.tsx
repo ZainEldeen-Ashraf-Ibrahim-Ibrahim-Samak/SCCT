@@ -8,6 +8,7 @@ import Image from "next/image";
 import { formatFileSize } from "@/lib/utils";
 import { useState } from "react";
 import { toast } from "sonner";
+import { logger } from "@/lib/dev-logger";
 
 interface MediaUploadProps {
   type: "image" | "file";
@@ -34,14 +35,14 @@ export function MediaUpload({
   const signatureEndpoint = "/api/cloudinary/sign";
 
   const handleSuccess = (result: any) => {
-    if (result?.info?.secure_url) {
-      onUpload(result.info.secure_url, result.info.public_id);
+    if (result?.info && typeof result.info !== "string" && result.info.secure_url) {
+      onUpload(result.info.secure_url, result.info.public_id ?? "");
       toast.success(t("uploadSuccess"));
     }
   };
 
-  const handleError = (error: any) => {
-    console.error("Cloudinary error:", error);
+  const handleError = (error: unknown) => {
+    logger.error("Cloudinary upload failed", error);
     toast.error(t("uploadError"));
   };
 
@@ -81,7 +82,7 @@ export function MediaUpload({
                 rel="noreferrer"
                 className="text-xs text-primary hover:underline"
               >
-                Download
+                {tc("download")}
               </a>
             </div>
           </div>
@@ -141,7 +142,7 @@ export function MediaUpload({
             {type === "image" ? t("uploadImage") : t("uploadFile")}
           </span>
           <span className="text-xs">
-            Max size: {formatFileSize(maxFileSize * 1024 * 1024)}
+            {t("maxSizeLabel", { size: formatFileSize(maxFileSize * 1024 * 1024) })}
           </span>
         </button>
       )}

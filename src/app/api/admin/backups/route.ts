@@ -1,21 +1,25 @@
-import { NextResponse } from "next/server";
 import { ExecuteBackupUseCase } from "@/domain/use-cases/admin/execute-backup";
+import { env } from "@/env.mjs";
 import { auth } from "@/lib/auth";
+import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
+import { logger } from "@/lib/dev-logger";
 
 const useCase = new ExecuteBackupUseCase();
 
 // Support POST for manual trigger
-export async function POST(request: Request) {
+export async function POST(_request: Request) {
   try {
     const session = await auth();
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session?.user) {
+      return unauthorizedResponse();
     }
 
     const result = await useCase.execute("manual");
-    return NextResponse.json({ success: true, data: result });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return successResponse(result);
+  } catch (error: unknown) {
+    logger.error("Manual backup execution failed", error);
+    const message = error instanceof Error ? error.message : "Backup execution failed";
+    return errorResponse(message, 500, "BACKUP_MANUAL_FAILED");
   }
 }
 
@@ -23,14 +27,16 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   try {
     const authHeader = request.headers.get("authorization");
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: "Unauthorized cron" }, { status: 401 });
+    if (authHeader !== `Bearer ${env.CRON_SECRET}`) {
+      return errorResponse("Unauthorized cron", 401, "UNAUTHORIZED");
     }
 
     const result = await useCase.execute("cron");
-    return NextResponse.json({ success: true, data: result });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return successResponse(result);
+  } catch (error: unknown) {
+    logger.error("Cron backup execution failed", error);
+    const message = error instanceof Error ? error.message : "Cron backup execution failed";
+    return errorResponse(message, 500, "BACKUP_CRON_FAILED");
   }
 }
 

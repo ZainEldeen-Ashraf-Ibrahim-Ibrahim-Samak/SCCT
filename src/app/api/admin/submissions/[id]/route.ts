@@ -1,14 +1,15 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { MongoSubmissionRepository } from "@/data/repositories/mongo-submission-repository";
 import { updateSubmissionStatusSchema } from "@/lib/validations";
+import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
+import { logger } from "@/lib/dev-logger";
 
 const repo = new MongoSubmissionRepository();
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session?.user) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    return unauthorizedResponse();
   }
 
   try {
@@ -17,10 +18,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const parsed = updateSubmissionStatusSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { success: false, error: "Validation error", details: parsed.error.flatten() },
-        { status: 400 }
-      );
+      return errorResponse("Validation error", 400, "VALIDATION_ERROR", parsed.error.flatten());
     }
 
     const result = await repo.updateStatus(id, {
@@ -30,19 +28,20 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     });
 
     if (!result) {
-      return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+      return errorResponse("Not found", 404, "NOT_FOUND");
     }
 
-    return NextResponse.json({ success: true, data: result });
-  } catch {
-    return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });
+    return successResponse(result);
+  } catch (error) {
+    logger.error("Failed to update submission status", error);
+    return errorResponse("Server error", 500, "SUBMISSION_STATUS_UPDATE_FAILED");
   }
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session?.user) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    return unauthorizedResponse();
   }
 
   try {
@@ -50,11 +49,12 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const success = await repo.delete(id);
 
     if (!success) {
-      return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+      return errorResponse("Not found", 404, "NOT_FOUND");
     }
 
-    return NextResponse.json({ success: true, message: "Deleted" });
-  } catch {
-    return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });
+    return successResponse({ message: "Deleted" });
+  } catch (error) {
+    logger.error("Failed to delete submission", { error, url: request.url });
+    return errorResponse("Server error", 500, "SUBMISSION_DELETE_FAILED");
   }
 }

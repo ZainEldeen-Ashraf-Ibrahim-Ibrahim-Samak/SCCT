@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
+import { logger } from "@/lib/dev-logger";
 import { MongoSubmissionRepository } from "@/data/repositories/mongo-submission-repository";
 
 const repo = new MongoSubmissionRepository();
@@ -7,7 +8,7 @@ const repo = new MongoSubmissionRepository();
 export async function GET(request: Request) {
   const session = await auth();
   if (!session?.user) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    return unauthorizedResponse();
   }
 
   try {
@@ -17,8 +18,9 @@ export async function GET(request: Request) {
     const limit = 10;
 
     const result = await repo.listPaginated(page, limit, status);
-    return NextResponse.json({ success: true, data: result });
-  } catch {
-    return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });
+    return successResponse(result);
+  } catch (error) {
+    logger.error("Failed to fetch admin submissions", error);
+    return errorResponse("Server error", 500, "SUBMISSIONS_FETCH_FAILED");
   }
 }

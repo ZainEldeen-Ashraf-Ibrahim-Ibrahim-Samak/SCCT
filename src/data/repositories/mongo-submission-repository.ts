@@ -5,6 +5,7 @@ import { FieldValueModel } from "@/data/models/field-value.model";
 import { destroyAssets } from "@/data/services/cloudinary-service";
 import { connectToDatabase } from "@/lib/db";
 import { CacheService } from "@/data/services/cache-service";
+import { logger } from "@/lib/dev-logger";
 
 function toEntity(doc: Record<string, unknown>): Submission {
   return {
@@ -34,7 +35,7 @@ export class MongoSubmissionRepository implements SubmissionRepository {
       submittedAt: new Date(),
     });
     await CacheService.invalidateSubmissionCache();
-    return toEntity(doc.toObject());
+    return toEntity(doc.toObject() as unknown as Record<string, unknown>);
   }
 
   async findById(id: string): Promise<Submission | null> {
@@ -160,7 +161,9 @@ export class MongoSubmissionRepository implements SubmissionRepository {
       .filter((id) => typeof id === "string" && id.trim().length > 0) as string[];
 
     if (publicIds.length > 0) {
-      await destroyAssets(publicIds).catch(console.error); // Best effort
+      await destroyAssets(publicIds).catch((error) => {
+        logger.error("Failed to destroy Cloudinary assets during submission deletion", error);
+      });
     }
 
     // Delete field values

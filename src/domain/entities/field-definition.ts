@@ -32,7 +32,7 @@ export interface FieldDefinition {
 
 export type CreateFieldDefinitionInput = Omit<
   FieldDefinition,
-  "id" | "isActive" | "createdAt" | "updatedAt"
+  "id" | "isActive" | "createdAt" | "updatedAt" | "sortOrder"
 > & {
   sortOrder?: number;
 };

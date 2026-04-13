@@ -24,6 +24,7 @@
     "yes": "Yes",
     "no": "No",
     "close": "Close",
+    "download": "Download",
     "copy": "Copy",
     "copied": "Copied!",
     "error": "Error",
@@ -138,6 +139,8 @@
     "deleteWarning": "This will remove all data, uploaded files, and audit history. This action cannot be undone.",
     "auditTrail": "Audit Trail",
     "auditEntry": "{admin} changed status from {oldStatus} to {newStatus}",
+    "noContactInfoProvided": "No contact info provided",
+    "optimisticAdminName": "You",
     "statusChanged": "Status updated successfully",
     "submissionDeleted": "Submission deleted successfully",
     "generateLink": "Generate New Submission Link",
@@ -165,9 +168,13 @@
     "uploadProgress": "Uploading...",
     "uploadSuccess": "Upload complete",
     "uploadError": "Upload failed. Please try again.",
+    "maxSizeLabel": "Max size: {size}",
     "fileTooLarge": "File exceeds maximum size of {maxSize}",
     "invalidLink": "This submission link is invalid or has expired",
     "fieldRequired": "This field is required"
+  },
+  "notifications": {
+    "viewDetails": "View Details →"
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",

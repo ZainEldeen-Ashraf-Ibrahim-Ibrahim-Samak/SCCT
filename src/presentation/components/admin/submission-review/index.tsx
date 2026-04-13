@@ -4,15 +4,15 @@ import { useTranslations, useLocale } from "next-intl";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useSubmissionsList } from "@/presentation/view-models/use-submissions-list";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
-import { CheckCircle2, Clock, Eye, AlertCircle, File, ArrowLeft } from "lucide-react";
+import { Clock, Eye, AlertCircle, File, ArrowLeft } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
+import { logger } from "@/lib/dev-logger";
 import { formatDate } from "@/lib/utils";
 import type { Submission } from "@/domain/entities/submission";
 import type { FieldValue } from "@/domain/entities/field-value";
@@ -38,10 +38,6 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
   useEffect(() => {
     const fetchSubmission = async () => {
       try {
-        const res = await fetch(`/api/admin/submissions/${id}?fields=true`);
-        // Wait, the detail route I created actually doesn't expose fields... Let's use the client ViewSubmission API
-        // But admin needs ID. Wait, the client token route can also accept ID if it's not a UUID and fails back to ID check. 
-        // Let's rely on that fallback for simplicity:
         const fetchRes = await fetch(`/api/submissions/${id}`);
         const json = await fetchRes.json();
         
@@ -54,8 +50,8 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
               setSubmission(prev => prev ? { ...prev, status: "viewed" } : null);
            }
         }
-      } catch (err) {
-        console.error(err);
+      } catch (error) {
+        logger.error("Failed to fetch submission details", error);
       } finally {
         setIsLoading(false);
       }
@@ -77,7 +73,7 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
           newStatus: status as any,
           comment: status === "needs_rewrite" ? rewriteComment : undefined,
           adminId: "optimistic",
-          adminName: "You",
+          adminName: t("optimisticAdminName"),
           timestamp: new Date()
         }];
         return { ...prev, status: status as any, auditTrail: newTrack };
@@ -135,7 +131,7 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
                 <div>
                   <CardTitle className="text-2xl">{submission.clientName}</CardTitle>
                   <CardDescription className="text-base mt-1">
-                    {submission.clientContact || "No contact info provided"}
+                    {submission.clientContact || t("noContactInfoProvided")}
                   </CardDescription>
                 </div>
                 <div className="flex flex-col items-end gap-2">
@@ -181,7 +177,7 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
                                 rel="noreferrer" 
                                 className="text-sm font-medium text-primary hover:underline"
                               >
-                                {tc("download")} {t("client.uploadFile")}
+                                {tc("download")}
                               </a>
                             </div>
                           )
