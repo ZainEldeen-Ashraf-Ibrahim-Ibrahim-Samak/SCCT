@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { env } from "@/env.mjs";
 
 /**
  * Merge Tailwind CSS classes with clsx and tailwind-merge.
@@ -46,7 +47,7 @@ export function formatFileSize(bytes: number): string {
  * Build the full submission URL from an access token.
  */
 export function buildSubmissionUrl(accessToken: string): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.AUTH_URL || "http://localhost:3000";
+  const baseUrl = env.NEXT_PUBLIC_APP_URL || env.AUTH_URL || "http://localhost:3000";
   return `${baseUrl}/submit/${accessToken}`;
 }
 

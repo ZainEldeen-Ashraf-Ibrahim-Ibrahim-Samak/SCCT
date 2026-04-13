@@ -4,9 +4,10 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { LanguageSwitcher } from "@/presentation/components/shared/language-switcher";
 import { ThemeToggle } from "@/presentation/components/shared/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, FileText, LogOut } from "lucide-react";
+import { LayoutDashboard, FileText, LogOut, Settings, Image } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { signOut } from "@/lib/auth";
+import { LiveNotifications } from "@/presentation/components/admin/live-notifications";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -48,6 +49,20 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
             <FileText className="h-4 w-4" />
             {t("forms")}
           </Link>
+          <Link
+            href="/admin/media"
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+          >
+            <Image className="h-4 w-4" />
+            Media Manager
+          </Link>
+          <Link
+            href="/admin/settings"
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+          >
+            <Settings className="h-4 w-4" />
+            Settings
+          </Link>
         </nav>
 
         <div className="p-4 border-t space-y-2">
@@ -63,7 +78,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
           >
             <Button variant="ghost" size="sm" className="w-full justify-start gap-2">
               <LogOut className="h-4 w-4" />
-              {t("dashboard")}
+              {t("logout")}
             </Button>
           </form>
         </div>
@@ -80,7 +95,10 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
         </header>
 
         {/* Main content */}
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-6">
+          <LiveNotifications />
+          {children}
+        </main>
       </div>
     </div>
   );

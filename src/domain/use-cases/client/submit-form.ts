@@ -4,6 +4,7 @@ import { FormTemplateRepository } from "@/domain/repositories/form-template-repo
 import { FieldDefinitionRepository } from "@/domain/repositories/field-definition-repository";
 import { Submission } from "@/domain/entities/submission";
 import { generateAccessToken } from "@/lib/utils";
+import { NotificationPublisher } from "@/lib/events/publisher";
 
 interface SubmitFormData {
   clientName: string;
@@ -89,6 +90,14 @@ export class SubmitFormUseCase {
       await this.fieldValueRepo.createMany(fieldValuesToCreate);
     }
 
+    // Fire & forget notification
+    NotificationPublisher.notifyAdmins({
+      type: "NEW_SUBMISSION",
+      title: "New Submission",
+      message: `${data.clientName} just submitted a new response.`,
+      link: `/admin/submissions?expand=${submission.id}`
+    });
+
     return { success: true, submission };
   }
 
@@ -132,6 +141,14 @@ export class SubmitFormUseCase {
 
     // 3. Reset submission status to pending
     const updatedSubmission = await this.submissionRepo.resetStatusForResubmission(submission.id);
+
+    // Fire & forget notification
+    NotificationPublisher.notifyAdmins({
+      type: "NEW_SUBMISSION",
+      title: "Submission Corrected",
+      message: `${data.clientName} has corrected their rejected submission.`,
+      link: `/admin/submissions?expand=${submission.id}`
+    });
 
     return { success: true, submission: updatedSubmission || submission };
   }

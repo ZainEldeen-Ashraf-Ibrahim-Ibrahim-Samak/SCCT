@@ -8,7 +8,9 @@ declare global {
   };
 }
 
-const MONGODB_URI = process.env.MONGODB_URI;
+import { env } from "@/env.mjs";
+
+const MONGODB_URI = env.MONGODB_URI;
 
 if (!MONGODB_URI) {
   throw new Error(

@@ -4,12 +4,19 @@ import { useState, useEffect, useCallback } from "react";
 import type { FieldDefinition } from "@/domain/entities/field-definition";
 import type { Submission } from "@/domain/entities/submission";
 import type { FieldValue } from "@/domain/entities/field-value";
+import { useDraftAutosave } from "./use-draft-autosave";
 
 interface FormFieldData {
   fieldDefinitionId: string;
   value?: string | number | null;
   mediaUrl?: string | null;
   mediaPublicId?: string | null;
+}
+
+interface DraftState {
+  clientName: string;
+  clientContact: string;
+  formData: Record<string, FormFieldData>;
 }
 
 interface UseSubmissionReturn {
@@ -45,12 +52,18 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
   const [submission, setSubmission] = useState<Submission | null>(null);
   const [values, setValues] = useState<FieldValue[]>([]);
 
-  // State for form edits
-  const [clientName, setClientName] = useState("");
-  const [clientContact, setClientContact] = useState("");
-  const [formData, setFormData] = useState<Record<string, FormFieldData>>({});
+  const { draft, updateDraft, clearDraft, isLoaded: draftLoaded } = useDraftAutosave<DraftState>(
+    `scct_draft_${tokenOrId}`,
+    { clientName: "", clientContact: "", formData: {} }
+  );
+
+  const clientName = draft?.clientName || "";
+  const clientContact = draft?.clientContact || "";
+  const formData = draft?.formData || {};
 
   const fetchContent = useCallback(async () => {
+    if (!draftLoaded) return; // Wait until draft is verified
+
     setIsLoading(true);
     setError(null);
     try {
@@ -65,61 +78,77 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       const data = json.data;
       setIsNew(data.isNew);
 
+      // Only inject database seed if the local draft hasn't been edited
+      const hasDraftData = draft.clientName.trim() !== "" || Object.keys(draft.formData).length > 0;
+
       if (data.isNew) {
         setFormName(data.formTemplate?.name || "");
         setFormDescription(data.formTemplate?.description || "");
         setFields(data.fields || []);
-        // Initialize empty state
-        const initialForm: Record<string, FormFieldData> = {};
-        data.fields.forEach((f: FieldDefinition) => {
-          initialForm[f.id] = { fieldDefinitionId: f.id };
-        });
-        setFormData(initialForm);
+        
+        if (!hasDraftData) {
+          const initialForm: Record<string, FormFieldData> = {};
+          data.fields.forEach((f: FieldDefinition) => {
+            initialForm[f.id] = { fieldDefinitionId: f.id };
+          });
+          updateDraft({ clientName: "", clientContact: "", formData: initialForm });
+        }
       } else {
         setFormName(data.submission?.formTemplateId || "Submission");
         setSubmission(data.submission);
         setValues(data.values || []);
         setFields(data.fields || []);
 
-        setClientName(data.submission?.clientName || "");
-        setClientContact(data.submission?.clientContact || "");
-
-        // Pre-fill existing data
-        const initialForm: Record<string, FormFieldData> = {};
-        data.fields.forEach((f: FieldDefinition) => {
-          const matchedVal = data.values?.find((v: FieldValue) => v.fieldDefinitionId === f.id);
-          initialForm[f.id] = {
-            fieldDefinitionId: f.id,
-            value: matchedVal?.value,
-            mediaUrl: matchedVal?.mediaUrl,
-            mediaPublicId: matchedVal?.mediaPublicId,
-          };
-        });
-        setFormData(initialForm);
+        if (!hasDraftData) {
+          const initialForm: Record<string, FormFieldData> = {};
+          data.fields.forEach((f: FieldDefinition) => {
+            const matchedVal = data.values?.find((v: FieldValue) => v.fieldDefinitionId === f.id);
+            initialForm[f.id] = {
+              fieldDefinitionId: f.id,
+              value: matchedVal?.value,
+              mediaUrl: matchedVal?.mediaUrl,
+              mediaPublicId: matchedVal?.mediaPublicId,
+            };
+          });
+          updateDraft({ 
+            clientName: data.submission?.clientName || "", 
+            clientContact: data.submission?.clientContact || "", 
+            formData: initialForm 
+          });
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "error");
     } finally {
       setIsLoading(false);
     }
-  }, [tokenOrId]);
+  }, [tokenOrId, draftLoaded]);
 
   useEffect(() => {
     fetchContent();
   }, [fetchContent]);
 
+  const setClientName = (name: string) => updateDraft({ ...draft, clientName: name });
+  const setClientContact = (contact: string) => updateDraft({ ...draft, clientContact: contact });
+
   const setFieldValue = (id: string, value: string | number | null) => {
-    setFormData((prev) => ({
-      ...prev,
-      [id]: { ...prev[id], value, fieldDefinitionId: id },
-    }));
+    updateDraft({
+      ...draft,
+      formData: {
+        ...draft.formData,
+        [id]: { ...draft.formData[id], value, fieldDefinitionId: id },
+      }
+    });
   };
 
   const setMediaValue = (id: string, url: string, publicId: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [id]: { ...prev[id], mediaUrl: url, mediaPublicId: publicId, fieldDefinitionId: id },
-    }));
+    updateDraft({
+      ...draft,
+      formData: {
+        ...draft.formData,
+        [id]: { ...draft.formData[id], mediaUrl: url, mediaPublicId: publicId, fieldDefinitionId: id },
+      }
+    });
   };
 
   const submitForm = async () => {
@@ -140,7 +169,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
 
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Failed to submit");
-      // Force refresh data
+      clearDraft();
       window.location.href = `/submit/${json.data.accessToken}`;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Submission failed");
@@ -168,7 +197,9 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
 
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Failed to resubmit");
-      await fetchContent(); // refresh
+      clearDraft();
+      // To strictly avoid stale draft data reloading right after submit:
+      window.location.reload(); 
     } catch (err) {
       setError(err instanceof Error ? err.message : "Resubmission failed");
       throw err;

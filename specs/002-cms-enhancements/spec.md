@@ -39,7 +39,7 @@ Clients filling out vast dynamic forms must not lose their inputted text and con
 
 ### User Story 3 - Admin Settings, Cron, and Backups (Priority: P1)
 
-Admins require a cohesive "Settings" Dashboard where they can manage system-wide parameters. Specifically, they need to configure automated chronological tasks (cron) to run at restricted intervals (either daily, hourly, or monthly, but never simultaneously). Among these tasks is a Database Backup system where admins can choose between Local, Cloud, or Both.
+Admins require a cohesive "Settings" Dashboard where they can manage system-wide parameters. Specifically, they need to configure automated chronological tasks (cron) to run at restricted intervals (either minutely, hourly, daily, or monthly, but never simultaneously). Among these tasks is a Database Backup system where admins can choose between Local, Cloud, or Both.
 
 **Why this priority**: Database safety is paramount for a CMS. The ability to guarantee automated backups protects business continuity.
 
@@ -88,7 +88,7 @@ Admins need an Analytics Dashboard showcasing high-level statistics of platform 
 - **FR-002**: System MUST include a script that synchronizes the structure of the primary localization file to secondary files.
 - **FR-003**: System MUST include a checking mechanism validating localized keys and detecting unknown/unmapped words via Mapped Key Verification (ensuring structural keys translate correctly across active locales).
 - **FR-004**: System MUST automatically store and restore unsubmitted client form progress (drafts).
-- **FR-005**: System MUST provide an Admin Settings interface exposing Database Backup protocols and Cron interval limits (Hourly, Daily, Monthly — mutually exclusive).
+- **FR-005**: System MUST provide an Admin Settings interface exposing Database Backup protocols and Cron interval limits (Minutely, Hourly, Daily, Monthly — mutually exclusive).
 - **FR-006**: System MUST execute database backups and export them securely to Cloudinary utilizing the existing integrated platform infrastructure.
 - **FR-007**: System MUST provide an administrative Media Manager aggregating all user and system media uploads for review and deletion.
 - **FR-008**: System MUST emit live push/WebSocket notifications directly to active Admin sessions triggered by client data submissions.

@@ -1,30 +1,23 @@
 <!--
   Sync Impact Report
   ─────────────────────────────────────────────────────
-  Version change: 0.0.0 → 1.0.0
-  Bump rationale: MAJOR — initial constitution creation
-    from blank template with all principles defined.
+  Version change: 1.0.0 → 1.1.0
+  Bump rationale: MINOR — added guidance on full SpecKit workflow,
+    Zero-Warning build policy, i18n synchronization scripts, and 
+    strict devlogger usage.
 
-  Modified principles:
-    [PRINCIPLE_1_NAME] → I. Clean Architecture (MVVM)
-    [PRINCIPLE_2_NAME] → II. Technology Stack Mandate
-    [PRINCIPLE_3_NAME] → III. Dynamic Schema Design
-    [PRINCIPLE_4_NAME] → IV. Media Management via Cloudinary
-    [PRINCIPLE_5_NAME] → V. Internationalization & Theming
+  Modified principles/sections:
+    V. Internationalization & Theming → updated to mandate sync scripts
+    Code Review & Quality Gates → updated with zero-warning and logging rules
+    Development Workflow → explicitly integrated full project flow
 
-  Added sections:
-    VI. Caching & Performance (Upstash Redis)
-    VII. Security & Data Integrity
-    Technology Stack Requirements (Section 2)
-    Development Workflow (Section 3)
-
-  Removed sections: (none — all template placeholders replaced)
+  Added sections: none
+  Removed sections: none
 
   Templates requiring updates:
-    ✅ .specify/templates/plan-template.md — reviewed, no updates needed
-    ✅ .specify/templates/spec-template.md — reviewed, no updates needed
-    ✅ .specify/templates/tasks-template.md — reviewed, no updates needed
-    ⚠  .specify/templates/commands/ — directory does not exist, skipped
+    ✅ .specify/templates/plan-template.md — reviewed
+    ✅ .specify/templates/spec-template.md — reviewed
+    ✅ .specify/templates/tasks-template.md — reviewed
 
   Follow-up TODOs: none
   ─────────────────────────────────────────────────────
@@ -116,12 +109,8 @@ All media (images, documents, videos) MUST flow through Cloudinary.
 The application MUST support Arabic (ar) and English (en) with full
 RTL/LTR layout switching and dark/light theme toggling from day one.
 
-- **i18n framework**: All user-facing strings MUST use translation
-  keys managed through an i18n library (e.g., next-intl or i18next).
-  Hard-coded strings in components are prohibited.
-- **Translation files**: Each locale MUST have a complete JSON
-  translation file. Missing keys MUST fall back to English and log a
-  warning.
+- **i18n framework & keys**: All user-facing strings MUST use structured translation keys managed through the `next-intl` library. Hard-coded language strings in components are strictly prohibited.
+- **Translation synchronization**: Developers MUST use the language scripts (`npm run i18n:sync` and `npm run i18n:lint`) to ensure the Arabic (`ar`) and English (`en`) JSON files remain fully synchronized without structural errors or orphaned keys.
 - **RTL support**: The layout MUST dynamically switch direction based
   on the active locale. CSS MUST use logical properties
   (margin-inline-start, padding-inline-end) instead of physical
@@ -190,20 +179,19 @@ The following versions and services are mandated:
 
 ## Development Workflow
 
-### Branching & Commits
+### Project Flow & Branches
 
-- Feature branches MUST follow the naming convention
-  `###-feature-name` (e.g., `001-dynamic-fields`).
-- Commits MUST use conventional commit messages
-  (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`).
+- The project MUST utilize the full specification workflow sequentially: clarify → plan → tasks → implement → review.
+- Feature branches MUST follow the naming convention `###-feature-name` (e.g., `002-cms-enhancements`).
+- Commits MUST use conventional commit messages (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`).
 - Pull requests MUST pass linting and type checks before merge.
 
-### Code Review & Quality Gates
+### Code Review, Logging & Quality Gates
 
-- Every pull request MUST be reviewed by at least one other developer
-  (or the AI assistant acting as reviewer).
-- Linting (ESLint) and formatting (Prettier) MUST be enforced via
-  pre-commit hooks or CI.
+- **Zero-Warning Policy**: Before building, developers MUST review and resolve *all* warnings. This includes ESLint warnings, TypeScript errors, Tailwind CSS warnings, and React console warnings.
+- **Logging Rule**: Standard `console.log()` statements are strictly prohibited in production code. Developers MUST use a dedicated `devlogger` or equivalent structured logging utility for debugging.
+- Every pull request MUST be reviewed by at least one other developer (or the AI assistant acting as reviewer).
+- Formatting (Prettier) MUST be enforced via pre-commit hooks or CI.
 - No `any` types in TypeScript — strict mode MUST be enabled.
 
 ### Testing Strategy
@@ -228,4 +216,4 @@ The following versions and services are mandated:
 - Use the project's `.specify/` guidance files for runtime
   development guidance.
 
-**Version**: 1.0.0 | **Ratified**: 2026-04-12 | **Last Amended**: 2026-04-12
+**Version**: 1.1.0 | **Ratified**: 2026-04-12 | **Last Amended**: 2026-04-13

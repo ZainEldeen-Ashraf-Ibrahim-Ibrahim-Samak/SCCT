@@ -1,7 +1,9 @@
 import { Redis } from "@upstash/redis";
 
-const UPSTASH_REDIS_REST_URL = process.env.UPSTASH_REDIS_REST_URL;
-const UPSTASH_REDIS_REST_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+import { env } from "@/env.mjs";
+
+const UPSTASH_REDIS_REST_URL = env.UPSTASH_REDIS_REST_URL;
+const UPSTASH_REDIS_REST_TOKEN = env.UPSTASH_REDIS_REST_TOKEN;
 
 function createRedisClient(): Redis | null {
   if (!UPSTASH_REDIS_REST_URL || !UPSTASH_REDIS_REST_TOKEN) {

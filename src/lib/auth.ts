@@ -5,11 +5,11 @@ import { MongoClient } from "mongodb";
 import bcrypt from "bcryptjs";
 import { connectToDatabase } from "@/lib/db";
 import { UserModel } from "@/data/models/user.model";
+import { env } from "@/env.mjs";
 
 // MongoDB client for Auth.js adapter
 const clientPromise = (async () => {
-  const uri = process.env.MONGODB_URI!;
-  const client = new MongoClient(uri);
+  const client = new MongoClient(env.MONGODB_URI!);
   await client.connect();
   return client;
 })();
