@@ -195,9 +195,6 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
   draftRef.current = draft;
   const formVersionRef = useRef<string | null>(null);
 
-  // Queue for SSE events received during active editing.
-  // Events are stored here and only processed after submit/navigate.
-  const pendingSSERef = useRef<string[]>([]);
   const isEditingRef = useRef(false);
 
   // Track whether the user has started editing (any draft mutation after initial load)
@@ -429,25 +426,19 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
         try {
           const data = JSON.parse(event.data) as EventsPayload;
           if (data.type === "STATUS_CHANGED") {
-            // Queue SSE events during active editing — process after submit/navigate
-            if (isEditingRef.current) {
-              pendingSSERef.current.push(data.type);
-            } else {
-              // Show a toast so the user knows the status changed
-              const newStatus = data.status;
-              if (newStatus === "viewed") {
-                toast.info("✓ Your submission has been viewed");
-              } else if (newStatus === "needs_rewrite") {
-                toast.warning("Your submission needs revision");
-              }
-              if (data.requestStatus === "pending_delivery" || data.requestStatus === "delivered") {
-                toast.warning("A resubmission request was sent");
-              }
-              // Trigger live-update animation flag
-              setStatusChangedLive(true);
-              setTimeout(() => setStatusChangedLive(false), 2000);
-              fetchContent(true);
+            const newStatus = data.status;
+            if (newStatus === "viewed") {
+              toast.info("✓ Your submission has been viewed");
+            } else if (newStatus === "needs_rewrite") {
+              toast.warning("Your submission needs revision");
             }
+            if (data.requestStatus === "pending_delivery" || data.requestStatus === "delivered") {
+              toast.warning("A resubmission request was sent");
+            }
+
+            setStatusChangedLive(true);
+            setTimeout(() => setStatusChangedLive(false), 2000);
+            fetchContent(true);
           }
         } catch {
           // silent fail for heartbeat/ping
@@ -537,7 +528,6 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       if (!json.success) throw new Error(json.error || "Failed to submit");
       clearDraft();
       isEditingRef.current = false;
-      pendingSSERef.current = [];
       // Client-side navigation via history API prevents full component remount
       const newUrl = `/${locale}/submit/${json.data.accessToken}`;
       window.history.pushState(null, "", newUrl);
@@ -605,7 +595,6 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       if (!json.success) throw new Error(json.error || "Failed to resubmit");
       clearDraft();
       isEditingRef.current = false;
-      pendingSSERef.current = [];
       // Silently refresh data without flashing skeletons
       await fetchContent(true);
     } catch (err) {

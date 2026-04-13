@@ -27,6 +27,9 @@ export default async function PublicFormStartPage({
     }
 
     const fields = await fieldDefRepo.findByFormId(formId, false);
+    const contactRecords = form.contactRecords && form.contactRecords.length > 0
+      ? form.contactRecords
+      : [{ id: "primary", name: "Primary Contact", contact: "", role: "", notes: "" }];
 
     // Create a new empty submission to generate an invite token, marked as draft
     const token = generateAccessToken();
@@ -35,7 +38,7 @@ export default async function PublicFormStartPage({
         formTemplateId: formId,
         clientName: "",
         clientContact: "",
-        contactRecords: [{ id: "primary", name: "Primary Contact" }],
+        contactRecords,
         formSnapshot: fields,
       },
       token

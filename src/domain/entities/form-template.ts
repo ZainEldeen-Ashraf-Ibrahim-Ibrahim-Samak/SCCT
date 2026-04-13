@@ -6,6 +6,13 @@ export interface FormTemplate {
   id: string;
   name: string;
   description: string;
+  contactRecords: Array<{
+    id: string;
+    name: string;
+    contact?: string;
+    role?: string;
+    notes?: string;
+  }>;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;

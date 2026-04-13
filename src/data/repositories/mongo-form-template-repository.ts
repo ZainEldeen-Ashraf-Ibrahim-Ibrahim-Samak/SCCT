@@ -7,10 +7,29 @@ import mongoose from "mongoose";
 import { logger } from "@/lib/dev-logger";
 
 function toEntity(doc: Record<string, unknown>): FormTemplate {
+  const rawContactRecords = Array.isArray(doc.contactRecords) ? doc.contactRecords : [];
+  const contactRecords = rawContactRecords
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const record = item as Record<string, unknown>;
+      const id = String(record.id ?? "").trim();
+      const name = String(record.name ?? "").trim();
+      if (!id || !name) return null;
+      return {
+        id,
+        name,
+        contact: String(record.contact ?? ""),
+        role: String(record.role ?? ""),
+        notes: String(record.notes ?? ""),
+      };
+    })
+    .filter((record): record is NonNullable<typeof record> => !!record);
+
   return {
     id: doc._id?.toString() ?? "",
     name: doc.name as string,
     description: (doc.description as string) ?? "",
+    contactRecords,
     isActive: doc.isActive as boolean,
     createdAt: doc.createdAt as Date,
     updatedAt: doc.updatedAt as Date,
@@ -24,6 +43,7 @@ export class MongoFormTemplateRepository implements FormTemplateRepository {
       const doc = await FormTemplateModel.create({
         name: input.name,
         description: input.description ?? "",
+        contactRecords: [{ id: "primary", name: "Primary Contact", contact: "", role: "", notes: "" }],
         isActive: true,
       });
       await CacheService.invalidateFormCache();

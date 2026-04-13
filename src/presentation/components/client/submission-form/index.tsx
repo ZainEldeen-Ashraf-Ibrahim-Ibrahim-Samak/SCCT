@@ -33,9 +33,6 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
     clientName,
     setClientName,
     contactRecords,
-    addContactRecord,
-    updateContactRecord,
-    removeContactRecord,
     setFieldValue,
     setMediaValue,
     setMediaItems,
@@ -95,12 +92,6 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
 
     if (!clientName.trim()) {
       errors.clientName = true;
-      isValid = false;
-    }
-
-    const hasValidContactRecord = contactRecords.some((record) => record.name.trim().length > 0);
-    if (!hasValidContactRecord) {
-      errors.contactRecords = true;
       isValid = false;
     }
 
@@ -246,25 +237,7 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
 
               <ContactRecords
                 records={contactRecords}
-                onAdd={() => {
-                  addContactRecord();
-                  if (validationErrors.contactRecords) {
-                    setValidationErrors((prev) => ({ ...prev, contactRecords: false }));
-                  }
-                }}
-                onUpdate={(id, patch) => {
-                  updateContactRecord(id, patch);
-                  if (validationErrors.contactRecords) {
-                    setValidationErrors((prev) => ({ ...prev, contactRecords: false }));
-                  }
-                }}
-                onRemove={removeContactRecord}
-                disabled={isViewOnly}
               />
-
-              {validationErrors.contactRecords && (
-                <p className="text-xs text-destructive">{t("contactRecordRequired")}</p>
-              )}
             </div>
 
             <div className="space-y-6">
