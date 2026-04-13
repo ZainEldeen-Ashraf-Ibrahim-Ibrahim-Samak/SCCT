@@ -4,6 +4,7 @@ import { FormTemplateModel } from "@/data/models/form-template.model";
 import { connectToDatabase } from "@/lib/db";
 import { CacheService } from "@/data/services/cache-service";
 import mongoose from "mongoose";
+import { logger } from "@/lib/dev-logger";
 
 function toEntity(doc: Record<string, unknown>): FormTemplate {
   return {
@@ -18,60 +19,100 @@ function toEntity(doc: Record<string, unknown>): FormTemplate {
 
 export class MongoFormTemplateRepository implements FormTemplateRepository {
   async create(input: CreateFormTemplateInput): Promise<FormTemplate> {
-    await connectToDatabase();
-    const doc = await FormTemplateModel.create({
-      name: input.name,
-      description: input.description ?? "",
-      isActive: true,
-    });
-    await CacheService.invalidateFormCache();
-    return toEntity(doc.toObject() as unknown as Record<string, unknown>);
+    try {
+      await connectToDatabase();
+      const doc = await FormTemplateModel.create({
+        name: input.name,
+        description: input.description ?? "",
+        isActive: true,
+      });
+      await CacheService.invalidateFormCache();
+      return toEntity(doc.toObject() as unknown as Record<string, unknown>);
+    } catch (error) {
+      logger.error("Failed to create form template", { input, error });
+      throw error;
+    }
   }
 
   async findById(id: string): Promise<FormTemplate | null> {
-    await connectToDatabase();
-    const doc = await FormTemplateModel.findById(id).lean();
-    return doc ? toEntity(doc) : null;
+    try {
+      await connectToDatabase();
+      const doc = await FormTemplateModel.findById(id).lean();
+      return doc ? toEntity(doc) : null;
+    } catch (error) {
+      logger.error("Failed to find form template by id", { id, error });
+      throw error;
+    }
   }
 
   async findActive(): Promise<FormTemplate | null> {
-    return CacheService.getActiveForm(async () => {
-      await connectToDatabase();
-      const doc = await FormTemplateModel.findOne({ isActive: true }).lean();
-      return doc ? toEntity(doc) : null;
-    });
+    try {
+      return await CacheService.getActiveForm(async () => {
+        await connectToDatabase();
+        const doc = await FormTemplateModel.findOne({ isActive: true }).lean();
+        return doc ? toEntity(doc) : null;
+      });
+    } catch (error) {
+      logger.error("Failed to find active form template", error);
+      throw error;
+    }
   }
 
   async findAll(): Promise<FormTemplate[]> {
-    await connectToDatabase();
-    const docs = await FormTemplateModel.find().sort({ createdAt: -1 }).lean();
-    return docs.map(toEntity);
+    try {
+      await connectToDatabase();
+      const docs = await FormTemplateModel.find().sort({ createdAt: -1 }).lean();
+      return docs.map(toEntity);
+    } catch (error) {
+      logger.error("Failed to find all form templates", error);
+      throw error;
+    }
   }
 
   async update(id: string, input: UpdateFormTemplateInput): Promise<FormTemplate | null> {
-    await connectToDatabase();
-    const doc = await FormTemplateModel.findByIdAndUpdate(id, input, { new: true }).lean();
-    await CacheService.invalidateFormCache();
-    return doc ? toEntity(doc) : null;
+    try {
+      await connectToDatabase();
+      const doc = await FormTemplateModel.findByIdAndUpdate(id, input, { new: true }).lean();
+      await CacheService.invalidateFormCache();
+      return doc ? toEntity(doc) : null;
+    } catch (error) {
+      logger.error("Failed to update form template", { id, input, error });
+      throw error;
+    }
   }
 
   async delete(id: string): Promise<boolean> {
-    await connectToDatabase();
-    const result = await FormTemplateModel.findByIdAndDelete(id);
-    await CacheService.invalidateFormCache();
-    return !!result;
+    try {
+      await connectToDatabase();
+      const result = await FormTemplateModel.findByIdAndDelete(id);
+      await CacheService.invalidateFormCache();
+      return !!result;
+    } catch (error) {
+      logger.error("Failed to delete form template", { id, error });
+      throw error;
+    }
   }
 
   async deactivateAll(): Promise<void> {
-    await connectToDatabase();
-    await FormTemplateModel.updateMany({}, { isActive: false });
-    await CacheService.invalidateFormCache();
+    try {
+      await connectToDatabase();
+      await FormTemplateModel.updateMany({}, { isActive: false });
+      await CacheService.invalidateFormCache();
+    } catch (error) {
+      logger.error("Failed to deactivate all form templates", error);
+      throw error;
+    }
   }
 
   async countSubmissions(formTemplateId: string): Promise<number> {
-    await connectToDatabase();
-    const SubmissionModel = mongoose.models.Submission;
-    if (!SubmissionModel) return 0;
-    return SubmissionModel.countDocuments({ formTemplateId });
+    try {
+      await connectToDatabase();
+      const SubmissionModel = mongoose.models.Submission;
+      if (!SubmissionModel) return 0;
+      return await SubmissionModel.countDocuments({ formTemplateId });
+    } catch (error) {
+      logger.error("Failed to count submissions for form template", { formTemplateId, error });
+      throw error;
+    }
   }
 }

@@ -7,7 +7,7 @@ export interface User {
   email: string;
   name: string;
   image?: string | null;
-  role: "admin";
+  role: "admin" | "user";
   languagePreference: "en" | "ar";
   themePreference: "light" | "dark";
   emailVerified?: Date | null;
@@ -17,7 +17,7 @@ export interface User {
 
 export type CreateUserInput = Pick<User, "email" | "name"> & {
   password: string;
-  role?: "admin";
+  role?: "admin" | "user";
   languagePreference?: "en" | "ar";
   themePreference?: "light" | "dark";
 };

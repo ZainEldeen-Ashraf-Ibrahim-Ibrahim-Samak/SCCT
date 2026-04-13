@@ -44,23 +44,38 @@ export class MongoSubmissionRepository implements SubmissionRepository {
   }
 
   async findById(id: string): Promise<Submission | null> {
-    await connectToDatabase();
-    const doc = await SubmissionModel.findById(id).lean();
-    return doc ? toEntity(doc) : null;
+    try {
+      await connectToDatabase();
+      const doc = await SubmissionModel.findById(id).lean();
+      return doc ? toEntity(doc) : null;
+    } catch (error) {
+      logger.error("Failed to find submission by id", { id, error });
+      throw error;
+    }
   }
 
   async findByToken(accessToken: string): Promise<Submission | null> {
-    return CacheService.getSubmission(accessToken, async () => {
-      await connectToDatabase();
-      const doc = await SubmissionModel.findOne({ accessToken }).lean();
-      return doc ? toEntity(doc) : null;
-    });
+    try {
+      return await CacheService.getSubmission(accessToken, async () => {
+        await connectToDatabase();
+        const doc = await SubmissionModel.findOne({ accessToken }).lean();
+        return doc ? toEntity(doc) : null;
+      });
+    } catch (error) {
+      logger.error("Failed to find submission by token", { accessToken, error });
+      throw error;
+    }
   }
 
   async findByFormId(formTemplateId: string): Promise<Submission[]> {
-    await connectToDatabase();
-    const docs = await SubmissionModel.find({ formTemplateId }).lean();
-    return docs.map(toEntity);
+    try {
+      await connectToDatabase();
+      const docs = await SubmissionModel.find({ formTemplateId }).lean();
+      return docs.map(toEntity);
+    } catch (error) {
+      logger.error("Failed to find submissions by form id", { formTemplateId, error });
+      throw error;
+    }
   }
 
   async listPaginated(
@@ -68,115 +83,144 @@ export class MongoSubmissionRepository implements SubmissionRepository {
     limit: number,
     status?: string
   ): Promise<{ submissions: Submission[]; total: number; totalPages: number }> {
-    const compute = async () => {
-      await connectToDatabase();
-      const filter = status && status !== "all" ? { status } : {};
-      const skip = (page - 1) * limit;
+    try {
+      const compute = async () => {
+        await connectToDatabase();
+        const filter = status && status !== "all" ? { status } : {};
+        const skip = (page - 1) * limit;
 
-      const [docs, total] = await Promise.all([
-        SubmissionModel.find(filter).sort({ submittedAt: -1 }).skip(skip).limit(limit).lean(),
-        SubmissionModel.countDocuments(filter),
-      ]);
+        const [docs, total] = await Promise.all([
+          SubmissionModel.find(filter).sort({ submittedAt: -1 }).skip(skip).limit(limit).lean(),
+          SubmissionModel.countDocuments(filter),
+        ]);
 
-      return {
-        submissions: docs.map(toEntity),
-        total,
-        totalPages: Math.ceil(total / limit),
+        return {
+          submissions: docs.map(toEntity),
+          total,
+          totalPages: Math.ceil(total / limit),
+        };
       };
-    };
 
-    if (!status || status === "all") {
-        return CacheService.getSubmissionsList("all", page, compute);
+      if (!status || status === "all") {
+        return await CacheService.getSubmissionsList("all", page, compute);
+      }
+      return await CacheService.getSubmissionsList(status, page, compute);
+    } catch (error) {
+      logger.error("Failed to list paginated submissions", { page, limit, status, error });
+      throw error;
     }
-    return CacheService.getSubmissionsList(status, page, compute);
   }
 
   async getCounts(): Promise<{ pending: number; viewed: number; needs_rewrite: number; total: number }> {
-    return CacheService.getSubmissionsCounts(async () => {
-      await connectToDatabase();
-      const counts = await SubmissionModel.aggregate([
-        { $group: { _id: "$status", count: { $sum: 1 } } },
-      ]);
+    try {
+      return await CacheService.getSubmissionsCounts(async () => {
+        await connectToDatabase();
+        const counts = await SubmissionModel.aggregate([
+          { $group: { _id: "$status", count: { $sum: 1 } } },
+        ]);
 
-      const result = { pending: 0, viewed: 0, needs_rewrite: 0, total: 0 };
-      for (const row of counts) {
-        if (row._id in result) {
-          (result as any)[row._id] = row.count;
-          result.total += row.count;
+        const result = { pending: 0, viewed: 0, needs_rewrite: 0, total: 0 };
+        for (const row of counts) {
+          if (row._id in result) {
+            (result as any)[row._id] = row.count;
+            result.total += row.count;
+          }
         }
-      }
-      return result;
-    });
+        return result;
+      });
+    } catch (error) {
+      logger.error("Failed to get submissions counts", error);
+      throw error;
+    }
   }
 
   async updateStatus(id: string, input: UpdateSubmissionStatusInput): Promise<Submission | null> {
-    await connectToDatabase();
-    const submission = await SubmissionModel.findById(id);
-    if (!submission) return null;
+    try {
+      await connectToDatabase();
+      const submission = await SubmissionModel.findById(id);
+      if (!submission) return null;
 
-    const auditEntry = {
-      oldStatus: submission.status,
-      newStatus: input.status,
-      comment: input.comment || "",
-      adminId: input.admin.id as any,
-      adminName: input.admin.name,
-      timestamp: new Date(),
-    };
+      const auditEntry = {
+        oldStatus: submission.status,
+        newStatus: input.status,
+        comment: input.comment || "",
+        adminId: input.admin.id as any,
+        adminName: input.admin.name,
+        timestamp: new Date(),
+      };
 
-    submission.status = input.status;
-    if (input.status === "needs_rewrite") {
-      submission.rewriteComment = input.comment || "";
-    } else {
-      submission.rewriteComment = "";
+      submission.status = input.status;
+      if (input.status === "needs_rewrite") {
+        submission.rewriteComment = input.comment || "";
+      } else {
+        submission.rewriteComment = "";
+      }
+      submission.auditTrail.push(auditEntry);
+
+      await submission.save();
+      const leanDoc = await SubmissionModel.findById(id).lean();
+      if (leanDoc) {
+        await CacheService.invalidateSubmissionCache(leanDoc.accessToken);
+      }
+      return leanDoc ? toEntity(leanDoc) : null;
+    } catch (error) {
+      logger.error("Failed to update submission status", { id, input, error });
+      throw error;
     }
-    submission.auditTrail.push(auditEntry);
-
-    await submission.save();
-    const leanDoc = await SubmissionModel.findById(id).lean();
-    await CacheService.invalidateSubmissionCache(leanDoc!.accessToken);
-    return toEntity(leanDoc!);
   }
 
   async resetStatusForResubmission(id: string): Promise<Submission | null> {
-    await connectToDatabase();
-    const doc = await SubmissionModel.findByIdAndUpdate(
-      id,
-      {
-        status: "pending",
-        rewriteComment: "",
-        lastResubmittedAt: new Date(),
-      },
-      { new: true }
-    ).lean();
-    if (doc) {
-      await CacheService.invalidateSubmissionCache(doc.accessToken);
+    try {
+      await connectToDatabase();
+      const doc = await SubmissionModel.findByIdAndUpdate(
+        id,
+        {
+          status: "pending",
+          rewriteComment: "",
+          lastResubmittedAt: new Date(),
+        },
+        { new: true }
+      ).lean();
+      if (doc) {
+        await CacheService.invalidateSubmissionCache(doc.accessToken);
+      }
+      return doc ? toEntity(doc) : null;
+    } catch (error) {
+      logger.error("Failed to reset submission status", { id, error });
+      throw error;
     }
-    return doc ? toEntity(doc) : null;
   }
 
   async delete(id: string): Promise<boolean> {
-    await connectToDatabase();
-    const submission = await SubmissionModel.findById(id).lean();
-    if (!submission) return false;
+    try {
+      await connectToDatabase();
+      const submission = await SubmissionModel.findById(id).lean();
+      if (!submission) return false;
 
-    // Destroy associated media files on Cloudinary
-    const fieldValues = await FieldValueModel.find({ submissionId: id }).lean();
-    const publicIds = fieldValues
-      .map((fv) => fv.mediaPublicId)
-      .filter((id) => typeof id === "string" && id.trim().length > 0) as string[];
+      // Destroy associated media files on Cloudinary
+      const fieldValues = await FieldValueModel.find({ submissionId: id }).lean();
+      const publicIds = fieldValues
+        .map((fv) => fv.mediaPublicId)
+        .filter((id) => typeof id === "string" && id.trim().length > 0) as string[];
 
-    if (publicIds.length > 0) {
-      await destroyAssets(publicIds).catch((error) => {
-        logger.error("Failed to destroy Cloudinary assets during submission deletion", error);
-      });
+      if (publicIds.length > 0) {
+        try {
+          await destroyAssets(publicIds);
+        } catch (error) {
+          logger.error("Failed to destroy Cloudinary assets during submission deletion", { id, error });
+        }
+      }
+
+      // Delete field values
+      await FieldValueModel.deleteMany({ submissionId: id });
+      // Delete submission
+      const result = await SubmissionModel.findByIdAndDelete(id);
+
+      await CacheService.invalidateSubmissionCache(submission.accessToken);
+      return !!result;
+    } catch (error) {
+      logger.error("Failed to delete submission", { id, error });
+      throw error;
     }
-
-    // Delete field values
-    await FieldValueModel.deleteMany({ submissionId: id });
-    // Delete submission
-    const result = await SubmissionModel.findByIdAndDelete(id);
-
-    await CacheService.invalidateSubmissionCache(submission.accessToken);
-    return !!result;
   }
 }

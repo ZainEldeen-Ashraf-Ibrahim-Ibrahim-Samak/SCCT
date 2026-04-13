@@ -6,7 +6,7 @@ export interface IUser extends Document {
   name: string;
   image?: string | null;
   password?: string;
-  role: "admin";
+  role: "admin" | "user";
   languagePreference: "en" | "ar";
   themePreference: "light" | "dark";
   emailVerified?: Date | null;
@@ -38,8 +38,8 @@ const userSchema = new Schema<IUser>(
     },
     role: {
       type: String,
-      enum: ["admin"],
-      default: "admin",
+      enum: ["admin", "user"],
+      default: "user",
       required: true,
     },
     languagePreference: {

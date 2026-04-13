@@ -27,16 +27,16 @@ export function LanguageSwitcher() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={
+      <DropdownMenuTrigger suppressHydrationWarning render={
         <Button
           variant="ghost"
           size="icon"
           disabled={isPending}
           aria-label={t("language")}
-        />
-      }>
-        <Languages className="h-5 w-5" />
-      </DropdownMenuTrigger>
+        >
+          <Languages className="h-5 w-5" />
+        </Button>
+      } />
       <DropdownMenuContent align="end">
         <DropdownMenuItem
           onClick={() => switchLocale("en")}

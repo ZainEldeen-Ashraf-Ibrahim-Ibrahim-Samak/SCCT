@@ -3,7 +3,7 @@ import { z } from "zod";
 
 export const env = createEnv({
   server: {
-    MONGODB_URI: z.string().url(),
+    MONGODB_URI: z.string().min(1),
     AUTH_SECRET: z.string().min(1),
     AUTH_URL: z.string().url().optional(),
     CRON_SECRET: z.string().min(1),
@@ -31,4 +31,7 @@ export const env = createEnv({
     NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   },
+  skipValidation:
+    !!process.env.SKIP_ENV_VALIDATION ||
+    process.argv.includes("--skip-env-validation"),
 });

@@ -6,13 +6,50 @@ import bcrypt from "bcryptjs";
 import { connectToDatabase } from "@/lib/db";
 import { UserModel } from "@/data/models/user.model";
 import { env } from "@/env.mjs";
+import { logger } from "@/lib/dev-logger";
+import { JWT } from "next-auth/jwt";
+
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      email: string;
+      name: string;
+      image?: string | null;
+      role: "admin" | "user";
+    };
+  }
+
+  interface User {
+    role?: "admin" | "user";
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    role?: string;
+    id?: string;
+  }
+}
 
 // MongoDB client for Auth.js adapter
 const clientPromise = (async () => {
-  const client = new MongoClient(env.MONGODB_URI!);
-  await client.connect();
-  return client;
+  try {
+    const client = new MongoClient(env.MONGODB_URI!, {
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 5000,
+    });
+    await client.connect();
+    return client;
+  } catch (error) {
+    logger.error("Auth helper failed to connect to MongoDB", error);
+    throw error;
+  }
 })();
+
+// Suppress unhandled rejection at process level for the module-level connection attempt.
+// The error is already logged inside the IIAFE try/catch.
+clientPromise.catch(() => {});
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: MongoDBAdapter(clientPromise),

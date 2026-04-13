@@ -1,37 +1,44 @@
-import { connectToDatabase } from "@/lib/db";
-import { UserModel } from "@/data/models/user.model";
-import bcrypt from "bcryptjs";
+import { loadEnvConfig } from "@next/env";
+import path from "path";
 
-async function seedAdmin() {
-  console.log("Connecting to database...");
-  await connectToDatabase();
+// 1. Use the official Next.js environment loader
+const projectDir = process.cwd();
+loadEnvConfig(projectDir);
 
-  const existingAdmin = await UserModel.findOne({ email: "admin@scct.local" });
+// 2. Disable strict validation for this standalone process
+process.env.SKIP_ENV_VALIDATION = "1";
 
-  if (existingAdmin) {
-    console.log("Admin user already exists. Skipping seed.");
+// 3. Import dependencies DYNAMICALLY to avoid premature validation
+async function run() {
+  try {
+    const { seedAdminUser } = await import("../src/lib/db-seed");
+    const { connectToDatabase } = await import("../src/lib/db");
+    const { logger } = await import("../src/lib/dev-logger");
+    const mongoose = (await import("mongoose")).default;
+
+    logger.info("--- Manual Admin Seeding Started ---");
+    
+    // Ensure we are connected
+    await connectToDatabase();
+    
+    const result = await seedAdminUser();
+    
+    if (result.success) {
+      logger.info(`SUCCESS: ${result.message}`);
+    } else {
+      logger.error(`FAILED to seed admin: ${(result as any).error?.message || "Unknown error"}`);
+      process.exit(1);
+    }
+    
+    // Gracefully close connection
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.disconnect();
+    }
     process.exit(0);
+  } catch (error: any) {
+    console.error(`Unexpected error during seeding: ${error?.message || "Unknown error"}`);
+    process.exit(1);
   }
-
-  const hashedPassword = await bcrypt.hash("changeme", 12);
-
-  await UserModel.create({
-    email: "admin@scct.local",
-    name: "Admin",
-    password: hashedPassword,
-    role: "admin",
-    languagePreference: "en",
-    themePreference: "light",
-  });
-
-  console.log("✅ Admin user created successfully!");
-  console.log("   Email: admin@scct.local");
-  console.log("   Password: changeme");
-  console.log("   ⚠️  Change this password after first login!");
-  process.exit(0);
 }
 
-seedAdmin().catch((err) => {
-  console.error("Failed to seed admin:", err);
-  process.exit(1);
-});
+run();

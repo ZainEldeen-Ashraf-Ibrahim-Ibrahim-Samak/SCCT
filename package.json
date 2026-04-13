@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "npm run seed:admin && next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "seed:admin": "tsx scripts/seed-admin.ts --skip-env-validation",
     "i18n:sync": "tsx src/lib/scripts/i18n-sync.ts",
     "i18n:lint": "tsx src/lib/scripts/i18n-lint.ts",
     "api:smoke": "tsx src/lib/scripts/api-smoke.ts"
