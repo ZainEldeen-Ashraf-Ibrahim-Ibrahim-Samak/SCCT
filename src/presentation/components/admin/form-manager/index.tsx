@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, FileText, Trash2, Settings, Share2, Copy, QrCode, Download } from "lucide-react";
+import { Plus, FileText, Trash2, Settings, Share2, Copy, QrCode, Download, Pencil } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
@@ -29,6 +29,13 @@ export function FormManager() {
   const [newFormName, setNewFormName] = useState("");
   const [newFormDesc, setNewFormDesc] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+
+  // Edit Dialog State
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingFormId, setEditingFormId] = useState<string | null>(null);
+  const [editFormName, setEditFormName] = useState("");
+  const [editFormDesc, setEditFormDesc] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
 
   // Share Dialog State
   const [shareFormId, setShareFormId] = useState<string | null>(null);
@@ -50,6 +57,31 @@ export function FormManager() {
       toast.error(err instanceof Error ? err.message : tc("error"));
     } finally {
       setIsCreating(false);
+    }
+  }
+
+  function handleOpenEdit(form: typeof forms[number]) {
+    setEditingFormId(form.id);
+    setEditFormName(form.name);
+    setEditFormDesc(form.description || "");
+    setIsEditOpen(true);
+  }
+
+  async function handleUpdate() {
+    if (!editingFormId || !editFormName.trim()) return;
+    setIsEditing(true);
+    try {
+      await updateForm(editingFormId, {
+        name: editFormName.trim(),
+        description: editFormDesc.trim(),
+      });
+      setIsEditOpen(false);
+      setEditingFormId(null);
+      toast.success(tc("success"));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : tc("error"));
+    } finally {
+      setIsEditing(false);
     }
   }
 
@@ -231,6 +263,14 @@ export function FormManager() {
                   <Button
                     variant="ghost"
                     size="icon"
+                    onClick={() => handleOpenEdit(form)}
+                    title={tc("edit") || "Edit"}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => handleOpenShare(form.id)}
                     title={ts("title")}
                     disabled={isShareLoading}
@@ -264,6 +304,43 @@ export function FormManager() {
           ))}
         </div>
       )}
+
+      {/* Edit Form Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{tc("edit") || "Edit Form"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-form-name">{t("formName")}</Label>
+              <Input
+                id="edit-form-name"
+                value={editFormName}
+                onChange={(e) => setEditFormName(e.target.value)}
+                placeholder={t("formName")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-form-desc">{t("formDescription")}</Label>
+              <Textarea
+                id="edit-form-desc"
+                value={editFormDesc}
+                onChange={(e) => setEditFormDesc(e.target.value)}
+                placeholder={t("formDescription")}
+              />
+            </div>
+            <Button
+              onClick={handleUpdate}
+              disabled={!editFormName.trim() || isEditing}
+              className="w-full"
+            >
+              {isEditing ? <span className="animate-spin border-2 border-white border-t-transparent rounded-full h-4 w-4 mr-2" /> : null}
+              {tc("save") || "Save"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Share Dialog */}
       <Dialog open={isShareOpen} onOpenChange={setIsShareOpen}>
