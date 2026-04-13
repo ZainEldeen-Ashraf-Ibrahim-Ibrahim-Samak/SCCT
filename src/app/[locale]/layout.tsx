@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
@@ -21,6 +21,11 @@ export const metadata: Metadata = {
   title: "SCCT — Client Data Collection",
   description:
     "Dynamic client data collection and admin review system with bilingual support",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 interface LocaleLayoutProps {

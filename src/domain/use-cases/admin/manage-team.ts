@@ -5,6 +5,10 @@ import { getUserModel } from "@/data/models/user.model";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
 async function checkAdmin() {
   const session = await auth();
   if (!session?.user || session.user.role !== "admin") {
@@ -32,18 +36,20 @@ export async function createTeamMember(data: { name: string; email: string; role
   await checkAdmin();
   const UserModel = await getUserModel();
 
-  const existingUser = await UserModel.findOne({ email: data.email.toLowerCase() });
+  const normalizedEmail = normalizeEmail(data.email);
+  const normalizedName = data.name.trim();
+  const rawPassword = data.password?.trim() || "password123";
+
+  const existingUser = await UserModel.findOne({ email: normalizedEmail });
   if (existingUser) {
     throw new Error("User with this email already exists");
   }
 
-  // Set default password if none provided
-  const rawPassword = data.password || "password123";
   const hashedPassword = await bcrypt.hash(rawPassword, 10);
 
   const newUser = await UserModel.create({
-    name: data.name,
-    email: data.email.toLowerCase(),
+    name: normalizedName,
+    email: normalizedEmail,
     role: data.role,
     password: hashedPassword,
   });
@@ -55,6 +61,53 @@ export async function createTeamMember(data: { name: string; email: string; role
     name: newUser.name,
     email: newUser.email,
     role: newUser.role,
+  };
+}
+
+export async function updateTeamMember(
+  userId: string,
+  data: {
+    name: string;
+    email: string;
+    password?: string;
+  },
+) {
+  await checkAdmin();
+  const UserModel = await getUserModel();
+
+  const user = await UserModel.findById(userId);
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const normalizedEmail = normalizeEmail(data.email);
+  const normalizedName = data.name.trim();
+
+  const existingUser = await UserModel.findOne({
+    email: normalizedEmail,
+    _id: { $ne: userId },
+  });
+  if (existingUser) {
+    throw new Error("User with this email already exists");
+  }
+
+  user.name = normalizedName;
+  user.email = normalizedEmail;
+
+  const nextPassword = data.password?.trim();
+  if (nextPassword) {
+    user.password = await bcrypt.hash(nextPassword, 10);
+  }
+
+  await user.save();
+
+  revalidatePath("/admin/team");
+
+  return {
+    id: user._id.toString(),
+    name: user.name,
+    email: user.email,
+    role: user.role,
   };
 }
 

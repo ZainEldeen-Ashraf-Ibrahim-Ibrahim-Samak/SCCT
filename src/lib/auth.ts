@@ -7,7 +7,11 @@ import { connectToDatabase } from "@/lib/db";
 import { UserModel } from "@/data/models/user.model";
 import { env } from "@/env.mjs";
 import { logger } from "@/lib/dev-logger";
-import { JWT } from "next-auth/jwt";
+import "next-auth/jwt";
+
+function isBcryptHash(value: string): boolean {
+  return /^\$2[aby]\$\d{2}\$.{53}$/.test(value);
+}
 
 declare module "next-auth" {
   interface Session {
@@ -72,8 +76,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         await connectToDatabase();
 
+        const normalizedEmail = (credentials.email as string)
+          .trim()
+          .toLowerCase();
+        const inputPassword = credentials.password as string;
+
         const user = await UserModel.findOne({
-          email: (credentials.email as string).toLowerCase(),
+          email: normalizedEmail,
         })
           .select("+password")
           .lean();
@@ -82,10 +91,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null;
         }
 
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password as string,
-          user.password,
-        );
+        let isPasswordValid = false;
+
+        if (isBcryptHash(user.password)) {
+          isPasswordValid = await bcrypt.compare(inputPassword, user.password);
+        } else {
+          // Backward compatibility for legacy records that stored plaintext.
+          isPasswordValid = inputPassword === user.password;
+
+          if (isPasswordValid) {
+            const migratedHash = await bcrypt.hash(inputPassword, 12);
+            await UserModel.updateOne(
+              { _id: user._id },
+              { $set: { password: migratedHash } },
+            );
+          }
+        }
 
         if (!isPasswordValid) {
           return null;

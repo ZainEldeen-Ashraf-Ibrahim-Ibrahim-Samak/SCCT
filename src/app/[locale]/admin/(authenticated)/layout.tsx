@@ -4,12 +4,11 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { LanguageSwitcher } from "@/presentation/components/shared/language-switcher";
 import { ThemeToggle } from "@/presentation/components/shared/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, FileText, LogOut, Settings, Image as ImageIcon, Users, Database, Clock } from "lucide-react";
-import { Link } from "@/i18n/navigation";
-import { signOut } from "@/lib/auth";
+import { Menu } from "lucide-react";
 import { LiveNotifications } from "@/presentation/components/admin/live-notifications";
 import { SidebarNav } from "@/presentation/components/admin/sidebar-nav";
 import { LogoutButton } from "@/presentation/components/admin/logout-button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -50,7 +49,28 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
       {/* Mobile header */}
       <div className="flex flex-1 flex-col">
         <header className="flex md:hidden items-center justify-between border-b px-4 py-3">
-          <h1 className="text-lg font-bold text-primary">SCCT</h1>
+          <div className="flex items-center gap-2">
+            <Sheet>
+              <SheetTrigger
+                nativeButton={false}
+                render={
+                  <Button variant="ghost" size="icon-sm" aria-label="Open menu" />
+                }
+              >
+                <Menu className="h-5 w-5" />
+              </SheetTrigger>
+              <SheetContent side="left" className="w-72 p-0">
+                <div className="p-6 border-b">
+                  <h2 className="text-xl font-bold text-primary">SCCT</h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {session.user.name}
+                  </p>
+                </div>
+                <SidebarNav userRole={userRole} />
+              </SheetContent>
+            </Sheet>
+            <h1 className="text-lg font-bold text-primary">SCCT</h1>
+          </div>
           <div className="flex items-center gap-1">
             <LanguageSwitcher />
             <ThemeToggle />
