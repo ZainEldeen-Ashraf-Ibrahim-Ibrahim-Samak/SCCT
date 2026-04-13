@@ -119,6 +119,16 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
     }
   };
 
+  const getLatestUpdater = () => {
+    if (submission?.auditTrail && submission.auditTrail.length > 0) {
+      const entry = [...submission.auditTrail].reverse().find(e => e.newStatus === submission.status);
+      return entry?.adminName || null;
+    }
+    return null;
+  };
+
+  const latestUpdater = getLatestUpdater();
+
   let statusAlert = null;
   if (submission && !isNeedsRewrite && !isDraft) {
      const liveClass = statusChangedLive ? "animate-pulse ring-4 ring-primary/50" : "";
@@ -126,8 +136,13 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
        <Alert className={`mb-6 p-6 border-2 shadow-sm bg-primary/5 border-primary/30 transition-all duration-500 ${liveClass}`}>
          <CheckCircle2 className="h-6 w-6 text-primary" />
          <AlertTitle className="text-xl font-bold text-primary">{t("submissionSuccess")}</AlertTitle>
-         <AlertDescription className="text-base mt-2 font-medium">
-           {submission.status === "viewed" ? t("statusViewed") : t("statusPending")}
+         <AlertDescription className="text-base mt-2 font-medium flex items-center justify-between">
+           <span>{submission.status === "viewed" ? t("statusViewed") : t("statusPending")}</span>
+           {latestUpdater && (
+             <span className="text-sm font-normal opacity-75 bg-primary/10 px-2 py-1 rounded">
+               {t("updatedByAdmin", { name: latestUpdater })}
+             </span>
+           )}
          </AlertDescription>
        </Alert>
      );
@@ -136,7 +151,14 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
     statusAlert = (
       <Alert variant="destructive" className={`mb-6 p-6 border-2 transition-all duration-500 ${liveClass}`}>
         <AlertCircle className="h-6 w-6" />
-        <AlertTitle className="text-xl font-bold">{t("needsRewriteTitle")}</AlertTitle>
+        <AlertTitle className="text-xl font-bold flex items-center justify-between">
+          <span>{t("needsRewriteTitle")}</span>
+          {latestUpdater && (
+             <span className="text-sm font-normal opacity-90 bg-destructive/10 px-2 py-1 rounded">
+               {t("updatedByAdmin", { name: latestUpdater })}
+             </span>
+           )}
+        </AlertTitle>
         <AlertDescription className="mt-4 text-base">
           <p>{t("needsRewriteMessage")}</p>
           <div className="mt-3 text-sm italic border-s-4 border-destructive/60 bg-destructive/10 p-3 rounded-r-md">

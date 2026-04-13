@@ -180,6 +180,7 @@
     "statusPending": "Your submission is being reviewed",
     "statusViewed": "Your submission has been reviewed",
     "statusNeedsRewrite": "Changes have been requested",
+    "updatedByAdmin": "Updated by {name}",
     "uploadImage": "Upload Image",
     "uploadFile": "Upload File",
     "uploadProgress": "Uploading...",

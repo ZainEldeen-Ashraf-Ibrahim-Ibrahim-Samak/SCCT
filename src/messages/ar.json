@@ -180,6 +180,7 @@
     "statusPending": "طلبك قيد المراجعة",
     "statusViewed": "تمت مراجعة طلبك",
     "statusNeedsRewrite": "تم طلب تعديلات",
+    "updatedByAdmin": "تم التحديث بواسطة {name}",
     "uploadImage": "رفع صورة",
     "uploadFile": "رفع ملف",
     "uploadProgress": "جارٍ الرفع...",
