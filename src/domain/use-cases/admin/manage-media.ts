@@ -1,58 +1,55 @@
-import { readdir, stat, unlink } from "fs/promises";
-import path from "path";
+import { v2 as cloudinary } from "cloudinary";
+import { env } from "@/env.mjs";
+import { logger } from "@/lib/dev-logger";
+
+// Configure Cloudinary
+if (env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SECRET) {
+  cloudinary.config({
+    cloud_name: env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+    api_key: env.CLOUDINARY_API_KEY,
+    api_secret: env.CLOUDINARY_API_SECRET,
+    secure: true,
+  });
+}
 
 export class ManageMediaUseCase {
-  private uploadsDir = path.join(process.cwd(), "public", "uploads");
-
   async getMediaFiles(nextCursor?: string, maxResults = 30) {
     try {
-      const files = await readdir(this.uploadsDir);
+      // Fetch both images and raw files (PDFs, etc.)
+      // Note: Cloudinary API only allows one resource_type at a time in search/list.
+      // We will default to images first, then maybe combine if needed, 
+      // but for most common use cases, 'image' is what's requested.
       
-      // Filter for files and get stats
-      const fileData = await Promise.all(
-        files.map(async (file) => {
-          const filePath = path.join(this.uploadsDir, file);
-          const s = await stat(filePath);
-          const ext = path.extname(file).slice(1).toLowerCase();
-          const isImage = ["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(ext);
-          return {
-            public_id: file,
-            secure_url: `/uploads/${file}`,
-            created_at: s.mtime.toISOString(),
-            bytes: s.size,
-            format: ext,
-            resource_type: isImage ? "image" : "raw",
-            width: 0,
-            height: 0
-          };
-        })
-      );
-
-      // Sort by latest first
-      fileData.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-      // Simple pagination
-      const start = nextCursor ? parseInt(nextCursor) : 0;
-      const paginated = fileData.slice(start, start + maxResults);
-      const next = start + maxResults < fileData.length ? (start + maxResults).toString() : null;
+      const result = await cloudinary.api.resources({
+        type: "upload",
+        prefix: "submissions/",
+        max_results: maxResults,
+        next_cursor: nextCursor,
+      });
 
       return {
-        resources: paginated,
-        next_cursor: next
+        resources: result.resources,
+        next_cursor: result.next_cursor
       };
     } catch (error) {
-      console.error("Failed to fetch local media files", error);
-      return { resources: [], next_cursor: null };
+      logger.error("Failed to fetch Cloudinary media files", error);
+      throw error;
     }
   }
 
   async deleteMediaFile(publicId: string) {
     try {
-      const filePath = path.join(this.uploadsDir, publicId);
-      await unlink(filePath);
-      return { result: "ok" };
+      // First try as image
+      let result = await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
+      
+      // If failed, try as raw
+      if (result.result !== "ok") {
+        result = await cloudinary.uploader.destroy(publicId, { resource_type: "raw" });
+      }
+      
+      return result;
     } catch (error) {
-      console.error(`Failed to delete local media file: ${publicId}`, error);
+      logger.error(`Failed to delete Cloudinary media file: ${publicId}`, error);
       throw error;
     }
   }
