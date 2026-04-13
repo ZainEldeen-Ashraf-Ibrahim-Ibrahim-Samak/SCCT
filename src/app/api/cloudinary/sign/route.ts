@@ -3,6 +3,8 @@ import { signUploadRequest } from "@/data/services/cloudinary-service";
 import { badRequestResponse, errorResponse } from "@/lib/api-response";
 import { logger } from "@/lib/dev-logger";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();

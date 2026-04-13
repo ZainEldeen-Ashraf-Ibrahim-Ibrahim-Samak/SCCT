@@ -26,16 +26,21 @@ function toEntity(doc: Record<string, unknown>): Submission {
 
 export class MongoSubmissionRepository implements SubmissionRepository {
   async create(input: CreateSubmissionInput, accessToken: string): Promise<Submission> {
-    await connectToDatabase();
-    const doc = await SubmissionModel.create({
-      ...input,
-      accessToken,
-      status: "pending",
-      auditTrail: [],
-      submittedAt: new Date(),
-    });
-    await CacheService.invalidateSubmissionCache();
-    return toEntity(doc.toObject() as unknown as Record<string, unknown>);
+    try {
+      await connectToDatabase();
+      const doc = await SubmissionModel.create({
+        ...input,
+        accessToken,
+        status: "pending",
+        auditTrail: [],
+        submittedAt: new Date(),
+      });
+      await CacheService.invalidateSubmissionCache();
+      return toEntity(doc.toObject() as unknown as Record<string, unknown>);
+    } catch (error) {
+      logger.error("Failed to create submission", { input, accessToken, error });
+      throw error;
+    }
   }
 
   async findById(id: string): Promise<Submission | null> {

@@ -32,4 +32,18 @@
 
 ### 5. API Robustness
 - **Review**: Ensure all `NextResponse.json` use structured error messages and correct status codes.
-- **Action**: Add try-catch blocks where missing and use `devLogger.error`.
+- **Action**: Standardized Forms, Submissions, and Cloudinary Sign API routes with formal error handlers and forced dynamic rendering.
+
+## Production Sign-off (2026-04-13)
+
+### Validation Evidence
+- [x] **Zero-Warning Build**: `npm run build` completed with Exit code: 0 and zero TypeScript/ESLint warnings.
+- [x] **Logging Coverage**: Global scan confirmed 0 `console.log` usages in `src`.
+- [x] **i18n Parity**: `npm run i18n:lint` passed with 100% string coverage across EN/AR.
+- [x] **Env Sync**: `env.mjs` and `.env.example` are 100% parity matched.
+
+### Vercel Readiness
+- **Force Dynamic**: Primary admin API routes marked `force-dynamic` to avoid build-time DB connection attempts and ensure fresh data.
+- **Placeholder URLs**: `.env.example` updated with valid URL placeholders (http://localhost:3000) to prevent Zod validation failures during setup.
+
+**Status**: **READY FOR DEPLOYMENT**

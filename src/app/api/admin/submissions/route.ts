@@ -5,6 +5,8 @@ import { MongoSubmissionRepository } from "@/data/repositories/mongo-submission-
 
 const repo = new MongoSubmissionRepository();
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   const session = await auth();
   if (!session?.user) {
