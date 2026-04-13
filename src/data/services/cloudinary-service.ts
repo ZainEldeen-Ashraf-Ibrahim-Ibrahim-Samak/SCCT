@@ -1,10 +1,16 @@
-import { unlink } from "fs/promises";
-import path from "path";
+import { v2 as cloudinary } from "cloudinary";
+import { env } from "@/env.mjs";
+import { logger } from "@/lib/dev-logger";
 
-/**
- * Local file storage service replacing Cloudinary.
- * Handles deletion and URL generation for locally stored files in public/uploads.
- */
+// Configure Cloudinary
+if (env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SECRET) {
+  cloudinary.config({
+    cloud_name: env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+    api_key: env.CLOUDINARY_API_KEY,
+    api_secret: env.CLOUDINARY_API_SECRET,
+    secure: true,
+  });
+}
 
 export interface SignUploadParams {
   timestamp: number;
@@ -21,66 +27,90 @@ export interface SignUploadResult {
 }
 
 /**
- * Placeholder for compatibility, no longer used with local uploads.
+ * Sign an upload request for Cloudinary.
  */
 export function signUploadRequest(params: SignUploadParams): SignUploadResult {
+  const timestamp = Math.round(new Date().getTime() / 1000);
+  const apiSecret = env.CLOUDINARY_API_SECRET;
+  
+  if (!apiSecret) {
+    throw new Error("CLOUDINARY_API_SECRET is not configured");
+  }
+
+  const signature = cloudinary.utils.api_sign_request(
+    { ...params, timestamp },
+    apiSecret
+  );
+
   return {
-    signature: "local",
-    timestamp: Date.now(),
-    cloudname: "local",
-    apikey: "local",
+    signature,
+    timestamp,
+    cloudname: env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "",
+    apikey: env.CLOUDINARY_API_KEY || "",
   };
 }
 
 /**
- * Destroy a local file by its public ID (filename).
+ * Destroy an asset on Cloudinary.
  */
 export async function destroyAsset(
   publicId: string,
   resourceType: "image" | "raw" | "video" = "image"
 ): Promise<{ result: string }> {
   try {
-    const filePath = path.join(process.cwd(), "public", "uploads", publicId);
-    await unlink(filePath);
-    return { result: "ok" };
+    const result = await cloudinary.uploader.destroy(publicId, {
+      resource_type: resourceType,
+    });
+    return result;
   } catch (error) {
-    console.error(`Failed to delete local asset: ${publicId}`, error);
+    logger.error(`Cloudinary destroy failed: ${publicId}`, error);
     return { result: "failed" };
   }
 }
 
 /**
- * Destroy multiple local files.
+ * Destroy multiple assets on Cloudinary.
  */
 export async function destroyAssets(
   publicIds: string[],
   resourceType: "image" | "raw" | "video" = "image"
 ): Promise<void> {
   if (publicIds.length === 0) return;
-
-  await Promise.all(
-    publicIds.map((id) => destroyAsset(id, resourceType))
-  );
+  
+  try {
+    // Note: delete_resources only works for images by default or needs resource_type specified
+    await cloudinary.api.delete_resources(publicIds, {
+      resource_type: resourceType,
+    });
+  } catch (error) {
+    logger.error("Cloudinary bulk delete failed", { publicIds, error });
+  }
 }
 
 /**
- * Generate a local URL for the file.
- * Local files don't support dynamic transformations without a backend service.
+ * Get a transformed URL.
  */
 export function getTransformUrl(
   publicId: string,
   options: any = {}
 ): string {
-  // If it's already a URL, return it
-  if (publicId.startsWith("/") || publicId.startsWith("http")) {
-    return publicId;
-  }
-  return `/uploads/${publicId}`;
+  if (publicId.startsWith("http")) return publicId;
+  return cloudinary.url(publicId, {
+    secure: true,
+    ...options,
+  });
 }
 
 /**
- * Generate a thumbnail URL for preview display.
+ * Get a thumbnail URL.
  */
 export function getThumbnailUrl(publicId: string): string {
-  return getTransformUrl(publicId);
+  if (publicId.startsWith("http")) return publicId;
+  return cloudinary.url(publicId, {
+    secure: true,
+    width: 250,
+    height: 250,
+    crop: "thumb",
+    gravity: "face",
+  });
 }

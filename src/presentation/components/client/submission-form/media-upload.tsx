@@ -164,25 +164,54 @@ export function MediaUpload({
           continue;
         }
 
+        // 1. Get signature
+        const signRes = await fetch("/api/cloudinary/sign", {
+          method: "POST",
+          body: JSON.stringify({ 
+            folder: "submissions",
+            timestamp: Math.round(new Date().getTime() / 1000)
+          }),
+        });
+        
+        const signData = await signRes.json();
+        if (!signRes.ok || !signData.success) {
+          throw new Error("Failed to get upload signature");
+        }
+
+        const { signature, timestamp, apikey, cloudname } = signData.data;
+
+        // 2. Upload to Cloudinary
         const formData = new FormData();
         formData.append("file", file);
+        formData.append("api_key", apikey);
+        formData.append("timestamp", timestamp.toString());
+        formData.append("signature", signature);
+        formData.append("folder", "submissions");
 
-        const res = await fetch("/api/upload", {
+        const resourceType = type === "image" ? "image" : "auto";
+        const cloudUrl = `https://api.cloudinary.com/v1_1/${cloudname}/${resourceType}/upload`;
+
+        const res = await fetch(cloudUrl, {
           method: "POST",
           body: formData,
         });
 
         const data = await res.json();
-        if (!res.ok || !data.success) {
-          toast.error(data.error || t("uploadError"));
+        
+        if (!res.ok) {
+          logger.error("Cloudinary upload error", data);
+          toast.error(data.error?.message || t("uploadError"));
           hasUploadFailure = true;
           continue;
         }
 
+        const resultUrl = data.secure_url;
+        const resultPublicId = data.public_id;
+
         if (isMultiple) {
-          uploadedItems.push({ url: data.url, publicId: data.publicId });
+          uploadedItems.push({ url: resultUrl, publicId: resultPublicId });
         } else {
-          onUpload(data.url, data.publicId);
+          onUpload(resultUrl, resultPublicId);
         }
       }
 
