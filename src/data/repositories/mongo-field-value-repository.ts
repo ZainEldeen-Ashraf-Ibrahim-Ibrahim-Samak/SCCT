@@ -13,6 +13,7 @@ function toEntity(doc: Record<string, unknown>): FieldValue {
     value: doc.value as FieldValue["value"],
     mediaUrl: doc.mediaUrl as string | null,
     mediaPublicId: doc.mediaPublicId as string | null,
+    mediaItems: (doc.mediaItems as any) ?? [],
     createdAt: doc.createdAt as Date,
     updatedAt: doc.updatedAt as Date,
   };

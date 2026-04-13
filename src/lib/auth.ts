@@ -84,7 +84,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const isPasswordValid = await bcrypt.compare(
           credentials.password as string,
-          user.password
+          user.password,
         );
 
         if (!isPasswordValid) {
@@ -104,7 +104,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = (user as unknown as Record<string, unknown>).role as string;
+        token.role = (user as unknown as Record<string, unknown>)
+          .role as string;
         token.id = user.id;
       }
       return token;

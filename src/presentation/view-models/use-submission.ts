@@ -131,7 +131,17 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
 
   useEffect(() => {
     fetchContent();
-  }, [fetchContent]);
+    
+    // Auto-refresh status every 10 seconds for real-time status updates (P1 request)
+    // Only poll if we are not currently submitting and are on an existing submission
+    const interval = setInterval(() => {
+      if (!isSubmitting && !isLoading) {
+        fetchContent();
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [fetchContent, isSubmitting, isLoading]);
 
   const setClientName = (name: string) => updateDraft({ ...draft, clientName: name });
   const setClientContact = (contact: string) => updateDraft({ ...draft, clientContact: contact });

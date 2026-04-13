@@ -40,6 +40,8 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
       serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
       family: 4, // Force IPv4 to avoid potential IPv6 handshake issues in some local envs
+      maxPoolSize: 10,
+      minPoolSize: 1,
     };
 
     cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
