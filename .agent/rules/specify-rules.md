@@ -1,4 +1,4 @@
-﻿# SCCT Development Guidelines
+# SCCT Development Guidelines
 
 Auto-generated from all feature plans. Last updated: 2026-04-13
 
@@ -11,6 +11,8 @@ Auto-generated from all feature plans. Last updated: 2026-04-13
 - N/A for this scope (003-production-readiness)
 - TypeScript 5.x on Node.js LTS + Next.js (App Router), @base-ui/react, next-intl, next-themes, next-auth, mongoose, ShadCN UI (005-fix-hydration-stability)
 - MongoDB (Mongoose ODM), Upstash Redis (005-fix-hydration-stability)
+- TypeScript / Next.js App Router + React (Hooks), Zod (Backend Validation) (006-fix-empty-form-payload)
+- N/A for this fix (MongoDB structure remains untouched) (006-fix-empty-form-payload)
 
 - TypeScript 5.x on Node.js 20+ (LTS) + Next.js 14+ (App Router), ShadCN UI, Mongoose 8+, Auth.js v5, next-cloudinary, @upstash/redis, @upstash/ratelimit, next-intl, next-themes, @dnd-kit/core, Zod (001-client-data-review)
 
@@ -31,9 +33,9 @@ npm test; npm run lint
 TypeScript 5.x on Node.js 20+ (LTS): Follow standard conventions
 
 ## Recent Changes
+- 006-fix-empty-form-payload: Added TypeScript / Next.js App Router + React (Hooks), Zod (Backend Validation)
 - 005-fix-hydration-stability: Added TypeScript 5.x on Node.js LTS + Next.js (App Router), @base-ui/react, next-intl, next-themes, next-auth, mongoose, ShadCN UI
 - 003-production-readiness: Added TypeScript 5.x / Next.js 14 App Router + `next-intl` (localization), `zod` (env validation)
-- 002-cms-enhancements: Added TypeScript 5+ (Node.js 20 LTS) + Next.js 14 App Router, zod, t3-env, next-intl, mongoose, cloudinary, upstash/redis
 
 
 <!-- MANUAL ADDITIONS START -->

@@ -41,6 +41,10 @@ export class SubmitFormUseCase {
       return { success: false, error: "Active form has no fields" };
     }
 
+    if (!data.fieldValues || data.fieldValues.length === 0) {
+      return { success: false, error: "Submission must contain field values" };
+    }
+
     // 1. Validate required fields
     for (const field of activeFields) {
       if (field.validationRules?.required) {
@@ -112,6 +116,10 @@ export class SubmitFormUseCase {
 
     if (submission.status !== "needs_rewrite" && submission.status !== "draft") {
       return { success: false, error: "Only submissions marked 'Needs Rewrite' or 'Draft' can be resubmitted" };
+    }
+
+    if (!data.fieldValues || data.fieldValues.length === 0) {
+      return { success: false, error: "Submission must contain field values" };
     }
 
     // 1. Validate against the snapshot

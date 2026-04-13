@@ -42,8 +42,8 @@ interface UseSubmissionReturn {
   setFieldValue: (id: string, value: string | number | null) => void;
   setMediaValue: (id: string, url: string, publicId: string) => void;
   setMediaItems: (id: string, items: { url: string; publicId: string }[]) => void;
-  submitForm: () => Promise<void>;
-  resubmitForm: () => Promise<void>;
+  submitForm: (explicitFormData?: Record<string, FormFieldData>) => Promise<void>;
+  resubmitForm: (explicitFormData?: Record<string, FormFieldData>) => Promise<void>;
   /** True briefly after an SSE status change is received — allows the UI to animate */
   statusChangedLive: boolean;
 }
@@ -249,13 +249,17 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
     };
   }, [fetchContent, tokenOrId]);
 
-  const submitForm = async () => {
+  const submitForm = async (explicitFormData?: Record<string, FormFieldData>) => {
     setIsSubmitting(true);
     setError(null);
     
     // Safety check for empty submissions
     const currentDraft = draftRef.current;
-    const fieldValues = Object.values(currentDraft.formData);
+    
+    // Prefer explicitly passed reactive formData to resolve boundary scope bypasses during hydration
+    const resolvedFormData = explicitFormData || currentDraft.formData;
+    const fieldValues = Object.values(resolvedFormData);
+    
     if (!currentDraft.clientName.trim() && fieldValues.length === 0) {
       logger.warn("Submit attempt with empty draft", { tokenOrId });
       setError("Please fill out the form before submitting.");
@@ -295,12 +299,14 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
     }
   };
 
-  const resubmitForm = async () => {
+  const resubmitForm = async (explicitFormData?: Record<string, FormFieldData>) => {
     setIsSubmitting(true);
     setError(null);
     try {
       const currentDraft = draftRef.current;
-      const fieldValues = Object.values(currentDraft.formData);
+      const resolvedFormData = explicitFormData || currentDraft.formData;
+      const fieldValues = Object.values(resolvedFormData);
+      
       const payload = {
         clientName: currentDraft.clientName,
         clientContact: currentDraft.clientContact,
