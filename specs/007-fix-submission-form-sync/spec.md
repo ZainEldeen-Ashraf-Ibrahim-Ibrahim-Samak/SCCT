@@ -5,6 +5,13 @@
 **Status**: Draft  
 **Input**: User description: "make can edit the concat form and can add more or delte can but must aleatst one record added 2 when admin send the resumti for user the user niot reced eh scoect nofication and although when admin viwed again not revcied for user 3 when reaarneg and admin update the foem like rearrange and user is oope nthe sumit/token for form and rfresh not get the updates fix that  4 add in in type sctor the value of can slect multybel data in sumtion form like others make the site name is coponet and import in pages that have the site name is 'scct'"
 
+## Clarifications
+
+### Session 2026-04-14
+
+- Q: After admin form changes, how should refresh handle a user's unsaved draft values? → A: Load latest form and carry over matching fields; warn for dropped fields.
+- Q: How long should undelivered resubmission notifications remain pending for offline users? → A: 7 days.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Manage Contact Records (Priority: P1)
@@ -52,6 +59,7 @@ As a token-based form user, if an admin updates or rearranges the form while I h
 
 1. **Given** a token form is open for a user, **When** an admin rearranges fields and republishes changes, **Then** a user refresh loads the updated structure.
 2. **Given** a user refreshes after admin updates, **When** the form reloads, **Then** outdated layout elements are not shown.
+3. **Given** a user has unsaved values and the form was updated by admin, **When** the user refreshes, **Then** matching fields retain their values and the user is warned about values that could not be carried over.
 
 ---
 
@@ -85,10 +93,13 @@ As a form user and site visitor, I can choose multiple values in the sector fiel
 - **FR-003**: System MUST allow users to delete contact records only when more than one record remains.
 - **FR-004**: System MUST enforce that at least one contact record always exists before and after form save/submit actions.
 - **FR-005**: System MUST generate and deliver a user-facing notification when an admin sends a resubmission request.
+- **FR-005A**: System MUST keep undelivered resubmission notifications pending for 7 days for offline users.
 - **FR-006**: System MUST retain resubmission notification state so admins can still view the request status when reopening the same submission later.
 - **FR-007**: System MUST associate each resubmission notification with the correct target user and submission.
 - **FR-008**: System MUST load the latest published form structure whenever a token-based submission page is refreshed.
 - **FR-009**: System MUST prevent display of outdated form ordering/structure after an admin form update.
+- **FR-009A**: System MUST retain unsaved values for fields that still match after refresh to the latest form version.
+- **FR-009B**: System MUST notify users when unsaved values are dropped because fields were removed or no longer compatible.
 - **FR-010**: System MUST allow multiple selections in the sector field within submission forms.
 - **FR-011**: System MUST store and display all selected sector values in submission review outputs.
 - **FR-012**: System MUST provide a reusable site-name element with the value "SCCT".
@@ -107,7 +118,7 @@ As a form user and site visitor, I can choose multiple values in the sector fiel
 ### Measurable Outcomes
 
 - **SC-001**: In acceptance testing, 100% of submission attempts maintain at least one contact record; zero submissions end with zero records.
-- **SC-002**: At least 95% of online resubmission notifications are visible to target users within 10 seconds, and 100% of offline users see pending notifications at next login.
+- **SC-002**: At least 95% of online resubmission notifications are visible to target users within 10 seconds, and 100% of offline users who return within 7 days see pending notifications at next login.
 - **SC-003**: In test runs where admins update form order while users hold open token links, 100% of user refreshes display the latest published form structure.
 - **SC-004**: In validation tests, 100% of multi-select sector submissions preserve all chosen values in user and admin views.
 - **SC-005**: In a full page audit of site-name displays, 100% show the same value "SCCT".

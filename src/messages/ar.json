@@ -127,6 +127,8 @@
     }
   },
   "submissions": {
+    "filterByAdmin": "تم التحديث بواسطة",
+    "allAdmins": "كل المشرفين",
     "title": "الطلبات",
     "clientName": "اسم العميل",
     "clientContact": "معلومات الاتصال",

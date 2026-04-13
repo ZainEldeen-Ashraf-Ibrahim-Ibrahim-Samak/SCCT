@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useSubmissionsList } from "@/presentation/view-models/use-submissions-list";
+import type { Submission } from "@/domain/entities/submission";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -17,9 +18,10 @@ export function SubmissionsManager() {
   const searchParams = useSearchParams();
   const expandId = searchParams.get("expand");
 
-  const { submissions, total, totalPages, counts, isLoading, fetchSubmissions, deleteSubmission } = useSubmissionsList();
+  const { submissions, totalPages, counts, isLoading, fetchSubmissions, deleteSubmission } = useSubmissionsList();
   
   const [statusFilter, setStatusFilter] = useState("all");
+  const [adminFilter, setAdminFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
 
@@ -45,6 +47,29 @@ export function SubmissionsManager() {
       setPage(1);
     }
   };
+
+  const getLatestUpdater = (sub: Submission) => {
+    if (sub.auditTrail && sub.auditTrail.length > 0) {
+      const updatedEntries = [...sub.auditTrail].reverse().find(entry => entry.newStatus === sub.status);
+      if (updatedEntries) {
+        return updatedEntries.adminName;
+      }
+    }
+    return null;
+  };
+
+  const uniqueAdmins = Array.from(new Set(submissions.map(getLatestUpdater).filter(Boolean))) as string[];
+
+  const filteredSubmissions = submissions.filter(sub => {
+    const matchesSearch = search 
+      ? (sub.clientName?.toLowerCase().includes(search.toLowerCase()) || sub.clientContact?.toLowerCase().includes(search.toLowerCase())) 
+      : true;
+    
+    const latestUpdater = getLatestUpdater(sub);
+    const matchesAdmin = adminFilter === "all" ? true : latestUpdater === adminFilter;
+
+    return matchesSearch && matchesAdmin;
+  });
 
   return (
     <div className="space-y-6">
@@ -101,8 +126,8 @@ export function SubmissionsManager() {
         </Card>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-muted/30 p-4 rounded-xl border">
-        <div className="relative w-full sm:max-w-xs">
+      <div className="flex flex-col sm:flex-row flex-wrap items-center justify-between gap-4 bg-muted/30 p-4 rounded-xl border">
+        <div className="relative w-full sm:flex-1 sm:min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input 
             placeholder={t("searchPlaceholder") || "Search submissions..."} 
@@ -112,26 +137,43 @@ export function SubmissionsManager() {
           />
         </div>
         
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <span className="text-sm font-medium whitespace-nowrap">{td("filterByStatus")}:</span>
-          <Select value={statusFilter} onValueChange={handleFilterChange}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder={td("filterByStatus")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{td("allStatuses")}</SelectItem>
-              <SelectItem value="pending">{td("pendingCount")}</SelectItem>
-              <SelectItem value="draft">{td("draftCount")}</SelectItem>
-              <SelectItem value="viewed">{td("viewedCount")}</SelectItem>
-              <SelectItem value="needs_rewrite">{td("needsRewriteCount")}</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <span className="text-sm font-medium whitespace-nowrap">{t("filterByAdmin") || "Admin"}:</span>
+            <Select value={adminFilter} onValueChange={(val) => val && setAdminFilter(val)}>
+              <SelectTrigger className="w-full sm:w-[150px]">
+                <SelectValue placeholder={t("allAdmins") || "All Admins"} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("allAdmins") || "All Admins"}</SelectItem>
+                {uniqueAdmins.map((admin) => (
+                  <SelectItem key={admin} value={admin}>{admin}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <span className="text-sm font-medium whitespace-nowrap">{td("filterByStatus")}:</span>
+            <Select value={statusFilter} onValueChange={handleFilterChange}>
+              <SelectTrigger className="w-full sm:w-[150px]">
+                <SelectValue placeholder={td("filterByStatus")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{td("allStatuses")}</SelectItem>
+                <SelectItem value="pending">{td("pendingCount")}</SelectItem>
+                <SelectItem value="draft">{td("draftCount")}</SelectItem>
+                <SelectItem value="viewed">{td("viewedCount")}</SelectItem>
+                <SelectItem value="needs_rewrite">{td("needsRewriteCount")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
       <div className={expandId ? "ring-2 ring-primary ring-offset-4 rounded-lg" : ""}>
         <SubmissionsTable 
-          submissions={submissions} 
+          submissions={filteredSubmissions} 
           isLoading={isLoading} 
           onDelete={deleteSubmission}
           onRefresh={() => fetchSubmissions(page, statusFilter)} 

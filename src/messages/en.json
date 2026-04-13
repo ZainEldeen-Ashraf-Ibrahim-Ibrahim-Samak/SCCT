@@ -127,6 +127,8 @@
     }
   },
   "submissions": {
+    "filterByAdmin": "Updating Admin",
+    "allAdmins": "All Admins",
     "title": "Submissions",
     "clientName": "Client Name",
     "clientContact": "Contact",
