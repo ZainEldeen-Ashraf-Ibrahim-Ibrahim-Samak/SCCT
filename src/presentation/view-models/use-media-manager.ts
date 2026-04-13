@@ -59,8 +59,9 @@ export function useMediaManager() {
     }
   };
 
-  const deleteMedia = async (publicId: string) => {
-    const toastId = toast.loading(t("deleting"));
+  const deleteMedia = async (publicId: string, showToast = true) => {
+    let toastId;
+    if (showToast) toastId = toast.loading(t("deleting"));
     try {
       const res = await fetch(`/api/admin/media?publicId=${encodeURIComponent(publicId)}`, {
         method: "DELETE"
@@ -70,11 +71,21 @@ export function useMediaManager() {
       if (!json.success) throw new Error(json.error);
 
       setResources(prev => prev.filter(r => r.public_id !== publicId));
-      toast.success(t("deleteSuccess"), { id: toastId });
+      if (showToast) toast.success(t("deleteSuccess"), { id: toastId });
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : t("deleteError");
-      toast.error(message, { id: toastId });
+      if (showToast) toast.error(message, { id: toastId });
       throw e;
+    }
+  };
+
+  const bulkDeleteMedia = async (publicIds: string[]) => {
+    const toastId = toast.loading(t("deleting") + ` (${publicIds.length})`);
+    try {
+      await Promise.all(publicIds.map(id => deleteMedia(id, false)));
+      toast.success(t("deleteSuccess"), { id: toastId });
+    } catch (e: unknown) {
+      toast.error(t("deleteError"), { id: toastId });
     }
   };
 
@@ -89,6 +100,7 @@ export function useMediaManager() {
     hasMore: !!nextCursor,
     loadMore,
     deleteMedia,
+    bulkDeleteMedia,
     refresh: () => fetchMedia()
   };
 }

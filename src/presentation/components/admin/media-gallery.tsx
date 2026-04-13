@@ -1,15 +1,52 @@
 "use client";
 
-import { useMediaManager } from "@/presentation/view-models/use-media-manager";
+import { useState } from "react";
+import { useMediaManager, MediaResource } from "@/presentation/view-models/use-media-manager";
 import { Button } from "@/components/ui/button";
-import { Loader2, Trash2, ExternalLink, Download, Image as ImageIcon, File, RefreshCw } from "lucide-react";
+import { Loader2, Trash2, ExternalLink, Download, Image as ImageIcon, File, RefreshCw, CheckCircle2, Circle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 
 export function MediaGallery() {
   const t = useTranslations("media");
-  const { resources, isLoading, isPaginating, hasMore, loadMore, deleteMedia, refresh } = useMediaManager();
+  const { resources, isLoading, isPaginating, hasMore, loadMore, deleteMedia, bulkDeleteMedia, refresh } = useMediaManager();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const toggleSelection = (publicId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(publicId)) {
+        next.delete(publicId);
+      } else {
+        next.add(publicId);
+      }
+      return next;
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (!confirm(t("deleteConfirm") + ` (${selectedIds.size})`)) return;
+    try {
+      await bulkDeleteMedia(Array.from(selectedIds));
+      setSelectedIds(new Set());
+    } catch {
+      // Handled in view-model
+    }
+  };
+
+  const handleBulkDownload = () => {
+    selectedIds.forEach((id) => {
+      const res = resources.find((r: MediaResource) => r.public_id === id);
+      if (res) {
+        const link = document.createElement("a");
+        link.href = res.secure_url.replace("/upload/", "/upload/fl_attachment/");
+        link.download = "";
+        link.click();
+      }
+    });
+    setSelectedIds(new Set());
+  };
 
   const handleDelete = async (publicId: string) => {
     if (!confirm(t("deleteConfirm"))) return;
@@ -63,28 +100,53 @@ export function MediaGallery() {
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-          {resources.map((res) => (
-            <Card key={res.public_id} className="group relative overflow-hidden border-zinc-200 dark:border-zinc-800 hover:ring-2 hover:ring-primary/20 transition-all duration-300">
+          {resources.map((res: MediaResource) => (
+            <Card 
+              key={res.public_id} 
+              className={`group relative overflow-hidden transition-all duration-300 ${
+                selectedIds.has(res.public_id) 
+                  ? "ring-2 ring-primary border-primary shadow-md" 
+                  : "border-zinc-200 dark:border-zinc-800 hover:ring-2 hover:ring-primary/20"
+              }`}
+              onClick={() => toggleSelection(res.public_id)}
+            >
+              <div 
+                className={`absolute top-2 left-2 z-20 transition-opacity duration-300 ${
+                  selectedIds.has(res.public_id) ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                }`}
+              >
+                {selectedIds.has(res.public_id) ? (
+                  <CheckCircle2 className="w-6 h-6 text-primary fill-white/90 drop-shadow" />
+                ) : (
+                  <Circle className="w-6 h-6 text-white drop-shadow-md hover:scale-110 transition-transform" />
+                )}
+              </div>
               <div className="aspect-square bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center relative overflow-hidden">
                 {res.resource_type === "image" ? (
                   <Image 
                     src={res.secure_url} 
                     alt={res.public_id} 
                     fill 
-                    className="object-cover transition-transform duration-500 group-hover:scale-110" 
+                    className={`object-cover transition-transform duration-500 ${!selectedIds.has(res.public_id) && "group-hover:scale-110"}`} 
                     sizes="(max-width: 768px) 50vw, 25vw"
                   />
                 ) : (
-                  <File className="w-12 h-12 text-zinc-400 group-hover:scale-110 transition-transform duration-500" />
+                  <File className={`w-12 h-12 text-zinc-400 transition-transform duration-500 ${!selectedIds.has(res.public_id) && "group-hover:scale-110"}`} />
                 )}
                 
                 {/* Hover overlay with Glassmorphism */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-4 backdrop-blur-[2px]">
+                <div 
+                  className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-4 backdrop-blur-[2px]"
+                  onClick={(e) => {
+                    // Prevent click to let the parent toggle selection handles it unless clicking button
+                  }}
+                >
                   <div className="flex gap-2">
                     <a 
                       href={res.secure_url} 
                       target="_blank" 
                       rel="noreferrer" 
+                      onClick={(e) => e.stopPropagation()}
                       className="flex items-center justify-center bg-white/20 hover:bg-white/40 h-10 w-10 rounded-full text-white backdrop-blur-md transition-all hover:scale-110"
                       title={t("viewFile") || "View"}
                     >
@@ -93,6 +155,7 @@ export function MediaGallery() {
                     <a 
                       href={res.secure_url.replace("/upload/", "/upload/fl_attachment/")} 
                       download
+                      onClick={(e) => e.stopPropagation()}
                       className="flex items-center justify-center bg-white/20 hover:bg-white/40 h-10 w-10 rounded-full text-white backdrop-blur-md transition-all hover:scale-110"
                       title={t("downloadFile") || "Download"}
                       aria-label={t("downloadFile") || "Download"}
@@ -101,7 +164,10 @@ export function MediaGallery() {
                     </a>
                     <button 
                       aria-label={t("deleteFile")}
-                      onClick={() => handleDelete(res.public_id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(res.public_id);
+                      }}
                       className="flex items-center justify-center bg-red-500/60 hover:bg-red-600 h-10 w-10 rounded-full text-white backdrop-blur-md transition-all hover:scale-110"
                     >
                       <Trash2 className="w-5 h-5" />
@@ -138,6 +204,28 @@ export function MediaGallery() {
               </>
             ) : t("loadMore")}
           </Button>
+        </div>
+      )}
+
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-background border border-border shadow-xl rounded-full px-6 py-3 flex items-center gap-4 animate-in slide-in-from-bottom-5 fade-in-0 duration-300 pointer-events-auto">
+          <span className="text-sm font-medium whitespace-nowrap">
+            {selectedIds.size} {t("selected")}
+          </span>
+          <div className="h-4 w-px bg-border max-sm:hidden" />
+          <div className="flex gap-2">
+            <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())} className="rounded-full">
+              {t("cancel")}
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleBulkDownload} className="rounded-full">
+              <Download className="w-4 h-4 sm:me-2" />
+              <span className="hidden sm:inline">{t("downloadFile")}</span>
+            </Button>
+            <Button size="sm" variant="destructive" onClick={handleBulkDelete} className="rounded-full">
+              <Trash2 className="w-4 h-4 sm:me-2" />
+              <span className="hidden sm:inline">{t("deleteFile")}</span>
+            </Button>
+          </div>
         </div>
       )}
     </div>

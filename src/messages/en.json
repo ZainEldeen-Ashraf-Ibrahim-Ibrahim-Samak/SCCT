@@ -276,8 +276,11 @@
     "deleteConfirm": "Are you sure you want to delete this file?",
     "viewFile": "View file",
     "deleteFile": "Delete file",
+    "downloadFile": "Download file",
     "deleteSuccess": "Deleted successfully",
-    "deleteError": "Failed to delete"
+    "deleteError": "Failed to delete",
+    "selected": "Selected",
+    "cancel": "Cancel Selection"
   },
   "team": {
     "title": "Team Management",

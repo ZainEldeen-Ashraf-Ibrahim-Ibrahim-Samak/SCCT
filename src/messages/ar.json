@@ -276,8 +276,11 @@
     "deleteConfirm": "هل أنت متأكد من حذف هذا الملف؟",
     "viewFile": "عرض الملف",
     "deleteFile": "حذف الملف",
+    "downloadFile": "تنزيل الملف",
     "deleteSuccess": "تم الحذف بنجاح",
-    "deleteError": "فشل الحذف"
+    "deleteError": "فشل الحذف",
+    "selected": "محدد",
+    "cancel": "إلغاء التحديد"
   },
   "team": {
     "title": "إدارة الفريق",
