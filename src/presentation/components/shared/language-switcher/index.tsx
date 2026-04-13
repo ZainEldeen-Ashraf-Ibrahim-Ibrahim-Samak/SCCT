@@ -27,7 +27,7 @@ export function LanguageSwitcher() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger nativeButton={true} suppressHydrationWarning render={
+      <DropdownMenuTrigger nativeButton={true} render={
         <Button
           variant="ghost"
           size="icon"

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { logger } from "@/lib/dev-logger";
 
 export function useDraftAutosave<T>(storageKey: string, initialValue: T) {
@@ -29,10 +29,10 @@ export function useDraftAutosave<T>(storageKey: string, initialValue: T) {
     }
   }, [storageKey, draft, isLoaded]);
 
-  // Update draft (supports functional updates)
-  const updateDraft = (update: T | ((prev: T) => T)) => {
+  // Update draft (supports functional updates) — stable reference via useCallback
+  const updateDraft = useCallback((update: T | ((prev: T) => T)) => {
     setDraft(update);
-  };
+  }, []);
 
   // Clear draft
   const clearDraft = () => {

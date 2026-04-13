@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocale } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import type { FieldDefinition } from "@/domain/entities/field-definition";
 import type { Submission } from "@/domain/entities/submission";
 import type { FieldValue } from "@/domain/entities/field-value";
 import { useDraftAutosave } from "./use-draft-autosave";
 import { logger } from "@/lib/dev-logger";
+import { toast } from "sonner";
 
 interface FormFieldData {
   fieldDefinitionId: string;
@@ -42,10 +44,13 @@ interface UseSubmissionReturn {
   setMediaItems: (id: string, items: { url: string; publicId: string }[]) => void;
   submitForm: () => Promise<void>;
   resubmitForm: () => Promise<void>;
+  /** True briefly after an SSE status change is received — allows the UI to animate */
+  statusChangedLive: boolean;
 }
 
 export function useSubmission(tokenOrId: string): UseSubmissionReturn {
   const locale = useLocale();
+  const router = useRouter();
   const [isNew, setIsNew] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,6 +61,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
   const [fields, setFields] = useState<FieldDefinition[]>([]);
   const [submission, setSubmission] = useState<Submission | null>(null);
   const [values, setValues] = useState<FieldValue[]>([]);
+  const [statusChangedLive, setStatusChangedLive] = useState(false);
 
   const { draft, updateDraft, clearDraft, isLoaded: draftLoaded } = useDraftAutosave<DraftState>(
     `scct_draft_${tokenOrId}`,
@@ -66,8 +72,63 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
   const clientContact = draft?.clientContact || "";
   const formData = draft?.formData || {};
 
+  // Use a ref to access draft state inside fetchContent without adding it as a dependency.
+  // This prevents the fetch callback from being recreated on every keystroke.
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
+
+  // Queue for SSE events received during active editing.
+  // Events are stored here and only processed after submit/navigate.
+  const pendingSSERef = useRef<string[]>([]);
+  const isEditingRef = useRef(false);
+
+  // Track whether the user has started editing (any draft mutation after initial load)
+  const setClientName = (name: string) => {
+    isEditingRef.current = true;
+    updateDraft(prev => ({ ...prev, clientName: name }));
+  };
+  const setClientContact = (contact: string) => {
+    isEditingRef.current = true;
+    updateDraft(prev => ({ ...prev, clientContact: contact }));
+  };
+
+  const setFieldValue = (id: string, value: string | number | null) => {
+    isEditingRef.current = true;
+    updateDraft(prev => ({
+      ...prev,
+      formData: {
+        ...prev.formData,
+        [id]: { ...prev.formData[id], value, fieldDefinitionId: id },
+      }
+    }));
+  };
+
+  const setMediaItems = (id: string, items: { url: string; publicId: string }[]) => {
+    isEditingRef.current = true;
+    updateDraft(prev => ({
+      ...prev,
+      formData: {
+        ...prev.formData,
+        [id]: { ...prev.formData[id], mediaItems: items, fieldDefinitionId: id },
+      }
+    }));
+  };
+
+  const setMediaValue = (id: string, url: string, publicId: string) => {
+    isEditingRef.current = true;
+    updateDraft(prev => ({
+      ...prev,
+      formData: {
+        ...prev.formData,
+        [id]: { ...prev.formData[id], mediaUrl: url, mediaPublicId: publicId, fieldDefinitionId: id },
+      }
+    }));
+  };
+
+  // Stable fetchContent — depends only on tokenOrId and draftLoaded.
+  // Reads draft state via ref to avoid recreating the callback on every keystroke.
   const fetchContent = useCallback(async () => {
-    if (!draftLoaded) return; // Wait until draft is verified
+    if (!draftLoaded) return;
 
     setIsLoading(true);
     setError(null);
@@ -83,8 +144,9 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       const data = json.data;
       setIsNew(data.isNew);
 
-      // Only inject database seed if the local draft hasn't been edited
-      const hasDraftData = draft.clientName.trim() !== "" || Object.keys(draft.formData).length > 0;
+      // Read draft via ref — no reactive dependency
+      const currentDraft = draftRef.current;
+      const hasDraftData = currentDraft.clientName.trim() !== "" || Object.keys(currentDraft.formData).length > 0;
 
       if (data.isNew) {
         setFormName(data.formTemplate?.name || "");
@@ -128,12 +190,12 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [tokenOrId, draftLoaded, draft.clientName, draft.formData, updateDraft]);
+  }, [tokenOrId, draftLoaded, updateDraft]);
 
   useEffect(() => {
     fetchContent();
 
-    // Listen for real-time status updates via SSE (Just Event)
+    // Listen for real-time status updates via SSE
     if (!tokenOrId) return;
 
     let reconnectTimeout: NodeJS.Timeout;
@@ -148,7 +210,22 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
         try {
           const data = JSON.parse(event.data);
           if (data.type === "STATUS_CHANGED") {
-             fetchContent();
+            // Queue SSE events during active editing — process after submit/navigate
+            if (isEditingRef.current) {
+              pendingSSERef.current.push(data.type);
+            } else {
+              // Show a toast so the user knows the status changed
+              const newStatus = data.status;
+              if (newStatus === "viewed") {
+                toast.info("✓ Your submission has been viewed");
+              } else if (newStatus === "needs_rewrite") {
+                toast.warning("Your submission needs revision");
+              }
+              // Trigger live-update animation flag
+              setStatusChangedLive(true);
+              setTimeout(() => setStatusChangedLive(false), 2000);
+              fetchContent();
+            }
           }
         } catch (e) {
           // silent fail for heartbeat/ping
@@ -157,7 +234,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
 
       eventSource.onerror = () => {
         if (eventSource) eventSource.close();
-        reconnectTimeout = setTimeout(connect, 5000); // Reconnect after 5s
+        reconnectTimeout = setTimeout(connect, 5000);
       };
     }
 
@@ -169,46 +246,14 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
     };
   }, [fetchContent, tokenOrId]);
 
-  const setClientName = (name: string) => updateDraft(prev => ({ ...prev, clientName: name }));
-  const setClientContact = (contact: string) => updateDraft(prev => ({ ...prev, clientContact: contact }));
-
-  const setFieldValue = (id: string, value: string | number | null) => {
-    updateDraft(prev => ({
-      ...prev,
-      formData: {
-        ...prev.formData,
-        [id]: { ...prev.formData[id], value, fieldDefinitionId: id },
-      }
-    }));
-  };
-
-  const setMediaItems = (id: string, items: { url: string; publicId: string }[]) => {
-    updateDraft(prev => ({
-      ...prev,
-      formData: {
-        ...prev.formData,
-        [id]: { ...prev.formData[id], mediaItems: items, fieldDefinitionId: id },
-      }
-    }));
-  };
-
-  const setMediaValue = (id: string, url: string, publicId: string) => {
-    updateDraft(prev => ({
-      ...prev,
-      formData: {
-        ...prev.formData,
-        [id]: { ...prev.formData[id], mediaUrl: url, mediaPublicId: publicId, fieldDefinitionId: id },
-      }
-    }));
-  };
-
   const submitForm = async () => {
     setIsSubmitting(true);
     setError(null);
     
     // Safety check for empty submissions
-    const fieldValues = Object.values(draft.formData);
-    if (!draft.clientName.trim() && fieldValues.length === 0) {
+    const currentDraft = draftRef.current;
+    const fieldValues = Object.values(currentDraft.formData);
+    if (!currentDraft.clientName.trim() && fieldValues.length === 0) {
       logger.warn("Submit attempt with empty draft", { tokenOrId });
       setError("Please fill out the form before submitting.");
       setIsSubmitting(false);
@@ -217,8 +262,8 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
 
     try {
       const payload = {
-        clientName: draft.clientName,
-        clientContact: draft.clientContact,
+        clientName: currentDraft.clientName,
+        clientContact: currentDraft.clientContact,
         fieldValues,
       };
 
@@ -233,10 +278,12 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Failed to submit");
       clearDraft();
-      window.location.href = `/${locale}/submit/${json.data.accessToken}`;
+      isEditingRef.current = false;
+      pendingSSERef.current = [];
+      // Client-side navigation — no full-page reload
+      router.push(`/submit/${json.data.accessToken}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Submission failed");
-      throw err;
     } finally {
       setIsSubmitting(false);
     }
@@ -246,10 +293,11 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
     setIsSubmitting(true);
     setError(null);
     try {
-      const fieldValues = Object.values(draft.formData);
+      const currentDraft = draftRef.current;
+      const fieldValues = Object.values(currentDraft.formData);
       const payload = {
-        clientName: draft.clientName,
-        clientContact: draft.clientContact,
+        clientName: currentDraft.clientName,
+        clientContact: currentDraft.clientContact,
         fieldValues,
       };
 
@@ -264,11 +312,13 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Failed to resubmit");
       clearDraft();
-      // To strictly avoid stale draft data reloading right after submit:
-      window.location.reload(); 
+      isEditingRef.current = false;
+      pendingSSERef.current = [];
+      // Let Next.js re-render server components with updated submission status.
+      // This shows the success confirmation view cleanly.
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Resubmission failed");
-      throw err;
     } finally {
       setIsSubmitting(false);
     }
@@ -294,5 +344,6 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
     setMediaItems,
     submitForm,
     resubmitForm,
+    statusChangedLive,
   };
 }

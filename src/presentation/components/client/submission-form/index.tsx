@@ -38,6 +38,7 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
     setMediaItems,
     submitForm,
     resubmitForm,
+    statusChangedLive,
   } = useSubmission(tokenOrId);
 
   const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({});

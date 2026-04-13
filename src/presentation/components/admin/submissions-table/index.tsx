@@ -1,12 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Copy, Eye, MoreHorizontal, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDate, buildSubmissionUrl } from "@/lib/utils";
 import { toast } from "sonner";
@@ -25,20 +26,38 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
   const tc = useTranslations("common");
   const router = useRouter();
 
+  // Controlled state for the delete confirmation dialog — decoupled from the dropdown
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
   const handleCopyLink = (token: string) => {
     const url = buildSubmissionUrl(token);
     navigator.clipboard.writeText(url);
     toast.success(t("linkCopied"));
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDeleteClick = (id: string) => {
+    setDeleteTargetId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTargetId) return;
     try {
-      await onDelete(id);
+      await onDelete(deleteTargetId);
       toast.success(t("submissionDeleted"));
       onRefresh();
     } catch (err) {
       toast.error(tc("error"));
+    } finally {
+      setDeleteDialogOpen(false);
+      setDeleteTargetId(null);
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setDeleteTargetId(null);
   };
 
   if (isLoading && submissions.length === 0) {
@@ -94,71 +113,76 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
   };
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{t("clientName")}</TableHead>
-            <TableHead>{t("clientContact")}</TableHead>
-            <TableHead>{tc("status")}</TableHead>
-            <TableHead>{t("submittedAt")}</TableHead>
-            <TableHead className="text-end">{tc("actions")}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {submissions.map((sub) => (
-            <TableRow key={sub.id} className="cursor-pointer group" onClick={() => router.push(`/admin/submissions/${sub.id}`)}>
-              <TableCell className="font-medium group-hover:text-primary transition-colors">
-                {sub.clientName || t("unnamedSubmission")}
-              </TableCell>
-              <TableCell>{sub.clientContact || "—"}</TableCell>
-              <TableCell>{getStatusBadge(sub.status)}</TableCell>
-              <TableCell className="text-muted-foreground text-sm">
-                <span title={formatDate(sub.submittedAt)}>{formatDate(sub.submittedAt)}</span>
-                {sub.lastResubmittedAt && (
-                  <span className="block text-xs text-amber-600/80 mt-0.5">
-                    {t("resubmittedAt", { date: formatDate(sub.lastResubmittedAt) })}
-                  </span>
-                )}
-              </TableCell>
-              <TableCell className="text-end" onClick={(e) => e.stopPropagation()}>
-                <DropdownMenu>
-                  <DropdownMenuTrigger nativeButton={true} render={<Button variant="ghost" className="h-8 w-8 p-0" />}>
-                    <span className="sr-only">{t("openMenu")}</span>
-                    <MoreHorizontal className="h-4 w-4" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => router.push(`/admin/submissions/${sub.id}`)}>
-                      <Eye className="me-2 h-4 w-4" />
-                      {t("viewDetail")}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleCopyLink(sub.accessToken)}>
-                      <Copy className="me-2 h-4 w-4" />
-                      {t("copyLink")}
-                    </DropdownMenuItem>
-                    <AlertDialog>
-                      <AlertDialogTrigger nativeButton={false} render={<DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive" />}>
+    <>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t("clientName")}</TableHead>
+              <TableHead>{t("clientContact")}</TableHead>
+              <TableHead>{tc("status")}</TableHead>
+              <TableHead>{t("submittedAt")}</TableHead>
+              <TableHead className="text-end">{tc("actions")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {submissions.map((sub) => (
+              <TableRow key={sub.id} className="cursor-pointer group" onClick={() => router.push(`/admin/submissions/${sub.id}`)}>
+                <TableCell className="font-medium group-hover:text-primary transition-colors">
+                  {sub.clientName || t("unnamedSubmission")}
+                </TableCell>
+                <TableCell>{sub.clientContact || "—"}</TableCell>
+                <TableCell>{getStatusBadge(sub.status)}</TableCell>
+                <TableCell className="text-muted-foreground text-sm">
+                  <span title={formatDate(sub.submittedAt)}>{formatDate(sub.submittedAt)}</span>
+                  {sub.lastResubmittedAt && (
+                    <span className="block text-xs text-amber-600/80 mt-0.5">
+                      {t("resubmittedAt", { date: formatDate(sub.lastResubmittedAt) })}
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell className="text-end" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger nativeButton={true} render={<Button variant="ghost" className="h-8 w-8 p-0" />}>
+                      <span className="sr-only">{t("openMenu")}</span>
+                      <MoreHorizontal className="h-4 w-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => router.push(`/admin/submissions/${sub.id}`)}>
+                        <Eye className="me-2 h-4 w-4" />
+                        {t("viewDetail")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleCopyLink(sub.accessToken)}>
+                        <Copy className="me-2 h-4 w-4" />
+                        {t("copyLink")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteClick(sub.id)}>
                         <Trash2 className="me-2 h-4 w-4" />
                         {t("deleteSubmission")}
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
-                          <AlertDialogDescription>{t("deleteWarning")}</AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => { handleDelete(sub.id); }}>{tc("delete")}</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Delete confirmation dialog — rendered outside the DropdownMenu tree to avoid
+          the dropdown's close lifecycle interfering with the dialog's open state */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("deleteWarning")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleDeleteCancel}>{tc("cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm}>{tc("delete")}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
