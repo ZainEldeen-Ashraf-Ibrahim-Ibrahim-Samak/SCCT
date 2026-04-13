@@ -72,38 +72,38 @@
 
 ### Domain Layer — US1
 
-- [ ] T032 [P] [US1] Create FormTemplate entity interface in `src/domain/entities/form-template.ts`
-- [ ] T033 [P] [US1] Create FieldDefinition entity interface in `src/domain/entities/field-definition.ts` with InputType enum and ValidationRules type
-- [ ] T034 [P] [US1] Create FormTemplate repository interface in `src/domain/repositories/form-template-repository.ts` (create, findById, findActive, update, delete)
-- [ ] T035 [P] [US1] Create FieldDefinition repository interface in `src/domain/repositories/field-definition-repository.ts` (create, findByFormId, update, softDelete, reorder)
-- [ ] T036 [US1] Create manage-forms use case in `src/domain/use-cases/admin/manage-forms.ts` (createForm, getForm, listForms, updateForm, deleteForm with submission check)
-- [ ] T037 [US1] Create manage-fields use case in `src/domain/use-cases/admin/manage-fields.ts` (createField, updateField, deleteField, reorderFields, listFields)
+- [x] T032 [P] [US1] Create FormTemplate entity interface in `src/domain/entities/form-template.ts`
+- [x] T033 [P] [US1] Create FieldDefinition entity interface in `src/domain/entities/field-definition.ts` with InputType enum and ValidationRules type
+- [x] T034 [P] [US1] Create FormTemplate repository interface in `src/domain/repositories/form-template-repository.ts` (create, findById, findActive, update, delete)
+- [x] T035 [P] [US1] Create FieldDefinition repository interface in `src/domain/repositories/field-definition-repository.ts` (create, findByFormId, update, softDelete, reorder)
+- [x] T036 [US1] Create manage-forms use case in `src/domain/use-cases/admin/manage-forms.ts` (createForm, getForm, listForms, updateForm, deleteForm with submission check)
+- [x] T037 [US1] Create manage-fields use case in `src/domain/use-cases/admin/manage-fields.ts` (createField, updateField, deleteField, reorderFields, listFields)
 
 ### Data Layer — US1
 
-- [ ] T038 [P] [US1] Create FormTemplate Mongoose model in `src/data/models/form-template.model.ts` with indexes per data-model.md
-- [ ] T039 [P] [US1] Create FieldDefinition Mongoose model in `src/data/models/field-definition.model.ts` with compound indexes, validation, and enum constraints per data-model.md
-- [ ] T040 [US1] Create MongoFormTemplateRepository in `src/data/repositories/mongo-form-template-repository.ts` implementing repository interface with cache integration
-- [ ] T041 [US1] Create MongoFieldDefinitionRepository in `src/data/repositories/mongo-field-definition-repository.ts` implementing repository interface with cache integration
+- [x] T038 [P] [US1] Create FormTemplate Mongoose model in `src/data/models/form-template.model.ts` with indexes per data-model.md
+- [x] T039 [P] [US1] Create FieldDefinition Mongoose model in `src/data/models/field-definition.model.ts` with compound indexes, validation, and enum constraints per data-model.md
+- [x] T040 [US1] Create MongoFormTemplateRepository in `src/data/repositories/mongo-form-template-repository.ts` implementing repository interface with cache integration
+- [x] T041 [US1] Create MongoFieldDefinitionRepository in `src/data/repositories/mongo-field-definition-repository.ts` implementing repository interface with cache integration
 
 ### API Layer — US1
 
-- [ ] T042 [US1] Create admin forms API route in `src/app/api/admin/forms/route.ts` (POST, GET) per contracts/admin-forms.md
-- [ ] T043 [US1] Create admin forms detail API route in `src/app/api/admin/forms/[formId]/route.ts` (GET, PATCH, DELETE) per contracts/admin-forms.md
-- [ ] T044 [US1] Create admin fields API route in `src/app/api/admin/fields/route.ts` (POST, GET) per contracts/admin-fields.md
-- [ ] T045 [US1] Create admin fields detail API route in `src/app/api/admin/fields/[fieldId]/route.ts` (PATCH, DELETE) per contracts/admin-fields.md
-- [ ] T046 [US1] Create admin fields reorder API route in `src/app/api/admin/fields/reorder/route.ts` (PATCH) per contracts/admin-fields.md
+- [x] T042 [US1] Create admin forms API route in `src/app/api/admin/forms/route.ts` (POST, GET) per contracts/admin-forms.md
+- [x] T043 [US1] Create admin forms detail API route in `src/app/api/admin/forms/[formId]/route.ts` (GET, PATCH, DELETE) per contracts/admin-forms.md
+- [x] T044 [US1] Create admin fields API route in `src/app/api/admin/fields/route.ts` (POST, GET) per contracts/admin-fields.md
+- [x] T045 [US1] Create admin fields detail API route in `src/app/api/admin/fields/[fieldId]/route.ts` (PATCH, DELETE) per contracts/admin-fields.md
+- [x] T046 [US1] Create admin fields reorder API route in `src/app/api/admin/fields/reorder/route.ts` (PATCH) per contracts/admin-fields.md
 
 ### Presentation Layer — US1
 
-- [ ] T047 [US1] Create useFormManager ViewModel hook in `src/presentation/view-models/use-form-manager.ts` (CRUD operations, loading/error states, active form toggle)
-- [ ] T048 [US1] Create useFieldBuilder ViewModel hook in `src/presentation/view-models/use-field-builder.ts` (field CRUD, drag-and-drop reordering state, field type selection)
-- [ ] T049 [US1] Create FormManager component in `src/presentation/components/admin/form-manager/index.tsx` (form list with create dialog, active indicator, ShadCN Card + Dialog)
-- [ ] T050 [US1] Create FieldBuilder component in `src/presentation/components/admin/field-builder/index.tsx` (@dnd-kit sortable list of field cards with inline add/edit/delete)
-- [ ] T051 [US1] Create FieldCard component in `src/presentation/components/admin/field-builder/field-card.tsx` (draggable card showing field name, type, validation, edit/delete actions)
-- [ ] T052 [US1] Create FieldFormDialog component in `src/presentation/components/admin/field-builder/field-form-dialog.tsx` (ShadCN Dialog with form for field creation/editing: bilingual names, type selector, validation rules, dropdown options)
-- [ ] T053 [US1] Create admin forms page in `src/app/[locale]/admin/forms/page.tsx` integrating FormManager component
-- [ ] T054 [US1] Create admin field builder page in `src/app/[locale]/admin/forms/[id]/fields/page.tsx` integrating FieldBuilder component
+- [x] T047 [US1] Create useFormManager ViewModel hook in `src/presentation/view-models/use-form-manager.ts` (CRUD operations, loading/error states, active form toggle)
+- [x] T048 [US1] Create useFieldBuilder ViewModel hook in `src/presentation/view-models/use-field-builder.ts` (field CRUD, drag-and-drop reordering state, field type selection)
+- [x] T049 [US1] Create FormManager component in `src/presentation/components/admin/form-manager/index.tsx` (form list with create dialog, active indicator, ShadCN Card + Dialog)
+- [x] T050 [US1] Create FieldBuilder component in `src/presentation/components/admin/field-builder/index.tsx` (@dnd-kit sortable list of field cards with inline add/edit/delete)
+- [x] T051 [US1] Create FieldCard component in `src/presentation/components/admin/field-builder/field-card.tsx` (draggable card showing field name, type, validation, edit/delete actions)
+- [x] T052 [US1] Create FieldFormDialog component in `src/presentation/components/admin/field-builder/field-form-dialog.tsx` (ShadCN Dialog with form for field creation/editing: bilingual names, type selector, validation rules, dropdown options)
+- [x] T053 [US1] Create admin forms page in `src/app/[locale]/admin/forms/page.tsx` integrating FormManager component
+- [x] T054 [US1] Create admin field builder page in `src/app/[locale]/admin/forms/[id]/fields/page.tsx` integrating FieldBuilder component
 
 **Checkpoint**: Admin can log in, create a form template, add fields of all types (text, number, image, file, date, dropdown), reorder via drag-and-drop, edit, and soft-delete fields. This is the MVP.
 
@@ -117,33 +117,33 @@
 
 ### Domain Layer — US2
 
-- [ ] T055 [P] [US2] Create Submission entity interface in `src/domain/entities/submission.ts` with SubmissionStatus enum and AuditEntry type
-- [ ] T056 [P] [US2] Create FieldValue entity interface in `src/domain/entities/field-value.ts`
-- [ ] T057 [P] [US2] Create Submission repository interface in `src/domain/repositories/submission-repository.ts` (create, findByToken, update, delete)
-- [ ] T058 [P] [US2] Create FieldValue repository interface in `src/domain/repositories/field-value-repository.ts` (createMany, findBySubmissionId, updateMany, deleteBySubmissionId)
-- [ ] T059 [US2] Create submit-form use case in `src/domain/use-cases/client/submit-form.ts` (validateFields against active form, create submission with formSnapshot, create field values, handle media references)
-- [ ] T060 [US2] Create view-submission use case in `src/domain/use-cases/client/view-submission.ts` (lookup by accessToken, return existing submission or fresh form)
+- [x] T055 [P] [US2] Create Submission entity interface in `src/domain/entities/submission.ts` with SubmissionStatus enum and AuditEntry type
+- [x] T056 [P] [US2] Create FieldValue entity interface in `src/domain/entities/field-value.ts`
+- [x] T057 [P] [US2] Create Submission repository interface in `src/domain/repositories/submission-repository.ts` (create, findByToken, update, delete)
+- [x] T058 [P] [US2] Create FieldValue repository interface in `src/domain/repositories/field-value-repository.ts` (createMany, findBySubmissionId, updateMany, deleteBySubmissionId)
+- [x] T059 [US2] Create submit-form use case in `src/domain/use-cases/client/submit-form.ts` (validateFields against active form, create submission with formSnapshot, create field values, handle media references)
+- [x] T060 [US2] Create view-submission use case in `src/domain/use-cases/client/view-submission.ts` (lookup by accessToken, return existing submission or fresh form)
 
 ### Data Layer — US2
 
-- [ ] T061 [P] [US2] Create Submission Mongoose model in `src/data/models/submission.model.ts` with embedded AuditEntry subdocument schema, indexes per data-model.md
-- [ ] T062 [P] [US2] Create FieldValue Mongoose model in `src/data/models/field-value.model.ts` with compound unique index per data-model.md
-- [ ] T063 [US2] Create MongoSubmissionRepository in `src/data/repositories/mongo-submission-repository.ts` implementing repository interface with cache integration
-- [ ] T064 [US2] Create MongoFieldValueRepository in `src/data/repositories/mongo-field-value-repository.ts` implementing repository interface
+- [x] T061 [P] [US2] Create Submission Mongoose model in `src/data/models/submission.model.ts` with embedded AuditEntry subdocument schema, indexes per data-model.md
+- [x] T062 [P] [US2] Create FieldValue Mongoose model in `src/data/models/field-value.model.ts` with compound unique index per data-model.md
+- [x] T063 [US2] Create MongoSubmissionRepository in `src/data/repositories/mongo-submission-repository.ts` implementing repository interface with cache integration
+- [x] T064 [US2] Create MongoFieldValueRepository in `src/data/repositories/mongo-field-value-repository.ts` implementing repository interface
 
 ### API Layer — US2
 
-- [ ] T065 [US2] Create client submission API route in `src/app/api/submissions/[token]/route.ts` (GET, POST, PUT) per contracts/client-submissions.md
-- [ ] T066 [US2] Create generate-link API route in `src/app/api/submissions/generate-link/route.ts` (POST, admin-only) per contracts/client-submissions.md
+- [x] T065 [US2] Create client submission API route in `src/app/api/submissions/[token]/route.ts` (GET, POST, PUT) per contracts/client-submissions.md
+- [x] T066 [US2] Create generate-link API route in `src/app/api/submissions/generate-link/route.ts` (POST, admin-only) per contracts/client-submissions.md
 
 ### Presentation Layer — US2
 
-- [ ] T067 [US2] Create useSubmissionForm ViewModel hook in `src/presentation/view-models/use-submission-form.ts` (form state, field validation, submission, Cloudinary upload handling, resubmission)
-- [ ] T068 [US2] Create DynamicForm component in `src/presentation/components/client/dynamic-form/index.tsx` (renders fields dynamically based on FieldDefinition type: text input, number input, date picker, dropdown select)
-- [ ] T069 [US2] Create MediaUploadField component in `src/presentation/components/client/dynamic-form/media-upload-field.tsx` (CldUploadWidget with signatureEndpoint, preview thumbnail, file size validation, progress indicator)
-- [ ] T070 [US2] Create SubmissionStatus component in `src/presentation/components/client/submission-status/index.tsx` (shows current status, rewrite comment if needs_rewrite, resubmit button)
-- [ ] T071 [US2] Create MediaViewer component in `src/presentation/components/shared/media-viewer/index.tsx` (inline image display with Cloudinary transformations, file download links)
-- [ ] T072 [US2] Create client submission page in `src/app/[locale]/submit/[token]/page.tsx` (server component that fetches form/submission data, renders DynamicForm or SubmissionStatus conditionally)
+- [x] T067 [US2] Create useSubmissionForm ViewModel hook in `src/presentation/view-models/use-submission-form.ts` (form state, field validation, submission, Cloudinary upload handling, resubmission)
+- [x] T068 [US2] Create DynamicForm component in `src/presentation/components/client/dynamic-form/index.tsx` (renders fields dynamically based on FieldDefinition type: text input, number input, date picker, dropdown select)
+- [x] T069 [US2] Create MediaUploadField component in `src/presentation/components/client/dynamic-form/media-upload-field.tsx` (CldUploadWidget with signatureEndpoint, preview thumbnail, file size validation, progress indicator)
+- [x] T070 [US2] Create SubmissionStatus component in `src/presentation/components/client/submission-status/index.tsx` (shows current status, rewrite comment if needs_rewrite, resubmit button)
+- [x] T071 [US2] Create MediaViewer component in `src/presentation/components/shared/media-viewer/index.tsx` (inline image display with Cloudinary transformations, file download links)
+- [x] T072 [US2] Create client submission page in `src/app/[locale]/submit/[token]/page.tsx` (server component that fetches form/submission data, renders DynamicForm or SubmissionStatus conditionally)
 
 **Checkpoint**: End-to-end client flow works — admin generates link, client opens it, fills form with mixed types + image uploads, submits, sees confirmation. Revisiting link shows status. Resubmission works when status is needs_rewrite.
 
@@ -157,27 +157,27 @@
 
 ### Domain Layer — US3
 
-- [ ] T073 [P] [US3] Create AuditEntry entity interface in `src/domain/entities/audit-entry.ts`
-- [ ] T074 [US3] Create review-submissions use case in `src/domain/use-cases/admin/review-submissions.ts` (listSubmissions with pagination/filter, getSubmissionDetail, updateStatus with audit entry, deleteSubmission with Cloudinary cleanup, getShareableLink)
+- [x] T073 [P] [US3] Create AuditEntry entity interface in `src/domain/entities/audit-entry.ts`
+- [x] T074 [US3] Create review-submissions use case in `src/domain/use-cases/admin/review-submissions.ts` (listSubmissions with pagination/filter, getSubmissionDetail, updateStatus with audit entry, deleteSubmission with Cloudinary cleanup, getShareableLink)
 
 ### API Layer — US3
 
-- [ ] T075 [US3] Create admin submissions list API route in `src/app/api/admin/submissions/route.ts` (GET with pagination, status filter, sorting) per contracts/admin-submissions.md
-- [ ] T076 [US3] Create admin submission detail API route in `src/app/api/admin/submissions/[submissionId]/route.ts` (GET, DELETE) per contracts/admin-submissions.md
-- [ ] T077 [US3] Create admin submission status API route in `src/app/api/admin/submissions/[submissionId]/status/route.ts` (PATCH) per contracts/admin-submissions.md
-- [ ] T078 [US3] Create admin submission link API route in `src/app/api/admin/submissions/[submissionId]/link/route.ts` (GET) per contracts/admin-submissions.md
+- [x] T075 [US3] Create admin submissions list API route in `src/app/api/admin/submissions/route.ts` (GET with pagination, status filter, sorting) per contracts/admin-submissions.md
+- [x] T076 [US3] Create admin submission detail API route in `src/app/api/admin/submissions/[submissionId]/route.ts` (GET, DELETE) per contracts/admin-submissions.md
+- [x] T077 [US3] Create admin submission status API route in `src/app/api/admin/submissions/[submissionId]/status/route.ts` (PATCH) per contracts/admin-submissions.md
+- [x] T078 [US3] Create admin submission link API route in `src/app/api/admin/submissions/[submissionId]/link/route.ts` (GET) per contracts/admin-submissions.md
 
 ### Presentation Layer — US3
 
-- [ ] T079 [US3] Create useDashboard ViewModel hook in `src/presentation/view-models/use-dashboard.ts` (submission list with pagination, status filter, status counts, loading states)
-- [ ] T080 [US3] Create useSubmissionReview ViewModel hook in `src/presentation/view-models/use-submission-review.ts` (submission detail, status change, comment, delete with confirmation, copy link)
-- [ ] T081 [US3] Create SubmissionTable component in `src/presentation/components/admin/submission-table/index.tsx` (ShadCN Table with columns: client name, date, status badge, actions; status filter tabs; pagination)
-- [ ] T082 [US3] Create StatusBadge component in `src/presentation/components/admin/submission-table/status-badge.tsx` (color-coded badges for pending/viewed/needs_rewrite)
-- [ ] T083 [US3] Create SubmissionDetail component in `src/presentation/components/admin/submission-detail/index.tsx` (full field value display with inline images via MediaViewer, status actions, rewrite comment input, audit trail timeline)
-- [ ] T084 [US3] Create AuditTimeline component in `src/presentation/components/admin/submission-detail/audit-timeline.tsx` (chronological list of status changes with admin name, timestamp, comment)
-- [ ] T085 [US3] Create DeleteConfirmDialog component in `src/presentation/components/admin/submission-detail/delete-confirm-dialog.tsx` (ShadCN AlertDialog warning about permanent deletion of data + Cloudinary assets)
-- [ ] T086 [US3] Create admin dashboard page in `src/app/[locale]/admin/dashboard/page.tsx` integrating SubmissionTable with status count summary cards
-- [ ] T087 [US3] Create admin submission detail page or modal integrating SubmissionDetail at `src/app/[locale]/admin/dashboard/[submissionId]/page.tsx`
+- [x] T079 [US3] Create useDashboard ViewModel hook in `src/presentation/view-models/use-dashboard.ts` (submission list with pagination, status filter, status counts, loading states)
+- [x] T080 [US3] Create useSubmissionReview ViewModel hook in `src/presentation/view-models/use-submission-review.ts` (submission detail, status change, comment, delete with confirmation, copy link)
+- [x] T081 [US3] Create SubmissionTable component in `src/presentation/components/admin/submission-table/index.tsx` (ShadCN Table with columns: client name, date, status badge, actions; status filter tabs; pagination)
+- [x] T082 [US3] Create StatusBadge component in `src/presentation/components/admin/submission-table/status-badge.tsx` (color-coded badges for pending/viewed/needs_rewrite)
+- [x] T083 [US3] Create SubmissionDetail component in `src/presentation/components/admin/submission-detail/index.tsx` (full field value display with inline images via MediaViewer, status actions, rewrite comment input, audit trail timeline)
+- [x] T084 [US3] Create AuditTimeline component in `src/presentation/components/admin/submission-detail/audit-timeline.tsx` (chronological list of status changes with admin name, timestamp, comment)
+- [x] T085 [US3] Create DeleteConfirmDialog component in `src/presentation/components/admin/submission-detail/delete-confirm-dialog.tsx` (ShadCN AlertDialog warning about permanent deletion of data + Cloudinary assets)
+- [x] T086 [US3] Create admin dashboard page in `src/app/[locale]/admin/dashboard/page.tsx` integrating SubmissionTable with status count summary cards
+- [x] T087 [US3] Create admin submission detail page or modal integrating SubmissionDetail at `src/app/[locale]/admin/dashboard/[submissionId]/page.tsx`
 
 **Checkpoint**: Full admin review workflow — dashboard lists submissions, admin can filter by status, view detail with inline images, change status with comments, see audit trail, delete submissions, and copy shareable links for client resubmission.
 
