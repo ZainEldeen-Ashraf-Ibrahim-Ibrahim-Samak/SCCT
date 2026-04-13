@@ -280,7 +280,9 @@
     "deleteSuccess": "Deleted successfully",
     "deleteError": "Failed to delete",
     "selected": "Selected",
-    "cancel": "Cancel Selection"
+    "cancel": "Cancel Selection",
+    "selectAll": "Select All",
+    "unselectAll": "Unselect All"
   },
   "team": {
     "title": "Team Management",

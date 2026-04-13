@@ -25,6 +25,14 @@ export function MediaGallery() {
     });
   };
 
+  const handleSelectAll = () => {
+    if (selectedIds.size === resources.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(resources.map((r: MediaResource) => r.public_id)));
+    }
+  };
+
   const handleBulkDelete = async () => {
     if (!confirm(t("deleteConfirm") + ` (${selectedIds.size})`)) return;
     try {
@@ -83,14 +91,30 @@ export function MediaGallery() {
             {t("subtitle")}
           </p>
         </div>
-        <Button 
-          variant="outline" 
-          onClick={refresh} 
-          className="shrink-0 hover:bg-primary hover:text-primary-foreground transition-all duration-300"
-        >
-          <RefreshCw className="h-4 w-4 me-2" />
-          {t("refresh")}
-        </Button>
+        <div className="flex items-center gap-2">
+          {resources.length > 0 && (
+            <Button 
+              variant="outline" 
+              onClick={handleSelectAll} 
+              className="shrink-0 transition-all duration-300"
+            >
+              {selectedIds.size === resources.length && resources.length > 0 ? (
+                <CheckCircle2 className="h-4 w-4 me-2" />
+              ) : (
+                <Circle className="h-4 w-4 me-2" />
+              )}
+              {selectedIds.size === resources.length && resources.length > 0 ? t("unselectAll") : t("selectAll")}
+            </Button>
+          )}
+          <Button 
+            variant="outline" 
+            onClick={refresh} 
+            className="shrink-0 hover:bg-primary hover:text-primary-foreground transition-all duration-300"
+          >
+            <RefreshCw className="h-4 w-4 me-2" />
+            {t("refresh")}
+          </Button>
+        </div>
       </div>
 
       {resources.length === 0 ? (

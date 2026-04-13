@@ -280,7 +280,9 @@
     "deleteSuccess": "تم الحذف بنجاح",
     "deleteError": "فشل الحذف",
     "selected": "محدد",
-    "cancel": "إلغاء التحديد"
+    "cancel": "إلغاء التحديد",
+    "selectAll": "تحديد الكل",
+    "unselectAll": "إلغاء تحديد الكل"
   },
   "team": {
     "title": "إدارة الفريق",
