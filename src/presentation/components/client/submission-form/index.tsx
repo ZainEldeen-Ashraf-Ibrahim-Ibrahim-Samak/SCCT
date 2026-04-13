@@ -100,9 +100,9 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
     e.preventDefault();
     if (!validate()) return;
     if (isNew) {
-      await submitForm();
+      await submitForm(formData);
     } else if (isNeedsRewrite || isDraft) {
-      await resubmitForm();
+      await resubmitForm(formData);
     }
   };
 
