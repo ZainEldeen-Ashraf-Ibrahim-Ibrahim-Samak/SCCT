@@ -17,6 +17,7 @@ import { logger } from "@/lib/dev-logger";
 import { formatDate } from "@/lib/utils";
 import type { Submission } from "@/domain/entities/submission";
 import type { FieldValue } from "@/domain/entities/field-value";
+import type { ContactFormField } from "@/domain/entities/form-template";
 
 interface SubmissionReviewProps {
   id: string;
@@ -35,6 +36,7 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
   
   const [submission, setSubmission] = useState<Submission | null>(null);
   const [values, setValues] = useState<FieldValue[]>([]);
+  const [contactFields, setContactFields] = useState<ContactFormField[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [rewriteComment, setRewriteComment] = useState("");
@@ -48,6 +50,9 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
         if (json.success && !json.data.isNew) {
            setSubmission(json.data.submission);
            setValues(json.data.values);
+           if (json.data.formTemplate?.contactFormFields) {
+             setContactFields([...json.data.formTemplate.contactFormFields].sort((a: any, b: any) => a.sortOrder - b.sortOrder));
+           }
            // Auto mark as viewed if pending
            if (json.data.submission.status === "pending") {
               await updateStatus(json.data.submission.id, "viewed");
@@ -82,9 +87,9 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
         }];
         return { ...prev, status, auditTrail: newTrack };
       });
-      if (status !== "needs_rewrite") {
-        setRewriteComment(""); // Clear comment if moving away from needs_rewrite
-      }
+      
+      // Clear the comment input after successful submission, regardless of status
+      setRewriteComment("");
     } finally {
       setIsUpdating(false);
     }
@@ -180,30 +185,49 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
                           </div>
 
                           <div className="grid gap-4 sm:grid-cols-2">
-                            <div className="space-y-1">
-                              <Label className="text-xs text-muted-foreground">{tc("name")}</Label>
-                              <p className="text-sm font-medium">{record.name || "—"}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs text-muted-foreground">{tClient("contactRecordEmail")}</Label>
-                              <p className="text-sm font-medium">{record.email || "—"}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs text-muted-foreground">{tClient("contactRecordPhone")}</Label>
-                              <p className="text-sm font-medium">{record.phone || record.contact || "—"}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs text-muted-foreground">{tClient("contactRecordContact")}</Label>
-                              <p className="text-sm font-medium">{record.contact || "—"}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs text-muted-foreground">{tClient("contactRecordRole")}</Label>
-                              <p className="text-sm font-medium">{record.role || "—"}</p>
-                            </div>
-                            <div className="space-y-1 sm:col-span-2">
-                              <Label className="text-xs text-muted-foreground">{tClient("contactRecordNotes")}</Label>
-                              <p className="text-sm font-medium whitespace-pre-wrap">{(record as any).address || record.notes || "—"}</p>
-                            </div>
+                            {contactFields.length > 0 ? (
+                              contactFields.map(field => {
+                                const val = field.key === "name" ? record.name 
+                                          : field.key === "email" ? record.email 
+                                          : field.key === "phone" ? record.phone 
+                                          : field.key === "address" ? ((record as any).address || record.notes)
+                                          : null;
+                                const label = locale === "ar" ? (field.labelAr || field.label || field.labelEn) : (field.labelEn || field.label || field.labelAr);
+                                return (
+                                  <div key={field.id} className={`space-y-1 ${field.key === "address" ? "sm:col-span-2" : ""}`}>
+                                    <Label className="text-xs text-muted-foreground">{label}</Label>
+                                    <p className={`text-sm font-medium ${field.key === "address" ? "whitespace-pre-wrap" : ""}`}>{val || "—"}</p>
+                                  </div>
+                                );
+                              })
+                            ) : (
+                              <>
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-muted-foreground">{tc("name")}</Label>
+                                  <p className="text-sm font-medium">{record.name || "—"}</p>
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-muted-foreground">{tClient("contactRecordEmail")}</Label>
+                                  <p className="text-sm font-medium">{record.email || "—"}</p>
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-muted-foreground">{tClient("contactRecordPhone")}</Label>
+                                  <p className="text-sm font-medium">{record.phone || record.contact || "—"}</p>
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-muted-foreground">{tClient("contactRecordContact")}</Label>
+                                  <p className="text-sm font-medium">{record.contact || "—"}</p>
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-muted-foreground">{tClient("contactRecordRole")}</Label>
+                                  <p className="text-sm font-medium">{record.role || "—"}</p>
+                                </div>
+                                <div className="space-y-1 sm:col-span-2">
+                                  <Label className="text-xs text-muted-foreground">{tClient("contactRecordNotes")}</Label>
+                                  <p className="text-sm font-medium whitespace-pre-wrap">{(record as any).address || record.notes || "—"}</p>
+                                </div>
+                              </>
+                            )}
                           </div>
                           {record.mediaUrl && (
                             <div className="mt-3 pt-3 border-t border-border/50">
