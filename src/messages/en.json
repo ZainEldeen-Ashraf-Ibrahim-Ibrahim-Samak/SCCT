@@ -304,6 +304,7 @@
     "contactRecordAddressPlaceholder": "Enter address",
     "contactRecordPhone": "Phone",
     "contactRecordPhonePlaceholder": "Enter phone",
+    "contactRecordContact": "Contact Details",
     "contactRecordRole": "Role",
     "contactRecordRolePlaceholder": "Relation or role",
     "contactRecordNotes": "Notes",
