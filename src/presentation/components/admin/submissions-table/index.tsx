@@ -28,19 +28,35 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
   const tc = useTranslations("common");
   const router = useRouter();
 
-  const getPrimaryContact = (submission: Submission) => {
-    const fromContactRecords = submission.contactRecords
-      .map((record) => [record.phone, record.email, record.contact])
-      .flat()
-      .map((value) => (value ?? "").trim())
-      .find((value) => value.length > 0);
+  const normalizeContactValue = (value?: string | null) => {
+    const normalized = (value ?? "").trim();
+    return normalized.length > 0 ? normalized : null;
+  };
+
+  const getContactSummary = (submission: Submission) => {
+    const fromContactRecords = submission.contactRecords.find((record) => {
+      return (
+        normalizeContactValue(record.email) ||
+        normalizeContactValue(record.phone) ||
+        normalizeContactValue(record.contact)
+      );
+    });
 
     if (fromContactRecords) {
-      return fromContactRecords;
+      return {
+        email: normalizeContactValue(fromContactRecords.email),
+        phone: normalizeContactValue(fromContactRecords.phone),
+        address: normalizeContactValue(fromContactRecords.contact),
+      };
     }
 
-    const fromLegacyContact = submission.clientContact?.trim();
-    return fromLegacyContact && fromLegacyContact.length > 0 ? fromLegacyContact : null;
+    const fromLegacyContact = normalizeContactValue(submission.clientContact);
+
+    return {
+      email: null,
+      phone: fromLegacyContact,
+      address: null,
+    };
   };
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -110,7 +126,9 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
 
   const getExportColumns = () => [
     { header: t("clientName"), key: "clientName" as const },
-    { header: t("clientContact"), key: (row: Submission) => getPrimaryContact(row) || "—" },
+    { header: t("contactEmail"), key: (row: Submission) => getContactSummary(row).email || "—" },
+    { header: t("contactPhone"), key: (row: Submission) => getContactSummary(row).phone || "—" },
+    { header: t("contactAddress"), key: (row: Submission) => getContactSummary(row).address || "—" },
     { header: tc("status"), key: "status" as const },
     { header: t("submittedAt"), key: (row: Submission) => formatDate(row.submittedAt) },
   ];
@@ -144,6 +162,8 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
               </TableHead>
               <TableHead className="whitespace-nowrap"><Skeleton className="h-4 w-24" /></TableHead>
               <TableHead className="hidden md:table-cell whitespace-nowrap"><Skeleton className="h-4 w-24" /></TableHead>
+              <TableHead className="hidden lg:table-cell whitespace-nowrap"><Skeleton className="h-4 w-24" /></TableHead>
+              <TableHead className="hidden xl:table-cell whitespace-nowrap"><Skeleton className="h-4 w-24" /></TableHead>
               <TableHead className="whitespace-nowrap"><Skeleton className="h-4 w-24" /></TableHead>
               <TableHead className="hidden sm:table-cell whitespace-nowrap"><Skeleton className="h-4 w-24" /></TableHead>
               <TableHead className="text-end whitespace-nowrap"><Skeleton className="h-4 w-8 inline-block" /></TableHead>
@@ -160,6 +180,8 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
                     <Skeleton className="h-3 w-20 mt-2 md:hidden" />
                   </TableCell>
                   <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell className="hidden xl:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
                   <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
                   <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
                   <TableCell className="text-end"><Skeleton className="h-8 w-8 inline-block" /></TableCell>
@@ -283,7 +305,9 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
                 />
               </TableHead>
               <TableHead className="whitespace-nowrap">{t("clientName")}</TableHead>
-              <TableHead className="hidden md:table-cell whitespace-nowrap">{t("clientContact")}</TableHead>
+              <TableHead className="hidden md:table-cell whitespace-nowrap">{t("contactEmail")}</TableHead>
+              <TableHead className="hidden lg:table-cell whitespace-nowrap">{t("contactPhone")}</TableHead>
+              <TableHead className="hidden xl:table-cell whitespace-nowrap">{t("contactAddress")}</TableHead>
               <TableHead className="whitespace-nowrap">{tc("status")}</TableHead>
               <TableHead className="hidden sm:table-cell whitespace-nowrap">{t("submittedAt")}</TableHead>
               <TableHead className="text-end whitespace-nowrap">{tc("actions")}</TableHead>
@@ -292,7 +316,7 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
           <TableBody>
             {submissions.map((sub) => {
               const latestUpdater = getLatestUpdater(sub);
-              const primaryContact = getPrimaryContact(sub);
+              const contactSummary = getContactSummary(sub);
               const isSelected = selectedIds.includes(sub.id);
               return (
                 <TableRow 
@@ -310,10 +334,14 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
                   <TableCell className="font-medium group-hover:text-primary transition-colors wrap-break-word">
                     {sub.clientName || t("unnamedSubmission")}
                     <div className="md:hidden mt-1 text-xs text-muted-foreground break-all">
-                      {primaryContact || "—"}
+                      {[contactSummary.email, contactSummary.phone, contactSummary.address]
+                        .filter((value): value is string => !!value)
+                        .join(" • ") || "—"}
                     </div>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell break-all">{primaryContact || "—"}</TableCell>
+                  <TableCell className="hidden md:table-cell break-all">{contactSummary.email || "—"}</TableCell>
+                  <TableCell className="hidden lg:table-cell break-all">{contactSummary.phone || "—"}</TableCell>
+                  <TableCell className="hidden xl:table-cell break-all">{contactSummary.address || "—"}</TableCell>
                   <TableCell>
                     <div className="flex flex-col items-start gap-1">
                       {getStatusBadge(sub.status)}

@@ -5,9 +5,11 @@ import { useLocale, useTranslations } from "next-intl";
 import type { FieldDefinition } from "@/domain/entities/field-definition";
 import type { Submission } from "@/domain/entities/submission";
 import type { FieldValue } from "@/domain/entities/field-value";
+import type { ContactFormField } from "@/domain/entities/form-template";
 import { useDraftAutosave } from "./use-draft-autosave";
 import { logger } from "@/lib/dev-logger";
 import { toast } from "sonner";
+import { DEFAULT_CONTACT_FORM_FIELDS, normalizeContactFormFields } from "@/lib/contact-form";
 
 interface FormFieldData {
   fieldDefinitionId: string;
@@ -22,8 +24,7 @@ export interface ContactRecordDraft {
   name: string;
   email: string;
   phone: string;
-  role: string;
-  notes: string;
+  address: string;
   mediaUrl?: string | null;
   mediaPublicId?: string | null;
 }
@@ -46,6 +47,7 @@ interface EventsPayload {
   type?: string;
   status?: string;
   requestStatus?: "pending_delivery" | "delivered" | "seen" | "expired";
+  formId?: string;
   messageKey?: string;
   droppedFieldIds?: string[];
 }
@@ -59,8 +61,7 @@ function createEmptyContactRecord(): ContactRecordDraft {
     name: "",
     email: "",
     phone: "",
-    role: "",
-    notes: "",
+    address: "",
   };
 }
 
@@ -114,8 +115,7 @@ function normalizeContactRecordDrafts(records: ContactRecordDraft[]) {
     name: record.name.trim(),
     email: record.email.trim(),
     phone: record.phone.trim(),
-    role: record.role.trim(),
-    notes: record.notes.trim(),
+    address: record.address.trim(),
     mediaUrl: record.mediaUrl || null,
     mediaPublicId: record.mediaPublicId || null,
   }));
@@ -125,8 +125,7 @@ function normalizeContactRecordDrafts(records: ContactRecordDraft[]) {
       record.name.length > 0 ||
       record.email.length > 0 ||
       record.phone.length > 0 ||
-      record.role.length > 0 ||
-      record.notes.length > 0 ||
+      record.address.length > 0 ||
       !!record.mediaUrl
     );
   });
@@ -141,8 +140,7 @@ function normalizeContactRecordDrafts(records: ContactRecordDraft[]) {
         name: seed?.name || "",
         email: seed?.email || "",
         phone: seed?.phone || "",
-        role: seed?.role || "",
-        notes: seed?.notes || "",
+        address: seed?.address || "",
         mediaUrl: seed?.mediaUrl || null,
         mediaPublicId: seed?.mediaPublicId || null,
       },
@@ -169,9 +167,8 @@ function mapSourceContactRecords(records: unknown): ContactRecordDraft[] {
         id,
         name: String(item.name ?? "").trim(),
         email: String(item.email ?? "").trim(),
-        phone: String(item.phone ?? item.contact ?? "").trim(),
-        role: String(item.role ?? "").trim(),
-        notes: String(item.notes ?? "").trim(),
+        phone: String(item.phone ?? "").trim(),
+        address: String(item.contact ?? item.address ?? "").trim(),
         mediaUrl: typeof item.mediaUrl === "string" ? item.mediaUrl : null,
         mediaPublicId: typeof item.mediaPublicId === "string" ? item.mediaPublicId : null,
       };
@@ -193,8 +190,7 @@ function hasMeaningfulDraftData(draft: DraftState | undefined): boolean {
       record.name.trim().length > 0 ||
       record.email.trim().length > 0 ||
       record.phone.trim().length > 0 ||
-      record.role.trim().length > 0 ||
-      record.notes.trim().length > 0 ||
+      record.address.trim().length > 0 ||
       !!record.mediaUrl
     );
   })) {
@@ -226,13 +222,11 @@ interface UseSubmissionReturn {
   submission: Submission | null;
   values: FieldValue[];
   formData: Record<string, FormFieldData>;
+  contactFormFields: ContactFormField[];
   clientName: string;
   setClientName: (name: string) => void;
   contactRecords: ContactRecordDraft[];
-  addContactRecord: () => void;
   updateContactRecord: (id: string, patch: Partial<Omit<ContactRecordDraft, "id">>) => void;
-  removeContactRecord: (id: string) => void;
-  reorderContactRecords: (orderedIds: string[]) => void;
   setFieldValue: (id: string, value: string | number | string[] | null) => void;
   setMediaValue: (id: string, url: string, publicId: string) => void;
   setMediaItems: (id: string, items: { url: string; publicId: string }[]) => void;
@@ -260,6 +254,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
   const [fields, setFields] = useState<FieldDefinition[]>([]);
   const [submission, setSubmission] = useState<Submission | null>(null);
   const [values, setValues] = useState<FieldValue[]>([]);
+  const [contactFormFields, setContactFormFields] = useState<ContactFormField[]>(DEFAULT_CONTACT_FORM_FIELDS);
   const [droppedFieldIds, setDroppedFieldIds] = useState<string[]>([]);
   const [statusChangedLive, setStatusChangedLive] = useState(false);
 
@@ -301,14 +296,6 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
     updateDraft(prev => ({ ...prev, clientName: name }));
   };
 
-  const addContactRecord = () => {
-    isEditingRef.current = true;
-    updateDraft((prev) => ({
-      ...prev,
-      contactRecords: [...(prev.contactRecords ?? []), createEmptyContactRecord()],
-    }));
-  };
-
   const updateContactRecord = (
     id: string,
     patch: Partial<Omit<ContactRecordDraft, "id">>,
@@ -323,50 +310,11 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
               name: patch.name ?? record.name,
               email: patch.email ?? record.email,
               phone: patch.phone ?? record.phone,
-              role: patch.role ?? record.role,
-              notes: patch.notes ?? record.notes,
+              address: patch.address ?? record.address,
             }
           : record,
       ),
     }));
-  };
-
-  const removeContactRecord = (id: string) => {
-    isEditingRef.current = true;
-    updateDraft((prev) => {
-      const records = prev.contactRecords ?? [];
-      if (records.length <= MIN_CONTACT_RECORDS) {
-        return prev;
-      }
-      return {
-        ...prev,
-        contactRecords: records.filter((record) => record.id !== id),
-      };
-    });
-  };
-
-  const reorderContactRecords = (orderedIds: string[]) => {
-    isEditingRef.current = true;
-    updateDraft((prev) => {
-      const records = prev.contactRecords ?? [];
-      if (records.length <= 1) return prev;
-
-      const idOrder = orderedIds.filter((id) => typeof id === "string" && id.trim().length > 0);
-      if (idOrder.length === 0) return prev;
-
-      const mapById = new Map(records.map((record) => [record.id, record]));
-      const moved = idOrder
-        .map((id) => mapById.get(id))
-        .filter((record): record is ContactRecordDraft => !!record);
-
-      const movedIds = new Set(moved.map((record) => record.id));
-      const untouched = records.filter((record) => !movedIds.has(record.id));
-
-      return {
-        ...prev,
-        contactRecords: [...moved, ...untouched],
-      };
-    });
   };
 
   const setFieldValue = (id: string, value: string | number | string[] | null) => {
@@ -453,6 +401,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
         setFormName(data.formTemplate?.name || "");
         setFormDescription(data.formTemplate?.description || "");
         setFields(data.fields || []);
+        setContactFormFields(normalizeContactFormFields(data.formTemplate?.contactFormFields));
         formVersionRef.current = nextFormVersion;
         
         if (!hasDraftData) {
@@ -472,6 +421,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
         setSubmission(data.submission);
         setValues(data.values || []);
         setFields(data.fields || []);
+        setContactFormFields(normalizeContactFormFields(data.formTemplate?.contactFormFields));
 
         // Existing submissions should reflect DB state after reload/admin updates.
         // Keep local draft only while user is actively editing and there is meaningful draft content.
@@ -567,12 +517,12 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
           if (data.type === "STATUS_CHANGED") {
             const newStatus = data.status;
             if (newStatus === "viewed") {
-              toast.info("✓ Your submission has been viewed");
+              toast.info(t("toastSubmissionViewed"));
             } else if (newStatus === "needs_rewrite") {
-              toast.warning("Your submission needs revision");
+              toast.warning(t("toastSubmissionNeedsRevision"));
             }
             if (data.requestStatus === "pending_delivery" || data.requestStatus === "delivered") {
-              toast.warning("A resubmission request was sent");
+              toast.warning(t("toastResubmissionRequested"));
             }
 
             setStatusChangedLive(true);
@@ -584,6 +534,11 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
                 setStatusChangedLive(false);
               }
             }, 2000);
+            fetchContent(true);
+          }
+
+          if (data.type === "CONTACT_FORM_UPDATED") {
+            toast.info(t("toastContactFormUpdated"));
             fetchContent(true);
           }
         } catch {
@@ -624,7 +579,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       currentDraft.contactRecords ?? [],
     );
     const resolvedClientName = currentDraft.clientName.trim() || resolvedContactRecords[0]?.name || DEFAULT_CONTACT_NAME;
-    
+
     if (
       !currentDraft.clientName.trim() &&
       !hasMeaningfulContacts &&
@@ -644,7 +599,17 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       const payload = {
         clientName: resolvedClientName,
         clientContact: "",
-        contactRecords: resolvedContactRecords,
+        contactRecords: resolvedContactRecords.map((record) => ({
+          id: record.id,
+          name: record.name,
+          email: record.email,
+          phone: record.phone,
+          contact: record.address,
+          role: "",
+          notes: "",
+          mediaUrl: record.mediaUrl ?? null,
+          mediaPublicId: record.mediaPublicId ?? null,
+        })),
         fieldValues,
       };
 
@@ -678,9 +643,11 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       window.history.pushState(null, "", newUrl);
       // Silently refresh data to get 'isViewOnly=true' without flashing skeletons
       await fetchContent(true);
+      toast.success(t("toastSubmitSaved"));
     } catch (err) {
       if (mountedRef.current) {
         setError(err instanceof Error ? err.message : "Submission failed");
+        toast.error(err instanceof Error ? err.message : t("error"));
       }
     } finally {
       if (mountedRef.current) {
@@ -705,7 +672,17 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       const payload = {
         clientName: resolvedClientName,
         clientContact: "",
-        contactRecords: resolvedContactRecords,
+        contactRecords: resolvedContactRecords.map((record) => ({
+          id: record.id,
+          name: record.name,
+          email: record.email,
+          phone: record.phone,
+          contact: record.address,
+          role: "",
+          notes: "",
+          mediaUrl: record.mediaUrl ?? null,
+          mediaPublicId: record.mediaPublicId ?? null,
+        })),
         fieldValues,
       };
 
@@ -735,9 +712,11 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       isEditingRef.current = false;
       // Silently refresh data without flashing skeletons
       await fetchContent(true);
+      toast.success(t("toastResubmitSaved"));
     } catch (err) {
       if (mountedRef.current) {
         setError(err instanceof Error ? err.message : "Resubmission failed");
+        toast.error(err instanceof Error ? err.message : t("error"));
       }
     } finally {
       if (mountedRef.current) {
@@ -757,13 +736,11 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
     submission,
     values,
     formData,
+    contactFormFields,
     clientName,
     setClientName,
     contactRecords,
-    addContactRecord,
     updateContactRecord,
-    removeContactRecord,
-    reorderContactRecords,
     setFieldValue,
     setMediaValue,
     setMediaItems,

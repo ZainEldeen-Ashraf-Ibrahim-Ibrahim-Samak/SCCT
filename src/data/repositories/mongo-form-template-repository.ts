@@ -5,6 +5,7 @@ import { connectToDatabase } from "@/lib/db";
 import { CacheService } from "@/data/services/cache-service";
 import mongoose from "mongoose";
 import { logger } from "@/lib/dev-logger";
+import { normalizeContactFormFields } from "@/lib/contact-form";
 
 function toEntity(doc: Record<string, unknown>): FormTemplate {
   const rawContactRecords = Array.isArray(doc.contactRecords) ? doc.contactRecords : [];
@@ -27,11 +28,14 @@ function toEntity(doc: Record<string, unknown>): FormTemplate {
     })
     .filter((record): record is NonNullable<typeof record> => !!record);
 
+  const contactFormFields = normalizeContactFormFields(doc.contactFormFields);
+
   return {
     id: doc._id?.toString() ?? "",
     name: doc.name as string,
     description: (doc.description as string) ?? "",
     contactRecords,
+    contactFormFields,
     isActive: doc.isActive as boolean,
     createdAt: doc.createdAt as Date,
     updatedAt: doc.updatedAt as Date,

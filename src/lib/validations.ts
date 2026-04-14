@@ -122,6 +122,15 @@ export const contactRecordSchema = z.object({
   { message: "At least one input must be provided for the contact record" }
 );
 
+export const contactFormFieldSchema = z.object({
+  id: z.string().min(1),
+  key: z.enum(["name", "email", "phone", "address"]),
+  label: z.string().min(1).max(200),
+  placeholder: z.string().max(200).optional().default(""),
+  required: z.boolean().optional().default(false),
+  sortOrder: z.number().int().min(0),
+});
+
 // ── Form Template Schemas ──────────────────────────────────────────
 
 export const createFormTemplateSchema = z.object({
@@ -137,6 +146,7 @@ export const updateFormTemplateSchema = z.object({
   description: z.string().optional(),
   isActive: z.boolean().optional(),
   contactRecords: z.array(contactRecordSchema).min(1).optional(),
+  contactFormFields: z.array(contactFormFieldSchema).min(1).optional(),
 });
 
 // ── Submission Schemas ─────────────────────────────────────────────

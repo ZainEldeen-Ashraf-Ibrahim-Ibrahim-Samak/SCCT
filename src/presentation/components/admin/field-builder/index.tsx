@@ -7,95 +7,96 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2 } from "lucide-react";
+import { GripVertical, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { FieldCard } from "./field-card";
 import { FieldFormDialog } from "./field-form-dialog";
 import type { FieldDefinition } from "@/domain/entities/field-definition";
+import type { ContactFormField, ContactFormFieldKey } from "@/domain/entities/form-template";
 import { useSensors, useSensor, PointerSensor, KeyboardSensor, DragEndEvent, DndContext, closestCenter } from "@dnd-kit/core";
-import { sortableKeyboardCoordinates, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { useSortable, sortableKeyboardCoordinates, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CONTACT_FORM_FIELD_KEYS, createContactFormFieldConfig, normalizeContactFormFields } from "@/lib/contact-form";
 
-interface ContactRecordDraft {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
+type ContactFormFieldDraft = ContactFormField;
+
+function normalizeDraftContactFormFields(fields: ContactFormFieldDraft[]) {
+  return normalizeContactFormFields(fields).map((field, index) => ({
+    ...field,
+    sortOrder: index,
+  }));
 }
 
-type RawContactRecord = Partial<ContactRecordDraft> & { contact?: unknown };
-
-function normalizeContactDraft(record: RawContactRecord): ContactRecordDraft {
-  return {
-    id: String(record.id ?? "").trim(),
-    name: String(record.name ?? "").trim(),
-    email: String(record.email ?? "").trim(),
-    phone: String(record.phone ?? "").trim(),
-    address: String(record.address ?? record.contact ?? "").trim(),
-  };
-}
-
-function areContactDraftListsEqual(a: ContactRecordDraft[], b: ContactRecordDraft[]) {
+function areContactFormFieldsEqual(a: ContactFormFieldDraft[], b: ContactFormFieldDraft[]) {
   if (a.length !== b.length) return false;
 
-  return a.every((record, index) => {
+  return a.every((field, index) => {
     const other = b[index];
     if (!other) return false;
 
     return (
-      record.id === other.id &&
-      record.name === other.name &&
-      record.email === other.email &&
-      record.phone === other.phone &&
-      record.address === other.address
+      field.id === other.id &&
+      field.key === other.key &&
+      field.label === other.label &&
+      field.placeholder === other.placeholder &&
+      field.required === other.required &&
+      field.sortOrder === other.sortOrder
     );
   });
-}
-
-function createContactRecord(): ContactRecordDraft {
-  return {
-    id: `cf_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-  };
 }
 
 interface FieldBuilderProps {
   formTemplateId: string;
 }
 
-function ContactRecord({
-  record,
+function ContactFormFieldRow({
+  field,
   index,
   disabled,
   canRemove,
   t,
+  tc,
   onUpdate,
   onRemove,
 }: {
-  record: ContactRecordDraft;
+  field: ContactFormFieldDraft;
   index: number;
   disabled: boolean;
   canRemove: boolean;
   t: (key: string, values?: Record<string, string | number>) => string;
-  onUpdate: (id: string, patch: Partial<Omit<ContactRecordDraft, "id">>) => void;
+  tc: (key: string, values?: Record<string, string | number>) => string;
+  onUpdate: (id: string, patch: Partial<Omit<ContactFormFieldDraft, "id">>) => void;
   onRemove: (id: string) => void;
 }) {
+  const { attributes, listeners, setNodeRef } = useSortable({ id: field.id });
+
   return (
-    <div className="rounded-md border bg-background p-4 space-y-4 shadow-sm group transition-all">
-      <div className="flex items-center justify-between mb-2">
-        <Label className="text-sm font-semibold">{t("contactRecordLabel", { index: index + 1 })}</Label>
-        {canRemove && !disabled && (
+    <div ref={setNodeRef} className="rounded-md border bg-background p-4 space-y-4 shadow-sm">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground"
+            aria-label={t("dragToReorder")}
+            {...attributes}
+            {...listeners}
+            disabled={disabled}
+          >
+            <GripVertical className="h-4 w-4" />
+          </button>
+          <Label className="text-sm font-semibold">{t("contactFormInputLabel", { index: index + 1 })}</Label>
+        </div>
+
+        {canRemove && (
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            onClick={() => onRemove(record.id)}
-            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
-            title={t("removeContactRecord")}
+            onClick={() => onRemove(field.id)}
+            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            title={t("contactFormRemoveInput")}
+            disabled={disabled}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -104,52 +105,58 @@ function ContactRecord({
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor={`contact-name-${record.id}`} className="text-xs text-muted-foreground uppercase">{t("contactRecordName")}</Label>
+          <Label htmlFor={`contact-key-${field.id}`} className="text-xs text-muted-foreground uppercase">{t("contactFormInputType")}</Label>
+          <select
+            id={`contact-key-${field.id}`}
+            value={field.key}
+            onChange={(e) => onUpdate(field.id, { key: e.target.value as ContactFormFieldKey })}
+            disabled={disabled}
+            aria-label={t("contactFormInputType")}
+            title={t("contactFormInputType")}
+            className="h-10 w-full rounded-md border border-input bg-muted/50 px-3 text-sm"
+          >
+            {CONTACT_FORM_FIELD_KEYS.map((key) => (
+              <option key={key} value={key}>
+                {t(`contactInputKinds.${key}`)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor={`contact-label-${field.id}`} className="text-xs text-muted-foreground uppercase">{t("contactFormInputName")}</Label>
           <Input
-            id={`contact-name-${record.id}`}
-            value={record.name}
-            onChange={(e) => onUpdate(record.id, { name: e.target.value })}
-            placeholder={t("contactRecordName")}
+            id={`contact-label-${field.id}`}
+            value={field.label}
+            onChange={(e) => onUpdate(field.id, { label: e.target.value })}
+            placeholder={t("contactFormInputNamePlaceholder")}
             disabled={disabled}
             className="bg-muted/50 focus-visible:bg-background"
           />
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor={`contact-email-${record.id}`} className="text-xs text-muted-foreground uppercase">{t("contactRecordEmail")}</Label>
+          <Label htmlFor={`contact-placeholder-${field.id}`} className="text-xs text-muted-foreground uppercase">{t("contactFormInputPlaceholder")}</Label>
           <Input
-            id={`contact-email-${record.id}`}
-            type="email"
-            value={record.email}
-            onChange={(e) => onUpdate(record.id, { email: e.target.value })}
-            placeholder={t("contactRecordEmail")}
+            id={`contact-placeholder-${field.id}`}
+            value={field.placeholder}
+            onChange={(e) => onUpdate(field.id, { placeholder: e.target.value })}
+            placeholder={t("contactFormInputPlaceholderHint")}
             disabled={disabled}
             className="bg-muted/50 focus-visible:bg-background"
           />
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor={`contact-address-${record.id}`} className="text-xs text-muted-foreground uppercase">{t("contactRecordAddress")}</Label>
-          <Input
-            id={`contact-address-${record.id}`}
-            value={record.address}
-            onChange={(e) => onUpdate(record.id, { address: e.target.value })}
-            placeholder={t("contactRecordAddress")}
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id={`contact-required-${field.id}`}
+            checked={field.required}
+            onCheckedChange={(checked) => onUpdate(field.id, { required: checked === true })}
             disabled={disabled}
-            className="bg-muted/50 focus-visible:bg-background"
           />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor={`contact-phone-${record.id}`} className="text-xs text-muted-foreground uppercase">{t("contactRecordPhone")}</Label>
-          <Input
-            id={`contact-phone-${record.id}`}
-            value={record.phone}
-            onChange={(e) => onUpdate(record.id, { phone: e.target.value })}
-            placeholder={t("contactRecordPhone")}
-            disabled={disabled}
-            className="bg-muted/50 focus-visible:bg-background"
-          />
+          <Label htmlFor={`contact-required-${field.id}`} className="text-sm">
+            {tc("required")}
+          </Label>
         </div>
       </div>
     </div>
@@ -163,8 +170,12 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
     useFieldBuilder(formTemplateId);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingField, setEditingField] = useState<FieldDefinition | null>(null);
-  const [contactRecords, setContactRecords] = useState<ContactRecordDraft[]>([createContactRecord()]);
-  const [savedContactRecords, setSavedContactRecords] = useState<ContactRecordDraft[]>([createContactRecord()]);
+  const [contactFormFields, setContactFormFields] = useState<ContactFormFieldDraft[]>(
+    normalizeDraftContactFormFields(normalizeContactFormFields(undefined)),
+  );
+  const [savedContactFormFields, setSavedContactFormFields] = useState<ContactFormFieldDraft[]>(
+    normalizeDraftContactFormFields(normalizeContactFormFields(undefined)),
+  );
   const [isLoadingContacts, setIsLoadingContacts] = useState(true);
   const [isSavingContacts, setIsSavingContacts] = useState(false);
 
@@ -177,19 +188,16 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
         throw new Error(data.error || "Failed to fetch form");
       }
 
-      const records: RawContactRecord[] = Array.isArray(data.data?.contactRecords)
-        ? (data.data.contactRecords as RawContactRecord[])
-        : [];
-      const normalized = (records.length > 0 ? records : [createContactRecord()]).map((record) =>
-        normalizeContactDraft(record),
+      const normalized = normalizeDraftContactFormFields(
+        normalizeContactFormFields(data.data?.contactFormFields),
       );
 
-      setContactRecords(normalized);
-      setSavedContactRecords(normalized);
+      setContactFormFields(normalized);
+      setSavedContactFormFields(normalized);
     } catch (error) {
-      const fallback = [createContactRecord()];
-      setContactRecords(fallback);
-      setSavedContactRecords(fallback);
+      const fallback = normalizeDraftContactFormFields(normalizeContactFormFields(undefined));
+      setContactFormFields(fallback);
+      setSavedContactFormFields(fallback);
       toast.error(error instanceof Error ? error.message : tc("error"));
     } finally {
       setIsLoadingContacts(false);
@@ -248,14 +256,14 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
     setIsDialogOpen(true);
   }
 
-  const normalizedContactRecords = useMemo(
-    () => contactRecords.map(normalizeContactDraft),
-    [contactRecords],
+  const normalizedContactFormFields = useMemo(
+    () => normalizeDraftContactFormFields(contactFormFields),
+    [contactFormFields],
   );
 
   const hasContactChanges = useMemo(
-    () => !areContactDraftListsEqual(normalizedContactRecords, savedContactRecords),
-    [normalizedContactRecords, savedContactRecords],
+    () => !areContactFormFieldsEqual(normalizedContactFormFields, savedContactFormFields),
+    [normalizedContactFormFields, savedContactFormFields],
   );
 
   useEffect(() => {
@@ -273,36 +281,26 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
   }
 
   async function handleSaveContacts() {
-    const normalized = normalizedContactRecords.filter((record) => record.id.length > 0);
+    const normalized = normalizeDraftContactFormFields(contactFormFields).filter((field) => field.id.length > 0);
 
-    if (normalized.length < 1 || normalized.length !== normalizedContactRecords.length) {
-      toast.error(t("contactRecordMinOne"));
+    if (normalized.length < 1 || normalized.length !== normalizedContactFormFields.length) {
+      toast.error(t("contactFormMinOneField"));
       return;
     }
-
-    const payloadContactRecords = normalized.map((record) => ({
-      id: record.id,
-      name: record.name,
-      email: record.email,
-      phone: record.phone,
-      contact: record.address,
-      role: "",
-      notes: "",
-    }));
 
     setIsSavingContacts(true);
     try {
       const res = await fetch(`/api/admin/forms/${formTemplateId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contactRecords: payloadContactRecords }),
+        body: JSON.stringify({ contactFormFields: normalized }),
       });
       const data = await res.json();
       if (!data.success) {
         throw new Error(data.error || "Failed to save contacts");
       }
-      setContactRecords(normalized);
-      setSavedContactRecords(normalized);
+      setContactFormFields(normalized);
+      setSavedContactFormFields(normalized);
       toast.success(tc("success"));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : tc("error"));
@@ -312,26 +310,60 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
   }
 
   function handleAddContact() {
-    setContactRecords((prev) => [...prev, createContactRecord()]);
+    const current = normalizeDraftContactFormFields(contactFormFields);
+    const nextSortOrder = current.length;
+
+    const usedKeys = new Set(current.map((field) => field.key));
+    const nextKey = CONTACT_FORM_FIELD_KEYS.find((key) => !usedKeys.has(key)) ?? "name";
+
+    setContactFormFields([
+      ...current,
+      createContactFormFieldConfig(nextKey, nextSortOrder),
+    ]);
   }
 
   function handleRemoveContact(id: string) {
-    setContactRecords((prev) => (prev.length <= 1 ? prev : prev.filter((record) => record.id !== id)));
+    setContactFormFields((prev) => {
+      if (prev.length <= 1) return prev;
+      return prev
+        .filter((field) => field.id !== id)
+        .map((field, index) => ({ ...field, sortOrder: index }));
+    });
   }
 
-  function handleUpdateContact(id: string, patch: Partial<Omit<ContactRecordDraft, "id">>) {
-    setContactRecords((prev) =>
-      prev.map((record) =>
-        record.id === id
+  function handleUpdateContact(id: string, patch: Partial<Omit<ContactFormFieldDraft, "id">>) {
+    setContactFormFields((prev) =>
+      prev.map((field) =>
+        field.id === id
           ? {
-              ...record,
-              name: patch.name ?? record.name,
-              email: patch.email ?? record.email,
-              phone: patch.phone ?? record.phone,
-              address: patch.address ?? record.address,
+              ...field,
+              key: patch.key ?? field.key,
+              label: patch.label ?? field.label,
+              placeholder: patch.placeholder ?? field.placeholder,
+              required: patch.required ?? field.required,
             }
-          : record,
+          : field,
       ),
+    );
+  }
+
+  async function handleContactDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = contactFormFields.findIndex((field) => field.id === active.id);
+    const newIndex = contactFormFields.findIndex((field) => field.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = [...contactFormFields];
+    const [moved] = reordered.splice(oldIndex, 1);
+    reordered.splice(newIndex, 0, moved);
+
+    setContactFormFields(
+      reordered.map((field, index) => ({
+        ...field,
+        sortOrder: index,
+      })),
     );
   }
 
@@ -374,8 +406,8 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
       <div className="space-y-4 rounded-xl border border-border/60 bg-muted/20 p-4">
         <div className="flex items-center justify-between gap-3">
           <div className="space-y-1">
-            <h3 className="text-lg font-semibold">{t("contactRecordsTitle")}</h3>
-            <p className="text-xs text-muted-foreground">{t("contactRecordMinOne")}</p>
+            <h3 className="text-lg font-semibold">{t("contactFormTitle")}</h3>
+            <p className="text-xs text-muted-foreground">{t("contactFormDescription")}</p>
           </div>
           <Button
             type="button"
@@ -385,7 +417,7 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
             disabled={isLoadingContacts || isSavingContacts}
           >
             <Plus className="mr-2 h-4 w-4" />
-            {t("addContactRecord")}
+            {t("contactFormAddInput")}
           </Button>
         </div>
 
@@ -393,20 +425,32 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
           {isLoadingContacts
             ? [1, 2].map((item) => <Skeleton key={item} className="h-52 w-full rounded-md" />)
             : (
-                <div className="space-y-3">
-                  {contactRecords.map((record, index) => (
-                    <ContactRecord
-                      key={record.id}
-                      record={record}
-                      index={index}
-                      disabled={isSavingContacts}
-                      canRemove={contactRecords.length > 1}
-                      t={t}
-                      onUpdate={handleUpdateContact}
-                      onRemove={handleRemoveContact}
-                    />
-                  ))}
-                </div>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleContactDragEnd}
+                >
+                  <SortableContext
+                    items={contactFormFields.map((field) => field.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="space-y-3">
+                      {contactFormFields.map((field, index) => (
+                        <ContactFormFieldRow
+                          key={field.id}
+                          field={field}
+                          index={index}
+                          disabled={isSavingContacts}
+                          canRemove={contactFormFields.length > 1}
+                          t={t}
+                          tc={tc}
+                          onUpdate={handleUpdateContact}
+                          onRemove={handleRemoveContact}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
             )}
         </div>
 

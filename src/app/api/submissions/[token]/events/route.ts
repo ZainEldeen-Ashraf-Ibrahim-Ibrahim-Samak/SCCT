@@ -3,6 +3,7 @@ import { redis } from "@/lib/redis";
 import { errorResponse } from "@/lib/api-response";
 import { logger } from "@/lib/dev-logger";
 import { MongoSubmissionRepository } from "@/data/repositories/mongo-submission-repository";
+import { CONTACT_FORM_UPDATES_CHANNEL } from "@/lib/events/publisher";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,7 @@ export async function GET(
   
   const redisClient = redis;
   const channel = `submission_updates:${token}`;
+  const contactFormUpdatesChannel = CONTACT_FORM_UPDATES_CHANNEL;
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -91,6 +93,26 @@ export async function GET(
           const rawEvents = await redisClient.lrange<unknown>(channel, -3, -1);
           if (rawEvents && Array.isArray(rawEvents)) {
             for (const evStr of rawEvents) {
+              const ev = parseEvent(evStr);
+              if (!ev?.timestamp) {
+                continue;
+              }
+
+              const evTime = new Date(ev.timestamp).getTime();
+              if (Number.isNaN(evTime)) {
+                continue;
+              }
+
+              if (evTime > lastChecked) {
+                sendEvent(ev);
+                lastChecked = evTime;
+              }
+            }
+          }
+
+          const rawContactFormEvents = await redisClient.lrange<unknown>(contactFormUpdatesChannel, -3, -1);
+          if (rawContactFormEvents && Array.isArray(rawContactFormEvents)) {
+            for (const evStr of rawContactFormEvents) {
               const ev = parseEvent(evStr);
               if (!ev?.timestamp) {
                 continue;

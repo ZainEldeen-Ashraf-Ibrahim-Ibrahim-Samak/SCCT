@@ -28,10 +28,9 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
     fields,
     submission,
     formData,
+    contactFormFields,
     contactRecords,
-    addContactRecord,
     updateContactRecord,
-    removeContactRecord,
     setFieldValue,
     setMediaValue,
     setMediaItems,
@@ -92,6 +91,27 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
     if (contactRecords.length < 1) {
       errors.contactRecords = true;
       isValid = false;
+    } else {
+      const primaryContact = contactRecords[0];
+      const hasMissingRequiredContactField = contactFormFields.some((field) => {
+        if (!field.required) return false;
+
+        const value =
+          field.key === "name"
+            ? primaryContact.name
+            : field.key === "email"
+              ? primaryContact.email
+              : field.key === "phone"
+                ? primaryContact.phone
+                : primaryContact.address;
+
+        return String(value ?? "").trim().length === 0;
+      });
+
+      if (hasMissingRequiredContactField) {
+        errors.contactRecords = true;
+        isValid = false;
+      }
     }
 
     fields.forEach((f) => {
@@ -213,6 +233,7 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-8">
             <ContactRecords
+              formFields={contactFormFields}
               records={contactRecords}
               disabled={isViewOnly || isSubmitting}
               showValidation={!!validationErrors.contactRecords}
@@ -222,9 +243,7 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
                   setValidationErrors((prev) => ({ ...prev, contactRecords: false }));
                 }
               }}
-                onAdd={addContactRecord}
-                onRemove={removeContactRecord}
-              />
+            />
 
               <div className="space-y-6">
                 {fields.map((field) => {

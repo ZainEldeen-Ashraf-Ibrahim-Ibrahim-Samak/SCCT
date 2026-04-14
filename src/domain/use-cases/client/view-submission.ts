@@ -18,13 +18,22 @@ interface ViewSubmissionResult {
 
 const OBJECT_ID_PATTERN = /^[a-f0-9]{24}$/i;
 
-function computeFieldVersion(fields: FieldDefinition[]): string {
+function computeFieldVersion(fields: FieldDefinition[], formUpdatedAt?: Date | string | null): string {
   const latest = fields.reduce((acc, field) => {
     const value = field.updatedAt instanceof Date ? field.updatedAt.getTime() : new Date(field.updatedAt).getTime();
     return Number.isNaN(value) ? acc : Math.max(acc, value);
   }, 0);
 
-  return latest > 0 ? new Date(latest).toISOString() : "0";
+  const formUpdatedAtValue = formUpdatedAt
+    ? new Date(formUpdatedAt).getTime()
+    : 0;
+
+  const versionValue = Math.max(
+    latest,
+    Number.isNaN(formUpdatedAtValue) ? 0 : formUpdatedAtValue,
+  );
+
+  return versionValue > 0 ? new Date(versionValue).toISOString() : "0";
 }
 
 /**
@@ -42,30 +51,32 @@ export class ViewSubmissionUseCase {
 
   private async buildExistingSubmissionResult(submission: Submission): Promise<ViewSubmissionResult> {
     const values = await this.fieldValueRepo.findBySubmissionId(submission.id);
+    const linkedForm = await this.formTemplateRepo.findById(submission.formTemplateId);
 
     // For editable states, always resolve latest published fields so token refresh picks up admin changes.
     if (submission.status === "draft" || submission.status === "needs_rewrite") {
-      const linkedForm = await this.formTemplateRepo.findById(submission.formTemplateId);
       const activeForm = linkedForm ?? (await this.formTemplateRepo.findActive());
 
       if (activeForm) {
         const liveFields = await this.fieldDefRepo.findByFormId(activeForm.id, false);
         return {
           isNew: false,
+          formTemplate: activeForm,
           submission,
           values,
           fields: liveFields,
-          formVersion: computeFieldVersion(liveFields),
+          formVersion: computeFieldVersion(liveFields, activeForm.updatedAt),
         };
       }
     }
 
     return {
       isNew: false,
+      formTemplate: linkedForm ?? undefined,
       submission,
       values,
       fields: [...submission.formSnapshot],
-      formVersion: computeFieldVersion([...submission.formSnapshot]),
+      formVersion: computeFieldVersion([...submission.formSnapshot], linkedForm?.updatedAt),
     };
   }
 
@@ -101,7 +112,7 @@ export class ViewSubmissionUseCase {
       isNew: true,
       formTemplate: targetForm,
       fields,
-      formVersion: computeFieldVersion(fields),
+      formVersion: computeFieldVersion(fields, targetForm.updatedAt),
     };
   }
 }

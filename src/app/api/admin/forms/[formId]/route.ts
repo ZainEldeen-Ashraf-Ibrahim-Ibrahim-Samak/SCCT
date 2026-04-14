@@ -4,6 +4,7 @@ import { ManageFormsUseCase } from "@/domain/use-cases/admin/manage-forms";
 import { updateFormTemplateSchema } from "@/lib/validations";
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
 import { logger } from "@/lib/dev-logger";
+import { NotificationPublisher } from "@/lib/events/publisher";
 
 const repo = new MongoFormTemplateRepository();
 const useCase = new ManageFormsUseCase(repo);
@@ -52,6 +53,11 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     if (!form) {
       return errorResponse("Form not found", 404, "NOT_FOUND");
     }
+
+    if (parsed.data.contactFormFields || parsed.data.contactRecords) {
+      await NotificationPublisher.notifyContactFormUpdated(form.id);
+    }
+
     return successResponse(form);
   } catch (error) {
     logger.error("Failed to update form", error);

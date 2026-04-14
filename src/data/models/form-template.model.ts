@@ -1,4 +1,5 @@
 import mongoose, { Schema, type Document, type Model } from "mongoose";
+import { DEFAULT_CONTACT_FORM_FIELDS } from "@/lib/contact-form";
 
 export interface IFormTemplate extends Document {
   name: string;
@@ -11,6 +12,14 @@ export interface IFormTemplate extends Document {
     contact?: string;
     role?: string;
     notes?: string;
+  }>;
+  contactFormFields: Array<{
+    id: string;
+    key: "name" | "email" | "phone" | "address";
+    label: string;
+    placeholder: string;
+    required: boolean;
+    sortOrder: number;
   }>;
   isActive: boolean;
   createdAt: Date;
@@ -30,6 +39,22 @@ const contactRecordSchema = new Schema(
   { _id: false }
 );
 
+const contactFormFieldSchema = new Schema(
+  {
+    id: { type: String, required: true, trim: true },
+    key: {
+      type: String,
+      required: true,
+      enum: ["name", "email", "phone", "address"],
+    },
+    label: { type: String, required: true, trim: true, maxlength: 200 },
+    placeholder: { type: String, default: "", trim: true, maxlength: 200 },
+    required: { type: Boolean, default: false },
+    sortOrder: { type: Number, required: true, min: 0, default: 0 },
+  },
+  { _id: false },
+);
+
 const formTemplateSchema = new Schema<IFormTemplate>(
   {
     name: {
@@ -46,6 +71,10 @@ const formTemplateSchema = new Schema<IFormTemplate>(
     contactRecords: {
       type: [contactRecordSchema],
       default: [{ id: "primary", name: "Primary Contact", email: "", phone: "", role: "", notes: "" }],
+    },
+    contactFormFields: {
+      type: [contactFormFieldSchema],
+      default: DEFAULT_CONTACT_FORM_FIELDS,
     },
     isActive: {
       type: Boolean,

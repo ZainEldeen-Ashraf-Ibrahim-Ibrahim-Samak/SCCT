@@ -2,6 +2,17 @@
  * FormTemplate entity interface.
  * Domain layer — zero framework imports.
  */
+export type ContactFormFieldKey = "name" | "email" | "phone" | "address";
+
+export interface ContactFormField {
+  id: string;
+  key: ContactFormFieldKey;
+  label: string;
+  placeholder: string;
+  required: boolean;
+  sortOrder: number;
+}
+
 export interface FormTemplate {
   id: string;
   name: string;
@@ -17,6 +28,7 @@ export interface FormTemplate {
     mediaUrl?: string | null;
     mediaPublicId?: string | null;
   }>;
+  contactFormFields: ContactFormField[];
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -27,5 +39,5 @@ export type CreateFormTemplateInput = Pick<FormTemplate, "name"> & {
 };
 
 export type UpdateFormTemplateInput = Partial<
-  Pick<FormTemplate, "name" | "description" | "isActive" | "contactRecords">
+  Pick<FormTemplate, "name" | "description" | "isActive" | "contactRecords" | "contactFormFields">
 >;

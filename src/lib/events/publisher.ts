@@ -10,6 +10,7 @@ export interface AdminNotification {
 }
 
 export const ADMIN_CHANNEL = "admin_notifications";
+export const CONTACT_FORM_UPDATES_CHANNEL = "contact_form_updates";
 
 export const NotificationPublisher = {
   async notifyAdmins(notification: Omit<AdminNotification, "timestamp">) {
@@ -55,6 +56,24 @@ export const NotificationPublisher = {
       await redis.expire(channel, 60 * 60 * 24 * 7);
     } catch (error) {
       logger.error("Failed to publish client update signal", { token, error });
+    }
+  },
+
+  async notifyContactFormUpdated(formId: string) {
+    if (!redis) return;
+
+    const payload = {
+      type: "CONTACT_FORM_UPDATED",
+      formId,
+      timestamp: new Date().toISOString(),
+    };
+
+    try {
+      await redis.rpush(CONTACT_FORM_UPDATES_CHANNEL, JSON.stringify(payload));
+      await redis.ltrim(CONTACT_FORM_UPDATES_CHANNEL, -100, -1);
+      await redis.expire(CONTACT_FORM_UPDATES_CHANNEL, 60 * 60 * 24 * 7);
+    } catch (error) {
+      logger.error("Failed to publish contact form update signal", { formId, error });
     }
   }
 };
