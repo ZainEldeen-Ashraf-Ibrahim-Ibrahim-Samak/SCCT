@@ -225,7 +225,6 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
               }}
                 onAdd={addContactRecord}
                 onRemove={removeContactRecord}
-                onReorder={reorderContactRecords}
               />
 
               <div className="space-y-6">
