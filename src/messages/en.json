@@ -117,7 +117,8 @@
     "noForms": "No forms created yet",
     "deleteConfirm": "Are you sure you want to delete this form?",
     "deleteWarning": "This action cannot be undone.",
-    "cannotDelete": "Cannot delete a form with existing submissions"
+    "cannotDelete": "Cannot delete a form with existing submissions",
+    "backToForms": "Back to Forms"
   },
   "fields": {
     "title": "Field Builder",

@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import type { Metadata } from "next";
 import { SITE_ADMIN_NAME } from "@/components/shared/site-name";
+import { getTranslations } from "next-intl/server";
 
 export const metadata: Metadata = {
   title: `Field Builder — ${SITE_ADMIN_NAME}`,
@@ -16,13 +17,14 @@ interface FieldsPageProps {
 
 export default async function FieldsPage({ params }: FieldsPageProps) {
   const { id } = await params;
+  const t = await getTranslations("forms");
 
   return (
     <div className="space-y-4">
       <Link href="/admin/forms">
         <Button variant="ghost" size="sm">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Forms
+          {t("backToForms")}
         </Button>
       </Link>
       <FieldBuilder formTemplateId={id} />
