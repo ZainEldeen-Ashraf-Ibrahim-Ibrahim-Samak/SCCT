@@ -17,6 +17,7 @@ import type { FieldDefinition } from "@/domain/entities/field-definition";
 import type { ContactFormField, ContactFormFieldKey } from "@/domain/entities/form-template";
 import { useSensors, useSensor, PointerSensor, KeyboardSensor, DragEndEvent, DndContext, closestCenter } from "@dnd-kit/core";
 import { useSortable, sortableKeyboardCoordinates, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { CONTACT_FORM_FIELD_KEYS, createContactFormFieldConfig, normalizeContactFormFields } from "@/lib/contact-form";
 
 type ContactFormFieldDraft = ContactFormField;
@@ -73,15 +74,31 @@ function ContactFormFieldRow({
   onUpdate: (id: string, patch: Partial<Omit<ContactFormFieldDraft, "id">>) => void;
   onRemove: (id: string) => void;
 }) {
-  const { attributes, listeners, setNodeRef } = useSortable({ id: field.id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: field.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   return (
-    <div ref={setNodeRef} className="rounded-md border bg-background p-4 space-y-4 shadow-sm">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`rounded-md border bg-background p-4 space-y-4 shadow-sm transition-shadow ${isDragging ? "shadow-lg z-10" : "hover:shadow-sm"}`}
+    >
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground"
+            className="cursor-grab active:cursor-grabbing touch-none text-muted-foreground hover:text-foreground"
             aria-label={t("dragToReorder")}
             {...attributes}
             {...listeners}
