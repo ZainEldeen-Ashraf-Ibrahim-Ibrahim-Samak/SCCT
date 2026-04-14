@@ -109,12 +109,14 @@ export const reorderFieldsSchema = z.object({
 
 export const contactRecordSchema = z.object({
   id: z.string().min(1),
-  name: z.string().min(1).max(200),
-  email: z.string().email().optional().or(z.literal("")),
-  phone: z.string().max(50).optional().default(""),
-  contact: z.string().max(200).optional().default(""),
-  role: z.string().max(100).optional().default(""),
-  notes: z.string().max(1000).optional().default(""),
+  name: z.string().max(200).optional().default(""),
+  email: z.string().email().optional().or(z.literal("")).or(z.null()),
+  phone: z.string().max(50).optional().default("").or(z.null()),
+  contact: z.string().max(200).optional().default("").or(z.null()),
+  role: z.string().max(100).optional().default("").or(z.null()),
+  notes: z.string().max(1000).optional().default("").or(z.null()),
+  mediaUrl: z.string().optional().nullable(),
+  mediaPublicId: z.string().optional().nullable(),
 });
 
 // ── Form Template Schemas ──────────────────────────────────────────

@@ -28,7 +28,9 @@ This contract defines externally observable behavior for:
       "name": "string",
       "contact": "string",
       "role": "string",
-      "notes": "string"
+      "notes": "string",
+      "mediaUrl": "string | null",
+      "mediaPublicId": "string | null"
     }
   ],
   "fieldValues": [

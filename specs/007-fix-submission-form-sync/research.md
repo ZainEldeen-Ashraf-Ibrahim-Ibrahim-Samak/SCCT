@@ -17,6 +17,18 @@ Represent contact records as a repeatable collection in the submission draft sta
 - **UI-only guard**: rejected because direct API calls could bypass rules.
 - **Server-only guard**: rejected because UX becomes frustrating when users can remove everything then fail at submit time.
 
+## 1.5) Contact Record File Uploads
+
+### Decision
+Extend the `ContactRecord` schema to include an optional generic file attachment (similar to the form manager's file fields). Store these files via Cloudinary and persist the `mediaUrl` and `mediaPublicId` in the `ContactRecord`.
+
+### Rationale
+- Requested in clarification.
+- Reusing the existing Cloudinary upload pattern ensures consistency with the constitution's media management instructions.
+
+### Alternatives considered
+- **Global file section**: rejected by the user in favor of inline per-record attachments.
+
 ## 2) Resubmission Notification Reliability and Visibility
 
 ### Decision

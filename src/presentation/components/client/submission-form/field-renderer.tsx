@@ -246,7 +246,7 @@ export function FieldRenderer({
         );
       }
 
-      const options = locale === "ar" ? field.dropdownOptionsAr : field.dropdownOptionsEn;
+      const options = (locale === "ar" ? field.dropdownOptionsAr : field.dropdownOptionsEn) || [];
 
       if (field.isMultiple) {
         const selectedValues = normalizeMultiDropdownValue(value);

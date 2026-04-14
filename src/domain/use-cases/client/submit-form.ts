@@ -7,6 +7,7 @@ import { CreateFieldValueInput } from "@/domain/entities/field-value";
 import { generateAccessToken } from "@/lib/utils";
 import { NotificationPublisher } from "@/lib/events/publisher";
 import { logger } from "@/lib/dev-logger";
+import { redis } from "@/lib/redis";
 
 interface SubmitFormData {
   clientName: string;
@@ -14,11 +15,13 @@ interface SubmitFormData {
   contactRecords: Array<{
     id: string;
     name: string;
-    email?: string;
-    phone?: string;
-    contact?: string;
-    role?: string;
-    notes?: string;
+    email?: string | null;
+    phone?: string | null;
+    contact?: string | null;
+    role?: string | null;
+    notes?: string | null;
+    mediaUrl?: string | null;
+    mediaPublicId?: string | null;
   }>;
   fieldValues: Array<{
     fieldDefinitionId: string;
@@ -54,6 +57,8 @@ function normalizeContactRecords(
         contact: record.contact ? String(record.contact).trim() : undefined,
         role: record.role ? String(record.role).trim() : undefined,
         notes: record.notes ? String(record.notes).trim() : undefined,
+        mediaUrl: record.mediaUrl ? String(record.mediaUrl).trim() : undefined,
+        mediaPublicId: record.mediaPublicId ? String(record.mediaPublicId).trim() : undefined,
       };
     })
     .filter((record): record is NonNullable<typeof record> => !!record);
@@ -180,6 +185,17 @@ export class SubmitFormUseCase {
       await this.fieldValueRepo.createMany(fieldValuesToCreate);
     }
 
+    try {
+      if (redis) {
+        await redis.del(`submission:${submission.id}`);
+        await redis.keys("submissions:*").then((keys) => {
+          if (keys && keys.length > 0 && redis) return redis.del(...keys);
+        });
+      }
+    } catch (err) {
+      logger.error("Failed to invalidate cache on submit", { err });
+    }
+
     // Fire & forget notification
     NotificationPublisher.notifyAdmins({
       type: "NEW_SUBMISSION",
@@ -277,6 +293,18 @@ export class SubmitFormUseCase {
       data.clientContact,
       normalizedContacts,
     );
+
+    try {
+      if (redis) {
+        await redis.del(`submission:${submission.id}`);
+        await redis.del(`submission:token:${accessToken}`);
+        await redis.keys("submissions:*").then((keys) => {
+          if (keys && keys.length > 0 && redis) return redis.del(...keys);
+        });
+      }
+    } catch (err) {
+      logger.error("Failed to invalidate cache on resubmit", { err });
+    }
 
     // Fire & forget notification
     NotificationPublisher.notifyAdmins({

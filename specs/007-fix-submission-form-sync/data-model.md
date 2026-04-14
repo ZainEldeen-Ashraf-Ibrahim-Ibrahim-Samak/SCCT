@@ -23,6 +23,8 @@ Represents one editable contact entry within a submission draft/submitted payloa
 - `contact` (string, optional).
 - `role` (string, optional).
 - `notes` (string, optional).
+- `mediaUrl` (string, optional): Cloudinary secure URL for an attached file.
+- `mediaPublicId` (string, optional): Cloudinary public ID for the attached file.
 
 ### Validation Rules
 - Submission payload MUST include at least 1 contact record.

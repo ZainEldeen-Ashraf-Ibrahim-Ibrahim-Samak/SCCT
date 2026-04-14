@@ -11,6 +11,9 @@
 
 - Q: After admin form changes, how should refresh handle a user's unsaved draft values? → A: Load latest form and carry over matching fields; warn for dropped fields.
 - Q: How long should undelivered resubmission notifications remain pending for offline users? → A: 7 days.
+- Q: Is the file upload field added to each individual contact record, or is it a single global file upload section for the entire contact manager? → A: Added to each individual contact record.
+- Q: Is uploading a file mandatory for each contact record, or is it completely optional? → A: Completely optional for every contact record.
+- Q: How should these uploaded contact files be displayed during review for admins and clients? → A: Inline within the contact record details in the review page.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -20,14 +23,15 @@ As a user completing a submission form, I can edit contact records, add more rec
 
 **Why this priority**: Form completion fails without reliable contact record management, and this is a core submission flow.
 
-**Independent Test**: Can be fully tested by opening a form, editing a contact row, adding rows, deleting rows, and confirming the final row cannot be removed.
+**Independent Test**: Can be fully tested by opening a form, editing a contact row, adding rows, deleting rows, uploading a file to a record, and confirming the final row cannot be removed.
 
 **Acceptance Scenarios**:
 
-1. **Given** a form has one contact record, **When** the user edits any field, **Then** the edited values are retained and visible.
+1. **Given** a form has one contact record, **When** the user edits any field or attaches an optional file, **Then** the edited values and file are retained and visible.
 2. **Given** a form has one contact record, **When** the user adds a new record, **Then** the form shows two records and both are editable.
 3. **Given** a form has multiple contact records, **When** the user deletes one record, **Then** the selected record is removed and remaining records stay unchanged.
 4. **Given** a form has exactly one contact record, **When** the user attempts to delete it, **Then** deletion is blocked and the form keeps one record.
+5. **Given** a contact record has an attached file, **When** an admin or client reviews the submission, **Then** the file is visible inline within that contact record's details.
 
 ---
 
@@ -104,10 +108,13 @@ As a form user and site visitor, I can choose multiple values in the sector fiel
 - **FR-011**: System MUST store and display all selected sector values in submission review outputs.
 - **FR-012**: System MUST provide a reusable site-name element with the value "SCCT".
 - **FR-013**: System MUST use the reusable site-name element on all pages that display the site name.
+- **FR-014**: System MUST add all missing Arabic (`ar`) website translation keys.
+- **FR-015**: System MUST allow users to optionally upload one or more files attached to each individual contact record (behaving similarly to the form file manager).
+- **FR-016**: System MUST display any attached contact files inline within the corresponding contact record details during both admin and client review.
 
 ### Key Entities *(include if feature involves data)*
 
-- **Contact Record**: A repeatable group of contact details in a submission, with a minimum count of one.
+- **Contact Record**: A repeatable group of contact details in a submission, with a minimum count of one. Can optionally include file attachments.
 - **Resubmission Request**: An admin-issued request tied to a specific user and submission, including delivery and visibility status.
 - **Form Version**: The currently published form structure used to render token-based submission pages.
 - **Sector Selection**: A collection of one or more selected sector values associated with a submission.
@@ -130,3 +137,11 @@ As a form user and site visitor, I can choose multiple values in the sector fiel
 - The latest published form structure is the single source of truth for token-based form rendering.
 - Sector options are managed by authorized staff and available to all users filling the form.
 - Scope includes all currently active pages that display the site name, and excludes archived or disabled pages.
+
+### User Story 5 - Optional Contact Fields UI Update (Priority: P2)
+
+As an admin and user, I can submit the form and view the contact info table with all individual contact fields being optional, provided that at least one contact record exists.
+
+**Acceptance Scenarios**:
+1. **Given** a user is completing a submission, **When** they fill out a contact record, **Then** all internal fields (name, email, phone, etc.) are optional in the UI, but the array must contain at least one record.
+2. **Given** an admin is viewing the submission table, **When** they review contact details, **Then** the UI gracefully handles any missing contact info fields without errors.

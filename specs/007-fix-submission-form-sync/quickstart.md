@@ -16,10 +16,11 @@ Implement and verify:
 
 1. **Data + Validation**
    - Update validation schema(s) and domain/data models for `contactRecords` minimum and multi-select sector arrays.
+   - Add optional `mediaUrl`/`mediaPublicId` for file attachments to the `contactRecords` schema.
    - Ensure backward-compatible parsing where possible.
 
 2. **Submission Flow + Reconciliation**
-   - Update submission view model and form renderer for repeatable contacts and refresh reconciliation warning behavior.
+   - Update submission view model and form renderer for repeatable contacts, file attachments, and refresh reconciliation warning behavior.
    - Guarantee latest form structure wins on refresh while carrying matching unsaved values.
 
 3. **Admin Status + Notification Durability**

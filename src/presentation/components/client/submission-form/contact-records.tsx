@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2, GripVertical } from "lucide-react";
+import { Trash2, GripVertical, Plus } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -24,6 +24,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { ContactRecordDraft } from "@/presentation/view-models/use-submission";
+import { MediaUpload } from "./media-upload";
 
 interface ContactRecordsProps {
   records: ContactRecordDraft[];
@@ -151,6 +152,28 @@ function SortableContactCard({
             onChange={(e) => onUpdate(record.id, { notes: e.target.value })}
             placeholder={t("contactRecordNotesPlaceholder")}
             className="min-h-20"
+            disabled={disabled}
+          />
+        </div>
+
+        <div className="space-y-2 sm:col-span-2 mt-2">
+          <Label>{t("contactRecordAttachment")}</Label>
+          <MediaUpload
+            type="file"
+            currentUrl={record.mediaUrl}
+            onUpload={(url, publicId) =>
+              onUpdate(record.id, {
+                mediaUrl: url,
+                mediaPublicId: publicId,
+              })
+            }
+            onRemove={() =>
+              onUpdate(record.id, {
+                mediaUrl: null,
+                mediaPublicId: null,
+              })
+            }
+            maxFileSize={10}
             disabled={disabled}
           />
         </div>

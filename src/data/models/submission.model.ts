@@ -25,6 +25,8 @@ export interface ISubmission extends Document {
     contact?: string;
     role?: string;
     notes?: string;
+    mediaUrl?: string;
+    mediaPublicId?: string;
   }>;
   formSnapshot: Record<string, unknown>[]; // Frozen representation of FieldDefinitions
   auditTrail: IAuditEntry[];
@@ -68,6 +70,8 @@ const contactRecordSchema = new Schema(
     contact: { type: String, default: "", trim: true, maxlength: 200 },
     role: { type: String, default: "", trim: true, maxlength: 100 },
     notes: { type: String, default: "", trim: true, maxlength: 1000 },
+    mediaUrl: { type: String, default: "" },
+    mediaPublicId: { type: String, default: "" },
   },
   { _id: false }
 );

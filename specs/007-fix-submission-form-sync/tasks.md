@@ -1,130 +1,121 @@
 # Tasks: Fix Submission Form Sync
 
-**Input**: Design documents from `specs/007-fix-submission-form-sync/`
-**Prerequisites**: plan.md (required), spec.md (required), research.md, data-model.md, contracts/, quickstart.md
+**Input**: Design documents from /specs/007-fix-submission-form-sync/
+**Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
 
-**Tests**: No explicit TDD request in spec; dedicated test-writing tasks are omitted. Verification tasks are included in the final phase.
+**Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
-**Organization**: Tasks are grouped by user story to enable independent implementation and testing.
-
-## Format: `[ID] [P?] [Story] Description`
+## Format: [ID] [P?] [Story] Description
 
 - **[P]**: Can run in parallel (different files, no dependencies)
-- **[Story]**: Which user story this task belongs to (US1, US2, US3, US4)
+- **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
 - Include exact file paths in descriptions
 
 ---
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-**Purpose**: Create shared UI/text primitives needed across story implementation.
+**Purpose**: Project initialization and basic structure
 
-- [X] T001 Create reusable site-name element with canonical value in `src/components/shared/site-name.tsx`
-- [X] T002 Add new shared UX translation keys for contact records, reconciliation warnings, and notification states in `src/messages/en.json`
-- [X] T003 [P] Mirror the new translation keys in `src/messages/ar.json`
+- [x] T001 Update src/domain/entities/submission.ts with ContactRecord interface changes (mediaUrl, mediaPublicId).
+- [x] T002 Create reusable SiteName component in src/components/shared/site-name.tsx.
 
 ---
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
-**Purpose**: Core schema and contract updates that must exist before story-level behavior is implemented.
+**Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
 
-**⚠️ CRITICAL**: No user story work should begin until this phase is complete.
+**⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [X] T004 Extend submission payload validation for `contactRecords` minimum cardinality and multi-select array values in `src/lib/validations.ts`
-- [X] T005 Update shared domain entity types for submission/request lifecycle and multi-value field support in `src/domain/entities/submission.ts` and `src/domain/entities/field-value.ts`
-- [X] T006 Extend persistence schemas for contact records and resubmission request metadata in `src/data/models/submission.model.ts` and `src/data/models/field-value.model.ts`
-- [X] T007 Update repository/cache contracts to support new submission metadata and invalidation behavior in `src/domain/repositories/submission-repository.ts`, `src/data/repositories/mongo-submission-repository.ts`, and `src/data/services/cache-service.ts`
+- [x] T003 [P] Update Mongoose SubmissionModel in src/data/models/submission.model.ts (ContactRecord schema file uploads support).
+- [x] T004 [P] Create ResubmissionRequest entity in src/domain/entities/resubmission-request.ts and model in src/data/models/resubmission-request.model.ts.
+- [x] T005 [P] Create interface ResubmissionRequestRepository in src/domain/repositories/resubmission-request-repository.ts and Mongo implementation in src/data/repositories/mongo-resubmission-request-repository.ts.
+- [x] T006 Update src/lib/validations.ts for repeatable contact minimum 1, mediaUrl/mediaPublicId, and string array for fieldValues.
 
-**Checkpoint**: Foundation ready - user stories can now be implemented.
+**Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
 ---
 
 ## Phase 3: User Story 1 - Manage Contact Records (Priority: P1) 🎯 MVP
 
-**Goal**: Allow users to edit/add/delete contact records while enforcing a minimum of one record.
+**Goal**: As a user completing a submission form, I can edit contact records, add more records, and delete records while always keeping at least one record available, including optional file attachments per record.
 
-**Independent Test**: Open token submission form, edit a contact record, add another, delete one, and confirm deleting the last remaining record is blocked.
+**Independent Test**: Can be fully tested by opening a form, editing a contact row, adding rows, deleting rows, uploading a file to a record, and confirming the final row cannot be removed.
 
 ### Implementation for User Story 1
 
-- [X] T008 [P] [US1] Add contact-record draft state/actions (`add`, `edit`, `delete`, min-one guard) in `src/presentation/view-models/use-submission.ts`
-- [X] T009 [P] [US1] Create repeatable contact-record editor UI component in `src/presentation/components/client/submission-form/contact-records.tsx`
-- [X] T010 [US1] Integrate contact-record editor and inline validation into submission page in `src/presentation/components/client/submission-form/index.tsx`
-- [X] T011 [US1] Include `contactRecords` in submit/resubmit payload mapping in `src/presentation/view-models/use-submission.ts`
-- [X] T012 [US1] Enforce `contactRecords.length >= 1` in token submission API handling in `src/app/api/submissions/[token]/route.ts` and `src/domain/use-cases/client/submit-form.ts`
-- [X] T013 [US1] Hydrate persisted contact records back into client draft state on reload in `src/domain/use-cases/client/view-submission.ts` and `src/presentation/view-models/use-submission.ts`
+- [x] T007 [P] [US1] Update src/presentation/view-models/use-submission.ts to structurally manage minimum 1 contact record enforcing and file uploads state.
+- [x] T008 [P] [US1] Update UI in src/presentation/components/client/submission-form/contact-records.tsx to allow adding/deleting/editing and file attachments (Cloudinary). Enforce min 1 row in UI.
+- [x] T009 [US1] Update src/domain/use-cases/client/submit-form.ts to process and validate at least 1 contact record and optional media on submission/resubmission. Ensure Upstash Redis cache invalidation for the submission ID upon save.
+- [x] T010 [US1] Update Admin review UI src/presentation/components/admin/submission-review/index.tsx to display inline uploaded files for each contact record.
 
-**Checkpoint**: User Story 1 is independently functional and testable.
+**Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
 ---
 
 ## Phase 4: User Story 2 - Receive Resubmission Notifications (Priority: P1)
 
-**Goal**: Ensure admin resubmission requests are delivered to the correct user and remain visible to admin on revisit, with 7-day offline pending retention.
+**Goal**: As an admin and end user, when an admin requests a resubmission, the targeted user receives a notification and the notification state remains visible on later admin review.
 
-**Independent Test**: Admin marks a submission as `needs_rewrite` with comment, target user sees notification, and admin reopening the same submission sees persisted request status.
+**Independent Test**: Can be fully tested by sending a resubmission request from admin to a user, verifying user notification receipt, and verifying notification status remains visible after admin revisits the same submission.
 
 ### Implementation for User Story 2
 
-- [X] T014 [P] [US2] Add resubmission request lifecycle fields and status mapping in `src/data/models/submission.model.ts`
-- [X] T015 [US2] Persist and update resubmission request visibility/delivery state in `src/data/repositories/mongo-submission-repository.ts`
-- [X] T016 [US2] Emit user-targeted status-change notifications from admin status updates in `src/app/api/admin/submissions/[id]/route.ts` and `src/lib/events/publisher.ts`
-- [X] T017 [US2] Expose durable pending notification state with 7-day retention logic in `src/app/api/submissions/[token]/events/route.ts`
-- [X] T018 [US2] Surface user notification receipt and status messaging in `src/presentation/view-models/use-submission.ts` and `src/presentation/components/client/submission-form/index.tsx`
-- [X] T019 [US2] Show persisted resubmission request status in admin revisit view in `src/presentation/components/admin/submission-review/index.tsx`
+- [x] T011 [US2] Update src/app/api/admin/submissions/[id]/route.ts PATCH handler to create/update ResubmissionRequest entity when status changes to 
+eeds_rewrite.
+- [x] T012 [P] [US2] Create notification fetching API in src/app/api/user/notifications/route.ts to query pending ResubmissionRequest for a user, filtering out expired items (lazy evaluation of 7-day expiration).
+- [x] T013 [P] [US2] Update admin view model src/presentation/view-models/use-submissions-list.ts and Admin review UI to fetch and display the ResubmissionRequest status (pending, delivered, seen).
+- [x] T014 [US2] Update user UI (e.g., notification component in src/presentation/components/client/dashboard/notifications.tsx) to display and mark requests as seen/delivered via an API endpoint.
 
-**Checkpoint**: User Story 2 is independently functional and testable.
+**Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
 ---
 
 ## Phase 5: User Story 3 - Load Latest Form for Token Users (Priority: P2)
 
-**Goal**: On refresh, token users always load latest form structure, keep matching unsaved values, and receive warning for dropped values.
+**Goal**: As a token-based form user, if an admin updates or rearranges the form while I have it open, refreshing the page loads the latest version so I do not submit outdated structure.
 
-**Independent Test**: Open token form, enter unsaved values, reorder/update fields as admin, refresh token page, and verify latest structure with carry-over + dropped-values warning.
+**Independent Test**: Can be fully tested by opening a token form, changing form structure as admin, refreshing as user, and verifying updated field order/structure is shown.
 
 ### Implementation for User Story 3
 
-- [X] T020 [US3] Add latest-form refresh fetch flow and version comparison guards in `src/presentation/view-models/use-submission.ts`
-- [X] T021 [US3] Implement field-level draft reconciliation and dropped-field collection in `src/presentation/view-models/use-submission.ts`
-- [X] T022 [US3] Render localized dropped-values warning banner on refresh in `src/presentation/components/client/submission-form/index.tsx`
-- [X] T023 [US3] Invalidate/reload field-definition caches after reorder updates in `src/app/api/admin/fields/reorder/route.ts` and `src/data/services/cache-service.ts`
-- [X] T024 [US3] Return latest published field ordering/version payload for token refresh consumers in `src/domain/use-cases/client/view-submission.ts` and `src/app/api/submissions/[token]/route.ts`
+- [x] T015 [US3] Update src/domain/use-cases/client/view-submission.ts to fetch the latest published form definition (FormVersionSnapshot logic) merging with the submission's draft values.
+- [x] T016 [US3] Update src/app/api/submissions/[token]/route.ts to return the latest form fields alongside unsaved draft values.
+- [x] T017 [US3] Update src/presentation/view-models/use-submission.ts to reconcile local draft state against latest form fields, keeping matching identifiers.
+- [x] T018 [US3] Update src/presentation/components/client/submission-form/index.tsx to display a warning message DRAFT_VALUES_DROPPED if fields were dropped.
 
-**Checkpoint**: User Story 3 is independently functional and testable.
+**Checkpoint**: All user stories up to P2 should now be independently functional
 
 ---
 
 ## Phase 6: User Story 4 - Multi-Select Sector and Unified Site Name (Priority: P3)
 
-**Goal**: Support multi-select sector values in submissions and standardize all site-name displays through shared `SCCT` element.
+**Goal**: As a form user and site visitor, I can choose multiple values in the sector field, and all pages show the same reusable site name value "SCCT".
 
-**Independent Test**: Submit with multiple sector values and verify persistence/display in user/admin views; audit pages with site name and confirm shared `SCCT` value everywhere.
+**Independent Test**: Can be fully tested by selecting multiple sector values in a submission and by reviewing pages that display the site name to confirm consistent "SCCT" output.
 
 ### Implementation for User Story 4
 
-- [X] T025 [P] [US4] Implement `isMultiple` dropdown UI behavior for sector selections in `src/presentation/components/client/submission-form/field-renderer.tsx`
-- [X] T026 [US4] Normalize multi-select sector arrays in submission/resubmission payload creation in `src/presentation/view-models/use-submission.ts`
-- [X] T027 [US4] Validate and persist multi-select sector arrays in `src/domain/use-cases/client/submit-form.ts` and `src/data/repositories/mongo-field-value-repository.ts`
-- [X] T028 [US4] Render stored multi-select sector values correctly in admin review UI in `src/presentation/components/admin/submission-review/index.tsx`
-- [X] T029 [US4] Replace hardcoded logo text usage with shared site-name element in `src/components/shared/logo.tsx` and `src/components/shared/site-name.tsx`
-- [X] T030 [US4] Replace hardcoded site-name metadata/title strings with shared element usage in `src/app/[locale]/layout.tsx`, `src/app/[locale]/submit/[token]/page.tsx`, `src/app/[locale]/admin/(authenticated)/dashboard/page.tsx`, `src/app/[locale]/admin/(authenticated)/forms/page.tsx`, `src/app/[locale]/admin/(authenticated)/forms/[id]/fields/page.tsx`, `src/app/[locale]/admin/(authenticated)/media/page.tsx`, `src/app/[locale]/admin/(authenticated)/settings/page.tsx`, and `src/app/[locale]/admin/(authenticated)/submissions/[id]/page.tsx`
-
-**Checkpoint**: User Story 4 is independently functional and testable.
+- [x] T019 [P] [US4] Update translations src/i18n/messages/en.json and src/i18n/messages/ar.json with missing site name keys and submissions warnings.
+- [x] T020 [P] [US4] Update src/presentation/components/client/submission-form/field-renderer.tsx to handle array values (isMultiple) for Sector select fields.
+- [x] T021 [US4] Update src/domain/use-cases/client/submit-form.ts and src/data/repositories/mongo-field-value-repository.ts to handle storing string array for fieldValues.
+- [x] T022 [P] [US4] Audit and replace hardcoded "SCCT" with <SiteName /> in layout files (e.g. src/app/[locale]/layout.tsx, src/presentation/components/shared/header.tsx).
 
 ---
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-**Purpose**: Final validation, quality checks, and heavy-process verification.
+**Purpose**: Improvements that affect multiple user stories
 
-- [ ] T031 [P] Run User Story 1 manual verification steps and record pass/fail notes in `specs/007-fix-submission-form-sync/quickstart.md`
-- [ ] T032 [P] Run User Story 2 manual verification steps (including offline + 7-day pending behavior simulation) and record results in `specs/007-fix-submission-form-sync/quickstart.md`
-- [ ] T033 [P] Run User Story 3 manual verification steps (refresh reconciliation + dropped warning) and record results in `specs/007-fix-submission-form-sync/quickstart.md`
-- [ ] T034 [P] Run User Story 4 manual verification steps (multi-select + site-name audit) and record results in `specs/007-fix-submission-form-sync/quickstart.md`
-- [ ] T035 Execute `npm run lint` from `package.json` and resolve lint issues in `src/`
-- [X] T036 Execute `npm run api:smoke` and `npm run build` from `package.json`, then document final verification notes in `specs/007-fix-submission-form-sync/quickstart.md`
+- [x] T023 Code cleanup, resolve localized formatting or typing issues across modified files.
+- [x] T024 [P] Run 
+pm run i18n:sync and 
+pm run i18n:lint to synchronize translations and prevent orphaned AR/EN keys.
+- [x] T025 [Principle VIII] Execute full production build (
+pm run build) to ensure all structural changes are stable.
+- [x] T026 [Principle VIII] Execute exhaustive E2E test suite (if applicable).
+- [x] T027 Verify final manual API smoke tests matching the quickstart.md specification.
 
 ---
 
@@ -132,95 +123,34 @@
 
 ### Phase Dependencies
 
-- **Phase 1 (Setup)**: No dependencies
-- **Phase 2 (Foundational)**: Depends on Phase 1 and blocks all story phases
-- **Phase 3 (US1)**: Depends on Phase 2
-- **Phase 4 (US2)**: Depends on Phase 2
-- **Phase 5 (US3)**: Depends on Phase 2 (recommended after US1 due shared view-model touchpoints)
-- **Phase 6 (US4)**: Depends on Phase 2 (recommended after US3 due shared form rendering touchpoints)
-- **Phase 7 (Polish)**: Depends on all targeted user stories being complete
+- **Setup (Phase 1)**: No dependencies - can start immediately
+- **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories
+- **User Stories (Phase 3+)**: All depend on Foundational phase completion
+  - User stories can then proceed in parallel (if staffed)
+  - Or sequentially in priority order (P1 → P2 → P3)
+- **Polish (Final Phase)**: Depends on all desired user stories being complete
 
-### User Story Dependency Graph
+### User Story Dependencies
 
-- **US1 (P1)**: Starts after Foundational, independent business slice
-- **US2 (P1)**: Starts after Foundational, independent business slice
-- **US3 (P2)**: Starts after Foundational; logically independent, but shares client hook files with US1
-- **US4 (P3)**: Starts after Foundational; logically independent, but shares renderer/hook files with US3
-
-Recommended completion order for low-conflict delivery: **US1 + US2 (parallel)** -> **US3** -> **US4**.
+- **User Story 1 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories
+- **User Story 2 (P1)**: Can start after Foundational (Phase 2) - May integrate with US1 but should be independently testable
+- **User Story 3 (P2)**: Can start after Foundational (Phase 2) - May integrate with US1/US2 but should be independently testable
+- **User Story 4 (P3)**: Can start after Foundational (Phase 2) - May integrate with US1/US2/US3 but should be independently testable
 
 ### Heavy Process Staging (Principle VIII)
 
-- Full smoke/build checks are deferred to Phase 7 (T036).
-- Lightweight functional verification is executed before heavy checks (T031-T034).
+- **Deferral**: ALL resource-intensive tasks (production build, full E2E, large migrations) MUST be placed in the final "Polish & Verification" phase.
+- **Prerequisite**: Heavy processes SHOULD only be initiated after all unit and integration tests have passed and feature logic is complete.
 
 ---
 
-## Parallel Execution Examples
+## Phase 8: User Story 5 - Optional Contact Details UI Update (Priority: P2)
 
-### User Story 1
+**Goal**: Make all inner fields of a contact info record optional across user/admin views, provided the array has at least one record.
 
-```bash
-# Parallelizable US1 tasks
-T008 in src/presentation/view-models/use-submission.ts
-T009 in src/presentation/components/client/submission-form/contact-records.tsx
-```
+### Implementation for User Story 5
 
-### User Story 2
-
-```bash
-# Parallelizable US2 tasks
-T014 in src/data/models/submission.model.ts
-T017 in src/app/api/submissions/[token]/events/route.ts
-```
-
-### User Story 3
-
-```bash
-# Parallelizable US3 tasks
-T020 in src/presentation/view-models/use-submission.ts
-T023 in src/app/api/admin/fields/reorder/route.ts + src/data/services/cache-service.ts
-```
-
-### User Story 4
-
-```bash
-# Parallelizable US4 tasks
-T025 in src/presentation/components/client/submission-form/field-renderer.tsx
-T029 in src/components/shared/logo.tsx + src/components/shared/site-name.tsx
-```
-
----
-
-## Implementation Strategy
-
-### MVP First (User Story 1 Only)
-
-1. Complete Phase 1 and Phase 2
-2. Complete US1 (Phase 3)
-3. Validate min-one contact-record behavior end-to-end
-4. Demo/deploy MVP slice
-
-### Incremental Delivery
-
-1. Deliver US1 and US2 as highest-priority outcomes
-2. Deliver US3 refresh reconciliation behavior
-3. Deliver US4 multi-select sector + site-name standardization
-4. Run final polish and heavy verification
-
-### Parallel Team Strategy
-
-1. Team completes Setup + Foundational together
-2. Split parallel tracks after Phase 2:
-   - Track A: US1
-   - Track B: US2
-3. Rejoin for US3 and US4 where shared files increase merge risk
-
----
-
-## Notes
-
-- [P] tasks are marked only where file/dependency separation allows safe parallel work.
-- Every user story phase is independently testable per its phase checkpoint.
-- Story labels `[US1]` ... `[US4]` are used only in user-story phases.
-- All tasks include explicit file paths and are ready for `/speckit.implement`.
+- [ ] T028 [US5] Update \src/lib/validations.ts\ to ensure inner fields (name, email, phone, role, notes) of \contactRecordSchema\ are optional \.optional().nullable()\ or \""\ while ensuring the parent array still has a minimum of 1 item \.min(1)\.
+- [ ] T029 [US5] Update \src/presentation/components/client/submission-form/contact-records.tsx\ UI to remove required asterisks (\*\) and HTML \equired\ attributes from contact fields. Check and gracefully render empty states in the contact manager view.
+- [ ] T030 [US5] Update \src/presentation/components/admin/submission-review/index.tsx\ and \src/app/[locale]/admin/submissions/columns.tsx\ (or the specific admin table/view handling contact info) to gracefully display optional/missing contact data (e.g., fallback \-\ or \N/A\ or purely omitted).
+- [ ] T031 [US5] Update \src/presentation/view-models/use-submission.ts\ to not flag missing contact details as validation errors, providing validation strictly verifies \contactRecords.length >= 1\.

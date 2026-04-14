@@ -24,6 +24,8 @@ export interface ContactRecordDraft {
   phone: string;
   role: string;
   notes: string;
+  mediaUrl?: string | null;
+  mediaPublicId?: string | null;
 }
 
 interface DraftState {
@@ -114,6 +116,8 @@ function normalizeContactRecordDrafts(records: ContactRecordDraft[]) {
     phone: record.phone.trim(),
     role: record.role.trim(),
     notes: record.notes.trim(),
+    mediaUrl: record.mediaUrl || null,
+    mediaPublicId: record.mediaPublicId || null,
   }));
 
   const meaningful = normalized.filter((record) => {
@@ -122,7 +126,8 @@ function normalizeContactRecordDrafts(records: ContactRecordDraft[]) {
       record.email.length > 0 ||
       record.phone.length > 0 ||
       record.role.length > 0 ||
-      record.notes.length > 0
+      record.notes.length > 0 ||
+      !!record.mediaUrl
     );
   });
 
@@ -138,6 +143,8 @@ function normalizeContactRecordDrafts(records: ContactRecordDraft[]) {
         phone: seed?.phone || "",
         role: seed?.role || "",
         notes: seed?.notes || "",
+        mediaUrl: seed?.mediaUrl || null,
+        mediaPublicId: seed?.mediaPublicId || null,
       },
     ];
   }
@@ -152,7 +159,7 @@ function mapSourceContactRecords(records: unknown): ContactRecordDraft[] {
   if (!Array.isArray(records)) return [createEmptyContactRecord()];
 
   const normalized = records
-    .map((record) => {
+    .map((record): ContactRecordDraft | null => {
       if (!record || typeof record !== "object") return null;
       const item = record as Record<string, unknown>;
       const id = String(item.id ?? "").trim();
@@ -165,6 +172,8 @@ function mapSourceContactRecords(records: unknown): ContactRecordDraft[] {
         phone: String(item.phone ?? item.contact ?? "").trim(),
         role: String(item.role ?? "").trim(),
         notes: String(item.notes ?? "").trim(),
+        mediaUrl: typeof item.mediaUrl === "string" ? item.mediaUrl : null,
+        mediaPublicId: typeof item.mediaPublicId === "string" ? item.mediaPublicId : null,
       };
     })
     .filter((record): record is ContactRecordDraft => !!record);
@@ -185,7 +194,8 @@ function hasMeaningfulDraftData(draft: DraftState | undefined): boolean {
       record.email.trim().length > 0 ||
       record.phone.trim().length > 0 ||
       record.role.trim().length > 0 ||
-      record.notes.trim().length > 0
+      record.notes.trim().length > 0 ||
+      !!record.mediaUrl
     );
   })) {
     return true;
@@ -507,11 +517,14 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
           formVersionRef.current = nextFormVersion;
 
           updateDraft({ 
-            clientName: data.submission?.clientName || "", 
-            contactRecords:
-              nextDraftContactRecords.length > 0
-                ? nextDraftContactRecords
-                : [createEmptyContactRecord()],
+            clientName: isEditingRef.current 
+              ? (currentDraft?.clientName || data.submission?.clientName || "") 
+              : (data.submission?.clientName || ""), 
+            contactRecords: isEditingRef.current && currentDraft?.contactRecords?.length
+              ? currentDraft.contactRecords
+              : (nextDraftContactRecords.length > 0
+                  ? nextDraftContactRecords
+                  : [createEmptyContactRecord()]),
             formData: reconciledFormData,
           });
         } else {

@@ -198,6 +198,34 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
                             <span className="font-medium">{tClient("contactRecordNotes")}: </span>
                             <span>{record.notes || "—"}</span>
                           </p>
+                          {record.mediaUrl && (
+                            <div className="mt-3 pt-3 border-t border-border/50">
+                              <p className="text-sm font-medium mb-2">{tClient("contactRecordAttachment")}:</p>
+                              {record.mediaUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
+                                <a href={record.mediaUrl} target="_blank" rel="noopener noreferrer" className="block max-w-sm rounded-md overflow-hidden border border-border hover:opacity-90 transition-opacity">
+                                  <Image
+                                    src={record.mediaUrl}
+                                    alt="Contact Attachment"
+                                    width={400}
+                                    height={300}
+                                    className="object-cover w-full h-auto"
+                                    unoptimized
+                                  />
+                                </a>
+                              ) : (
+                                <a
+                                  href={record.mediaUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-primary bg-primary/10 rounded-md hover:bg-primary/20 transition-colors"
+                                >
+                                  <File className="w-4 h-4" />
+                                  {tc("viewDocument")}
+                                  <ExternalLink className="w-3 h-3 ml-1" />
+                                </a>
+                              )}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>

@@ -1,11 +1,13 @@
 import { auth } from "@/lib/auth";
 import { MongoSubmissionRepository } from "@/data/repositories/mongo-submission-repository";
+import { MongoResubmissionRequestRepository } from "@/data/repositories/mongo-resubmission-request-repository";
 import { updateSubmissionStatusSchema } from "@/lib/validations";
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
 import { logger } from "@/lib/dev-logger";
 import { CacheService } from "@/data/services/cache-service";
 
 const repo = new MongoSubmissionRepository();
+const resubmissionRepo = new MongoResubmissionRequestRepository();
 
 export const dynamic = "force-dynamic";
 
@@ -30,11 +32,19 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       admin: { id: session.user.id as string, name: session.user.name as string },
     });
 
-    await CacheService.invalidateAllSubmissionPayloadCache();
-
     if (!result) {
       return errorResponse("Not found", 404, "NOT_FOUND");
     }
+
+    // T011: Synchronize the standalone ResubmissionRequest for targeted user notification flows
+    if (parsed.data.status === "needs_rewrite" && result.resubmissionRequest) {
+      await resubmissionRepo.create({
+        ...result.resubmissionRequest,
+        submissionId: result.id
+      });
+    }
+
+    await CacheService.invalidateAllSubmissionPayloadCache();
 
     return successResponse(result);
   } catch (error) {

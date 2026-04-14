@@ -9,11 +9,13 @@ export interface FormTemplate {
   contactRecords: Array<{
     id: string;
     name: string;
-    email?: string;
-    phone?: string;
-    contact?: string;
-    role?: string;
-    notes?: string;
+    email?: string | null;
+    phone?: string | null;
+    contact?: string | null;
+    role?: string | null;
+    notes?: string | null;
+    mediaUrl?: string | null;
+    mediaPublicId?: string | null;
   }>;
   isActive: boolean;
   createdAt: Date;
