@@ -477,7 +477,13 @@ export function MediaUpload({
         `}
       >
         {isUploading ? (
-          <UploadCloud className="h-8 w-8 animate-bounce" />
+          <div className="flex flex-col items-center justify-center gap-3 w-full max-w-[200px]">
+            <UploadCloud className="h-8 w-8 animate-bounce text-primary" />
+            <div className="w-full bg-secondary rounded-full h-2 overflow-hidden shadow-inner">
+              <div className="bg-primary h-full transition-all duration-200" style={{ width: `${uploadProgress}%` }} />
+            </div>
+            <span className="text-sm font-semibold text-primary">{uploadProgress}%</span>
+          </div>
         ) : (
           <>
             {type === "image" ? <ImageIcon className="h-8 w-8 group-hover:scale-110 transition-transform" /> : <UploadCloud className="h-8 w-8 group-hover:scale-110 transition-transform" />}

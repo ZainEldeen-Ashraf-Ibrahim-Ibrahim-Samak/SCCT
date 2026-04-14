@@ -170,34 +170,41 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
                 <div className="space-y-3">
                   <Label className="text-base font-semibold text-foreground/80">{t("contactRecords")}</Label>
                   {submission.contactRecords.length > 0 ? (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {submission.contactRecords.map((record, index) => (
-                        <div key={record.id} className="rounded-lg border bg-muted/30 p-4 space-y-2">
-                          <p className="text-sm font-semibold">{t("contactRecordEntry", { index: index + 1 })}</p>
-                          <p className="text-sm">
-                            <span className="font-medium">{tc("name")}: </span>
-                            <span>{record.name || "—"}</span>
-                          </p>
-                          <p className="text-sm">
-                            <span className="font-medium">{tClient("contactRecordEmail")}: </span>
-                            <span>{record.email || "—"}</span>
-                          </p>
-                          <p className="text-sm">
-                            <span className="font-medium">{tClient("contactRecordPhone")}: </span>
-                            <span>{record.phone || record.contact || "—"}</span>
-                          </p>
-                          <p className="text-sm">
-                            <span className="font-medium">{tClient("contactRecordContact")}: </span>
-                            <span>{record.contact || "—"}</span>
-                          </p>
-                          <p className="text-sm">
-                            <span className="font-medium">{tClient("contactRecordRole")}: </span>
-                            <span>{record.role || "—"}</span>
-                          </p>
-                          <p className="text-sm whitespace-pre-wrap">
-                            <span className="font-medium">{tClient("contactRecordNotes")}: </span>
-                            <span>{record.notes || "—"}</span>
-                          </p>
+                        <div key={record.id} className="space-y-4 rounded-xl border border-border/60 bg-muted/20 p-4">
+                          <div className="space-y-1">
+                            <h4 className="text-base font-semibold">
+                              {t("contactRecordEntry", { index: index + 1 })}
+                            </h4>
+                          </div>
+
+                          <div className="grid gap-4 sm:grid-cols-2">
+                            <div className="space-y-1">
+                              <Label className="text-xs text-muted-foreground">{tc("name")}</Label>
+                              <p className="text-sm font-medium">{record.name || "—"}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs text-muted-foreground">{tClient("contactRecordEmail")}</Label>
+                              <p className="text-sm font-medium">{record.email || "—"}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs text-muted-foreground">{tClient("contactRecordPhone")}</Label>
+                              <p className="text-sm font-medium">{record.phone || record.contact || "—"}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs text-muted-foreground">{tClient("contactRecordContact")}</Label>
+                              <p className="text-sm font-medium">{record.contact || "—"}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs text-muted-foreground">{tClient("contactRecordRole")}</Label>
+                              <p className="text-sm font-medium">{record.role || "—"}</p>
+                            </div>
+                            <div className="space-y-1 sm:col-span-2">
+                              <Label className="text-xs text-muted-foreground">{tClient("contactRecordNotes")}</Label>
+                              <p className="text-sm font-medium whitespace-pre-wrap">{(record as any).address || record.notes || "—"}</p>
+                            </div>
+                          </div>
                           {record.mediaUrl && (
                             <div className="mt-3 pt-3 border-t border-border/50">
                               <p className="text-sm font-medium mb-2">{tClient("contactRecordAttachment")}:</p>
