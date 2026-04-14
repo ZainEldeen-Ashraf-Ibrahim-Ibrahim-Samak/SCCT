@@ -5,6 +5,11 @@
 **Status**: Draft  
 **Input**: User description: "now make regixes for input on forms and conact for users sumbtion to avoid although any issues , iwant although for admin when entring the forms names , and placholders although the when admin create the from name , and discrptions"
 
+## Clarifications
+
+### Session 2026-04-14
+- Q: Regex Strictness for Descriptions vs Names? → A: Use the same strict regex for both Names and Descriptions (Option A).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Secure Form Name and Description Entry (Priority: P1)
@@ -44,7 +49,7 @@ Admins must be restricted to safe characters when defining custom fields (e.g., 
 
 ### Functional Requirements
 
-- **FR-001**: System MUST strictly validate the Form Name and Form Description against a predefined safe-character whitelist (supporting letters, numbers, spaces, and basic punctuation).
+- **FR-001**: System MUST strictly validate the Form Name and Form Description against the *exact same* predefined safe-character whitelist (strict alphanumeric, spaces, and minimal punctuation).
 - **FR-002**: System MUST validate all custom field labels (English and Arabic) and placeholders against a safe-character whitelist inside the dynamic form builder.
 - **FR-003**: System MUST validate the Contact Form internal field names and placeholders against a safe-character whitelist.
 - **FR-004**: System MUST present real-time visual feedback (e.g., inline error messages) when an admin types invalid characters into any of the text fields mentioned above.
