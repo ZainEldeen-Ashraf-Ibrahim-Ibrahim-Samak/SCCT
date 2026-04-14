@@ -202,7 +202,7 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
                             <div className="mt-3 pt-3 border-t border-border/50">
                               <p className="text-sm font-medium mb-2">{tClient("contactRecordAttachment")}:</p>
                               {record.mediaUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? (
-                                <a href={record.mediaUrl} target="_blank" rel="noopener noreferrer" className="block max-w-sm rounded-md overflow-hidden border border-border hover:opacity-90 transition-opacity">
+                                <a href={record.mediaUrl} target="_blank" rel="noopener noreferrer" title="View attachment" className="block max-w-sm rounded-md overflow-hidden border border-border hover:opacity-90 transition-opacity">
                                   <Image
                                     src={record.mediaUrl}
                                     alt="Contact Attachment"

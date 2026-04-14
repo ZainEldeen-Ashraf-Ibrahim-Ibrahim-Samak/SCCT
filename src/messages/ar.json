@@ -36,33 +36,34 @@
     "darkMode": "داكن",
     "lightMode": "فاتح",
     "systemMode": "النظام",
-    "fileTooLarge": "File is too large",
-    "invalidFileType": "Invalid file type",
-    "uploadError": "Error uploading file",
-    "uploadSuccess": "Upload successful",
-    "addMore": "Add more",
-    "noFilesUploaded": "No files uploaded",
-    "dropToUpload": "Drop files here to upload",
-    "uploadImage": "Upload Image",
-    "uploadFile": "Upload File",
-    "title": "Title",
-    "subtitle": "Subtitle",
-    "createForm": "Create Form",
-    "formName": "Form Name",
-    "formDescription": "Form Description",
-    "noForms": "No forms found",
-    "activeForm": "Active Form",
-    "inactiveForm": "Inactive Form",
-    "setActive": "Set Active",
-    "deleteConfirm": "Are you sure you want to delete this form?",
-    "deleteWarning": "This action cannot be undone.",
+    "fileTooLarge": "الملف كبير جداً",
+    "invalidFileType": "نوع الملف غير صالح",
+    "uploadError": "خطأ في رفع الملف",
+    "uploadSuccess": "تم الرفع بنجاح",
+    "addMore": "إضافة المزيد",
+    "noFilesUploaded": "لم يتم رفع أي ملفات",
+    "dropToUpload": "أفلت الملفات هنا للرفع",
+    "uploadImage": "رفع صورة",
+    "uploadFile": "رفع ملف",
+    "title": "العنوان",
+    "subtitle": "العنوان الفرعي",
+    "createForm": "إنشاء نموذج",
+    "formName": "اسم النموذج",
+    "formDescription": "وصف النموذج",
+    "noForms": "لا توجد نماذج",
+    "activeForm": "نموذج نشط",
+    "inactiveForm": "نموذج غير نشط",
+    "setActive": "تعيين كنشط",
+    "deleteConfirm": "هل أنت متأكد من حذف هذا النموذج؟",
+    "deleteWarning": "لا يمكن التراجع عن هذا الإجراء.",
     "export": "تصدير",
     "exportSelected": "تصدير المحدد",
     "exportAll": "تصدير الكل",
     "exportCSV": "CSV",
     "exportExcel": "Excel",
     "exportPDF": "PDF",
-    "exportedSuccess": "تم التصدير بنجاح"
+    "exportedSuccess": "تم التصدير بنجاح",
+    "loggedInAs": "مسجل الدخول باسم:"
   },
   "auth": {
     "login": "تسجيل الدخول",
@@ -74,7 +75,9 @@
     "loginButton": "تسجيل الدخول",
     "loginError": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
     "userAccessDenied": "تم رفض الوصول. يرجى الاتصال بالمسؤول للسماح لك بالدخول.",
-    "logoutConfirm": "هل أنت متأكد من تسجيل الخروج؟"
+    "logoutConfirm": "هل أنت متأكد من تسجيل الخروج؟",
+    "accessDenied": "تم رفض الوصول",
+    "requestAccess": "يرجى تقديم طلب للمسؤول للسماح لك بالانضمام."
   },
   "nav": {
     "dashboard": "لوحة التحكم",
@@ -220,8 +223,8 @@
       "seen": "تمت المشاهدة",
       "expired": "منتهي"
     },
-    "submissionsDeleted": "Submissions deleted successfully",
-    "selected": "selected"
+    "submissionsDeleted": "تم حذف الطلبات بنجاح",
+    "selected": "محدد"
   },
   "client": {
     "formTitle": "نموذج تقديم البيانات",
@@ -277,12 +280,12 @@
     "contactRecordRequired": "أضف جهة تواصل واحدة على الأقل مع الاسم.",
     "droppedValuesTitle": "تم تحديث النموذج",
     "droppedValuesDescription": "تمت إزالة {count} من القيم غير المحفوظة بسبب تغيير النموذج.",
-    "resubmissionRequested": "Resubmission Requested",
-    "requestedResubmissionMessage": "We requested a resubmission for your records.",
-    "markAsSeen": "Mark as seen",
-    "error": "An error occurred",
-    "dragToReorder": "Drag to reorder",
-    "contactRecordAttachment": "Contact Record Attachment"
+    "resubmissionRequested": "تم طلب إعادة الإرسال",
+    "requestedResubmissionMessage": "لقد طلبنا إعادة إرسال سجلاتك.",
+    "markAsSeen": "تحديد كمقروء",
+    "error": "حدث خطأ",
+    "dragToReorder": "اسحب لإعادة الترتيب",
+    "contactRecordAttachment": "مرفق سجل التواصل"
   },
   "notifications": {
     "viewDetails": "عرض التفاصيل ←"
@@ -421,7 +424,7 @@
     "loadSettingsError": "فشل تحميل الإعدادات"
   },
   "settings": {
-    "title": "Settings",
-    "subtitle": "Manage your settings"
+    "title": "الإعدادات",
+    "subtitle": "إدارة إعداداتك"
   }
 }

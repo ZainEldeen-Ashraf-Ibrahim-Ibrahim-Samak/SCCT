@@ -116,9 +116,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null;
         }
 
-        if (user.role === "user") {
-          throw new AccessDeniedError();
-        }
+        // We no longer block "user" role here so they can login and be redirected
+        // to the request-access page.
+        // if (user.role === "user") {
+        //   throw new AccessDeniedError();
+        // }
 
         return {
           id: user._id.toString(),

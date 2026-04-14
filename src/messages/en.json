@@ -62,7 +62,8 @@
     "exportCSV": "CSV",
     "exportExcel": "Excel",
     "exportPDF": "PDF",
-    "exportedSuccess": "Exported successfully"
+    "exportedSuccess": "Exported successfully",
+    "loggedInAs": "Logged in as:"
   },
   "auth": {
     "login": "Login",
@@ -74,7 +75,9 @@
     "loginButton": "Sign In",
     "loginError": "Invalid email or password",
     "userAccessDenied": "Access denied. Please contact an admin to allow you to join.",
-    "logoutConfirm": "Are you sure you want to log out?"
+    "logoutConfirm": "Are you sure you want to log out?",
+    "accessDenied": "Access Restricted",
+    "requestAccess": "Please make a request to the admin to allow you to join."
   },
   "nav": {
     "dashboard": "Dashboard",

@@ -32,7 +32,6 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
     addContactRecord,
     updateContactRecord,
     removeContactRecord,
-    reorderContactRecords,
     setFieldValue,
     setMediaValue,
     setMediaItems,

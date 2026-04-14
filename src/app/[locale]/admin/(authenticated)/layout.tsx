@@ -26,6 +26,12 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
     return null;
   }
 
+  // If a regular user tries to access admin pages, redirect them to request access
+  if (userRole === "user") {
+    redirect({ href: "/request-access", locale });
+    return null;
+  }
+
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
