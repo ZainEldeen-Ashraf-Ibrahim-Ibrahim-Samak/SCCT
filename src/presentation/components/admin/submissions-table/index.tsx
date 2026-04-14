@@ -115,18 +115,22 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
     { header: t("submittedAt"), key: (row: Submission) => formatDate(row.submittedAt) },
   ];
 
-  const handleExport = (format: "csv" | "excel" | "pdf", data: Submission[], filenamePrefix: string) => {
+  const handleExport = async (format: "csv" | "excel" | "pdf", data: Submission[], filenamePrefix: string) => {
     const filename = `${filenamePrefix}-${new Date().toISOString().split("T")[0]}`;
     const columns = getExportColumns();
     
-    if (format === "csv") {
-      exportToCSV(data, filename, columns);
-    } else if (format === "excel") {
-      exportToExcel(data, filename, columns);
-    } else if (format === "pdf") {
-      exportToPDF(data, filename, t("exportTitle") || "Submissions Export", columns);
+    try {
+      if (format === "csv") {
+        exportToCSV(data, filename, columns);
+      } else if (format === "excel") {
+        exportToExcel(data, filename, columns);
+      } else if (format === "pdf") {
+        await exportToPDF(data, filename, t("exportTitle") || "Submissions Export", columns);
+      }
+      toast.success(tc("exportedSuccess") || "Exported successfully");
+    } catch (err) {
+      toast.error("Export failed");
     }
-    toast.success(tc("exportedSuccess") || "Exported successfully");
   };
 
   if (isLoading && submissions.length === 0) {

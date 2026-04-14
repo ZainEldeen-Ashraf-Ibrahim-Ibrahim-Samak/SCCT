@@ -139,6 +139,7 @@
     "contactRecordName": "اسم جهة التواصل",
     "contactRecordContact": "تفاصيل التواصل",
     "contactRecordEmail": "البريد الإلكتروني",
+    "contactRecordAddress": "العنوان",
     "contactRecordPhone": "الهاتف",
     "contactRecordRole": "الصفة",
     "contactRecordNotes": "ملاحظات",
@@ -286,7 +287,10 @@
     "markAsSeen": "تحديد كمقروء",
     "error": "حدث خطأ",
     "dragToReorder": "اسحب لإعادة الترتيب",
-    "contactRecordAttachment": "مرفق سجل التواصل"
+    "contactRecordAttachment": "مرفق سجل التواصل",
+    "toastSubmissionViewed": "✓ تمت مشاهدة طلبك",
+    "toastSubmissionNeedsRevision": "طلبك يحتاج إلى تعديل",
+    "toastResubmissionRequested": "تم إرسال طلب إعادة التقديم"
   },
   "notifications": {
     "viewDetails": "عرض التفاصيل ←"

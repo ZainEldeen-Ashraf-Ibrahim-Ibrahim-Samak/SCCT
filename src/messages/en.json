@@ -139,6 +139,7 @@
     "contactRecordName": "Contact Name",
     "contactRecordContact": "Contact Details",
     "contactRecordEmail": "Email",
+    "contactRecordAddress": "Address",
     "contactRecordPhone": "Phone",
     "contactRecordRole": "Role",
     "contactRecordNotes": "Notes",
@@ -286,7 +287,10 @@
     "markAsSeen": "Mark as seen",
     "error": "An error occurred",
     "dragToReorder": "Drag to reorder",
-    "contactRecordAttachment": "Contact Record Attachment"
+    "contactRecordAttachment": "Contact Record Attachment",
+    "toastSubmissionViewed": "✓ Your submission has been viewed",
+    "toastSubmissionNeedsRevision": "Your submission needs revision",
+    "toastResubmissionRequested": "A resubmission request was sent"
   },
   "notifications": {
     "viewDetails": "View Details →"

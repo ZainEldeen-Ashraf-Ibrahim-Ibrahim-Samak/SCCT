@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { FieldDefinition } from "@/domain/entities/field-definition";
 import type { Submission } from "@/domain/entities/submission";
 import type { FieldValue } from "@/domain/entities/field-value";
@@ -246,6 +246,7 @@ interface UseSubmissionReturn {
 
 export function useSubmission(tokenOrId: string): UseSubmissionReturn {
   const locale = useLocale();
+  const t = useTranslations("client");
   const mountedRef = useRef(false);
   const statusFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 

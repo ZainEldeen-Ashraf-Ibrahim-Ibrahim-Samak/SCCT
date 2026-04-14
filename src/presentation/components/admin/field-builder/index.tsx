@@ -7,9 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { FieldCard } from "./field-card";
 import { FieldFormDialog } from "./field-form-dialog";
@@ -22,18 +21,18 @@ interface ContactRecordDraft {
   name: string;
   email: string;
   phone: string;
-  role: string;
-  notes: string;
+  address: string;
 }
 
-function normalizeContactDraft(record: ContactRecordDraft): ContactRecordDraft {
+type RawContactRecord = Partial<ContactRecordDraft> & { contact?: unknown };
+
+function normalizeContactDraft(record: RawContactRecord): ContactRecordDraft {
   return {
     id: String(record.id ?? "").trim(),
     name: String(record.name ?? "").trim(),
     email: String(record.email ?? "").trim(),
     phone: String(record.phone ?? "").trim(),
-    role: String(record.role ?? "").trim(),
-    notes: String(record.notes ?? "").trim(),
+    address: String(record.address ?? record.contact ?? "").trim(),
   };
 }
 
@@ -49,8 +48,7 @@ function areContactDraftListsEqual(a: ContactRecordDraft[], b: ContactRecordDraf
       record.name === other.name &&
       record.email === other.email &&
       record.phone === other.phone &&
-      record.role === other.role &&
-      record.notes === other.notes
+      record.address === other.address
     );
   });
 }
@@ -61,8 +59,7 @@ function createContactRecord(): ContactRecordDraft {
     name: "",
     email: "",
     phone: "",
-    role: "",
-    notes: "",
+    address: "",
   };
 }
 
@@ -74,19 +71,35 @@ function ContactRecord({
   record,
   index,
   disabled,
+  canRemove,
   t,
   onUpdate,
+  onRemove,
 }: {
   record: ContactRecordDraft;
   index: number;
   disabled: boolean;
+  canRemove: boolean;
   t: (key: string, values?: Record<string, string | number>) => string;
   onUpdate: (id: string, patch: Partial<Omit<ContactRecordDraft, "id">>) => void;
+  onRemove: (id: string) => void;
 }) {
   return (
     <div className="rounded-md border bg-background p-4 space-y-4 shadow-sm group transition-all">
       <div className="flex items-center justify-between mb-2">
         <Label className="text-sm font-semibold">{t("contactRecordLabel", { index: index + 1 })}</Label>
+        {canRemove && !disabled && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => onRemove(record.id)}
+            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+            title={t("removeContactRecord")}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -116,6 +129,18 @@ function ContactRecord({
         </div>
 
         <div className="space-y-1.5">
+          <Label htmlFor={`contact-address-${record.id}`} className="text-xs text-muted-foreground uppercase">{t("contactRecordAddress")}</Label>
+          <Input
+            id={`contact-address-${record.id}`}
+            value={record.address}
+            onChange={(e) => onUpdate(record.id, { address: e.target.value })}
+            placeholder={t("contactRecordAddress")}
+            disabled={disabled}
+            className="bg-muted/50 focus-visible:bg-background"
+          />
+        </div>
+
+        <div className="space-y-1.5">
           <Label htmlFor={`contact-phone-${record.id}`} className="text-xs text-muted-foreground uppercase">{t("contactRecordPhone")}</Label>
           <Input
             id={`contact-phone-${record.id}`}
@@ -126,30 +151,6 @@ function ContactRecord({
             className="bg-muted/50 focus-visible:bg-background"
           />
         </div>
-
-        <div className="space-y-1.5 md:col-span-2">
-          <Label htmlFor={`contact-role-${record.id}`} className="text-xs text-muted-foreground uppercase">{t("contactRecordRole")}</Label>
-          <Input
-            id={`contact-role-${record.id}`}
-            value={record.role}
-            onChange={(e) => onUpdate(record.id, { role: e.target.value })}
-            placeholder={t("contactRecordRole")}
-            disabled={disabled}
-            className="bg-muted/50 focus-visible:bg-background"
-          />
-        </div>
-
-        <div className="space-y-1.5 md:col-span-2">
-          <Label htmlFor={`contact-notes-${record.id}`} className="text-xs text-muted-foreground uppercase">{t("contactRecordNotes")}</Label>
-          <Textarea
-            id={`contact-notes-${record.id}`}
-            value={record.notes}
-            onChange={(e) => onUpdate(record.id, { notes: e.target.value })}
-            placeholder={t("contactRecordNotes")}
-            className="min-h-20 bg-muted/50 focus-visible:bg-background"
-            disabled={disabled}
-          />
-        </div>
       </div>
     </div>
   );
@@ -158,7 +159,7 @@ function ContactRecord({
 export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
   const t = useTranslations("fields");
   const tc = useTranslations("common");
-  const { fields, isLoading, createField, updateField, deleteField, reorderFields } =
+  const { fields, isLoading, updateField, reorderFields } =
     useFieldBuilder(formTemplateId);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingField, setEditingField] = useState<FieldDefinition | null>(null);
@@ -176,8 +177,12 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
         throw new Error(data.error || "Failed to fetch form");
       }
 
-      const records = Array.isArray(data.data?.contactRecords) ? data.data.contactRecords : [];
-      const normalized = (records.length > 0 ? records : [createContactRecord()]).map(normalizeContactDraft);
+      const records: RawContactRecord[] = Array.isArray(data.data?.contactRecords)
+        ? (data.data.contactRecords as RawContactRecord[])
+        : [];
+      const normalized = (records.length > 0 ? records : [createContactRecord()]).map((record) =>
+        normalizeContactDraft(record),
+      );
 
       setContactRecords(normalized);
       setSavedContactRecords(normalized);
@@ -224,22 +229,14 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
 
   async function handleSaveField(data: Record<string, unknown>) {
     try {
-      if (editingField) {
-        await updateField(editingField.id, data);
-      } else {
-        await createField(data);
+      if (!editingField) {
+        toast.error(tc("error"));
+        return;
       }
+
+      await updateField(editingField.id, data);
       setIsDialogOpen(false);
       setEditingField(null);
-      toast.success(tc("success"));
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : tc("error"));
-    }
-  }
-
-  async function handleDeleteField(id: string) {
-    try {
-      await deleteField(id);
       toast.success(tc("success"));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : tc("error"));
@@ -283,12 +280,22 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
       return;
     }
 
+    const payloadContactRecords = normalized.map((record) => ({
+      id: record.id,
+      name: record.name,
+      email: record.email,
+      phone: record.phone,
+      contact: record.address,
+      role: "",
+      notes: "",
+    }));
+
     setIsSavingContacts(true);
     try {
       const res = await fetch(`/api/admin/forms/${formTemplateId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contactRecords: normalized }),
+        body: JSON.stringify({ contactRecords: payloadContactRecords }),
       });
       const data = await res.json();
       if (!data.success) {
@@ -304,6 +311,14 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
     }
   }
 
+  function handleAddContact() {
+    setContactRecords((prev) => [...prev, createContactRecord()]);
+  }
+
+  function handleRemoveContact(id: string) {
+    setContactRecords((prev) => (prev.length <= 1 ? prev : prev.filter((record) => record.id !== id)));
+  }
+
   function handleUpdateContact(id: string, patch: Partial<Omit<ContactRecordDraft, "id">>) {
     setContactRecords((prev) =>
       prev.map((record) =>
@@ -313,8 +328,7 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
               name: patch.name ?? record.name,
               email: patch.email ?? record.email,
               phone: patch.phone ?? record.phone,
-              role: patch.role ?? record.role,
-              notes: patch.notes ?? record.notes,
+              address: patch.address ?? record.address,
             }
           : record,
       ),
@@ -328,15 +342,6 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
           <h2 className="text-2xl font-bold tracking-tight">{t("title")}</h2>
           <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
-        <Button
-          onClick={() => {
-            setEditingField(null);
-            setIsDialogOpen(true);
-          }}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          {t("addField")}
-        </Button>
       </div>
 
       {fields.length === 0 ? (
@@ -359,7 +364,6 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
                   key={field.id}
                   field={field}
                   onEdit={() => handleEdit(field)}
-                  onDelete={() => handleDeleteField(field.id)}
                 />
               ))}
             </div>
@@ -373,6 +377,16 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
             <h3 className="text-lg font-semibold">{t("contactRecordsTitle")}</h3>
             <p className="text-xs text-muted-foreground">{t("contactRecordMinOne")}</p>
           </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleAddContact}
+            disabled={isLoadingContacts || isSavingContacts}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            {t("addContactRecord")}
+          </Button>
         </div>
 
         <div className="space-y-3">
@@ -386,8 +400,10 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
                       record={record}
                       index={index}
                       disabled={isSavingContacts}
+                      canRemove={contactRecords.length > 1}
                       t={t}
                       onUpdate={handleUpdateContact}
+                      onRemove={handleRemoveContact}
                     />
                   ))}
                 </div>

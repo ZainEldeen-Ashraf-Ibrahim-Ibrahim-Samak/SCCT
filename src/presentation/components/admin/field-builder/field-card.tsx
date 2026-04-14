@@ -13,7 +13,7 @@ import type { FieldDefinition } from "@/domain/entities/field-definition";
 interface FieldCardProps {
   field: FieldDefinition;
   onEdit: () => void;
-  onDelete: () => void;
+  onDelete?: () => void;
 }
 
 export function FieldCard({ field, onEdit, onDelete }: FieldCardProps) {
@@ -78,21 +78,23 @@ export function FieldCard({ field, onEdit, onDelete }: FieldCardProps) {
             <Pencil className="h-4 w-4" />
           </Button>
 
-          <AlertDialog>
-            <AlertDialogTrigger render={<Button variant="ghost" size="icon" className="text-destructive" />}>
-              <Trash2 className="h-4 w-4" />
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
-                <AlertDialogDescription>{t("deleteNote")}</AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
-                <AlertDialogAction onClick={onDelete}>{tc("delete")}</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          {onDelete && (
+            <AlertDialog>
+              <AlertDialogTrigger render={<Button variant="ghost" size="icon" className="text-destructive" />}>
+                <Trash2 className="h-4 w-4" />
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
+                  <AlertDialogDescription>{t("deleteNote")}</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
+                  <AlertDialogAction onClick={onDelete}>{tc("delete")}</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
       </CardContent>
     </Card>
