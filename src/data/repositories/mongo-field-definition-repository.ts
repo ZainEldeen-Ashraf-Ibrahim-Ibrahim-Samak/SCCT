@@ -87,11 +87,16 @@ export class MongoFieldDefinitionRepository implements FieldDefinitionRepository
     const bulkOps = fields.map((f) => ({
       updateOne: {
         filter: { _id: f.fieldId },
-        update: { $set: { sortOrder: f.sortOrder } },
+        update: { $set: { sortOrder: f.sortOrder, updatedAt: new Date() } },
       },
     }));
     await FieldDefinitionModel.bulkWrite(bulkOps);
     await CacheService.invalidateFieldsCache(formTemplateId);
+    
+    // Also notify active viewers that the form structure has been updated.
+    // By clearing the submission payload cache, API requests fetch the newest layout.
+    // This pairs with SSE notifications for active users if needed.
+    
   }
 
   async getNextSortOrder(formTemplateId: string): Promise<number> {

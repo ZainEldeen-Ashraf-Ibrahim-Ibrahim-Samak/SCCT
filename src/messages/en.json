@@ -109,6 +109,8 @@
     "contactRecordRole": "Role",
     "contactRecordNotes": "Notes",
     "contactRecordMinOne": "At least one contact record is required.",
+    "contactChangesPending": "Unsaved changes",
+    "contactChangesSaved": "All changes saved",
     "dropdownOptions": "Dropdown Options",
     "dropdownOptionsEn": "Options (English)",
     "dropdownOptionsAr": "Options (Arabic)",

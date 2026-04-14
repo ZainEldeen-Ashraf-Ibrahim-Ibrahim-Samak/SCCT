@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const fs = require('fs');
 const files = ['dist/index.js', 'dist/index.mjs', 'dist/index.cjs'];
 files.forEach(f => {

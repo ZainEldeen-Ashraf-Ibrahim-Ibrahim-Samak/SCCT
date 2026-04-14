@@ -4,11 +4,8 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useSubmission } from "@/presentation/view-models/use-submission";
 import { FieldRenderer } from "./field-renderer";
-import { ContactRecords } from "./contact-records";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle, CheckCircle2, Loader2, Send } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -30,9 +27,6 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
     fields,
     submission,
     formData,
-    clientName,
-    setClientName,
-    contactRecords,
     setFieldValue,
     setMediaValue,
     setMediaItems,
@@ -89,11 +83,6 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
   const validate = () => {
     const errors: Record<string, boolean> = {};
     let isValid = true;
-
-    if (!clientName.trim()) {
-      errors.clientName = true;
-      isValid = false;
-    }
 
     fields.forEach((f) => {
       if (f.validationRules?.required) {
@@ -213,33 +202,6 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
 
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-8">
-            <div className="space-y-4 bg-muted/30 p-6 rounded-xl border border-border/50">
-              <h3 className="font-semibold text-lg">{isNew || isDraft ? t("formSubtitle") : t("viewingSubmission")}</h3>
-              <div className="grid gap-4 sm:grid-cols-1">
-                <div className="space-y-2">
-                  <Label htmlFor="clientName" className={validationErrors.clientName ? "text-destructive" : ""}>
-                    {t("yourName")} <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="clientName"
-                    value={clientName}
-                    onChange={(e) => {
-                      setClientName(e.target.value);
-                      if (validationErrors.clientName) setValidationErrors(prev => ({ ...prev, clientName: false }));
-                    }}
-                    disabled={isViewOnly}
-                    placeholder={t("namePlaceholder")}
-                    className={validationErrors.clientName ? "border-destructive" : ""}
-                  />
-                  {validationErrors.clientName && <p className="text-xs text-destructive">{t("fieldRequired")}</p>}
-                </div>
-              </div>
-
-              <ContactRecords
-                records={contactRecords}
-              />
-            </div>
-
             <div className="space-y-6">
               {fields.map((field) => {
                  const currentVal = formData[field.id];

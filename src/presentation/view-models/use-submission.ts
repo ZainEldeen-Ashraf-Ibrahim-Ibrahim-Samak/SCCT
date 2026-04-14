@@ -48,6 +48,7 @@ interface EventsPayload {
 }
 
 const MIN_CONTACT_RECORDS = 1;
+const DEFAULT_CONTACT_NAME = "Primary Contact";
 
 function createEmptyContactRecord(): ContactRecordDraft {
   return {
@@ -99,6 +100,48 @@ function summarizeFieldPayload(fieldValues: SubmissionFieldPayload[]) {
     withMediaUrl: fieldValues.filter((fv) => !!fv.mediaUrl).length,
     withMediaItems: fieldValues.filter((fv) => fv.mediaItems.length > 0).length,
     ids: fieldValues.map((fv) => fv.fieldDefinitionId),
+  };
+}
+
+function normalizeContactRecordDrafts(records: ContactRecordDraft[]) {
+  const normalized = records.map((record) => ({
+    ...record,
+    name: record.name.trim(),
+    contact: record.contact.trim(),
+    role: record.role.trim(),
+    notes: record.notes.trim(),
+  }));
+
+  const meaningful = normalized.filter((record) => {
+    return (
+      record.name.length > 0 ||
+      record.contact.length > 0 ||
+      record.role.length > 0 ||
+      record.notes.length > 0
+    );
+  });
+
+  let resolved = meaningful.map((record, index) => ({
+    ...record,
+    name: record.name || record.contact || `${DEFAULT_CONTACT_NAME} ${index + 1}`,
+  }));
+
+  if (resolved.length < MIN_CONTACT_RECORDS) {
+    const seed = normalized[0];
+    resolved = [
+      {
+        id: seed?.id || createEmptyContactRecord().id,
+        name: DEFAULT_CONTACT_NAME,
+        contact: seed?.contact || "",
+        role: seed?.role || "",
+        notes: seed?.notes || "",
+      },
+    ];
+  }
+
+  return {
+    hasMeaningfulContacts: meaningful.length > 0,
+    resolvedContactRecords: resolved,
   };
 }
 
@@ -470,19 +513,14 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
     const resolvedFormData = explicitFormData || currentDraft.formData;
     const fieldValues = normalizeSubmissionFieldValues(resolvedFormData, fields);
     const fieldSummary = summarizeFieldPayload(fieldValues);
-    const validContactRecords = (currentDraft.contactRecords ?? [])
-      .map((record) => ({
-        ...record,
-        name: record.name.trim(),
-        contact: record.contact.trim(),
-        role: record.role.trim(),
-        notes: record.notes.trim(),
-      }))
-      .filter((record) => record.name.length > 0);
+    const { hasMeaningfulContacts, resolvedContactRecords } = normalizeContactRecordDrafts(
+      currentDraft.contactRecords ?? [],
+    );
+    const resolvedClientName = currentDraft.clientName.trim() || resolvedContactRecords[0]?.name || DEFAULT_CONTACT_NAME;
     
     if (
       !currentDraft.clientName.trim() &&
-      validContactRecords.length < MIN_CONTACT_RECORDS &&
+      !hasMeaningfulContacts &&
       fieldSummary.withText === 0 &&
       fieldSummary.withMediaUrl === 0 &&
       fieldSummary.withMediaItems === 0
@@ -497,16 +535,16 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       const currentToken = window.location.pathname.split("/").pop() || tokenOrId;
       const endpoint = `/api/submissions/${currentToken}`;
       const payload = {
-        clientName: currentDraft.clientName,
+        clientName: resolvedClientName,
         clientContact: "",
-        contactRecords: validContactRecords,
+        contactRecords: resolvedContactRecords,
         fieldValues,
       };
 
       logger.info("Submitting form payload prepared", {
         endpoint,
         tokenOrId: currentToken,
-        clientNameLength: currentDraft.clientName.length,
+        clientNameLength: resolvedClientName.length,
         clientContactLength: 0,
         fieldSummary,
       });
@@ -548,33 +586,22 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       const resolvedFormData = explicitFormData || currentDraft.formData;
       const fieldValues = normalizeSubmissionFieldValues(resolvedFormData, fields);
       const fieldSummary = summarizeFieldPayload(fieldValues);
-      const validContactRecords = (currentDraft.contactRecords ?? [])
-        .map((record) => ({
-          ...record,
-          name: record.name.trim(),
-          contact: record.contact.trim(),
-          role: record.role.trim(),
-          notes: record.notes.trim(),
-        }))
-        .filter((record) => record.name.length > 0);
-
-      if (validContactRecords.length < MIN_CONTACT_RECORDS) {
-        throw new Error("Please add at least one contact record.");
-      }
+      const { resolvedContactRecords } = normalizeContactRecordDrafts(currentDraft.contactRecords ?? []);
+      const resolvedClientName = currentDraft.clientName.trim() || resolvedContactRecords[0]?.name || DEFAULT_CONTACT_NAME;
       const currentToken = window.location.pathname.split("/").pop() || tokenOrId;
       const endpoint = `/api/submissions/${currentToken}`;
       
       const payload = {
-        clientName: currentDraft.clientName,
+        clientName: resolvedClientName,
         clientContact: "",
-        contactRecords: validContactRecords,
+        contactRecords: resolvedContactRecords,
         fieldValues,
       };
 
       logger.info("Resubmitting form payload prepared", {
         endpoint,
         tokenOrId: currentToken,
-        clientNameLength: currentDraft.clientName.length,
+        clientNameLength: resolvedClientName.length,
         clientContactLength: 0,
         fieldSummary,
       });

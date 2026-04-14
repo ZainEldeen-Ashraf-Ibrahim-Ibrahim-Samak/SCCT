@@ -109,6 +109,8 @@
     "contactRecordRole": "الصفة",
     "contactRecordNotes": "ملاحظات",
     "contactRecordMinOne": "يجب وجود سجل تواصل واحد على الأقل.",
+    "contactChangesPending": "تغييرات غير محفوظة",
+    "contactChangesSaved": "جميع التغييرات محفوظة",
     "dropdownOptions": "خيارات القائمة المنسدلة",
     "dropdownOptionsEn": "الخيارات (إنجليزي)",
     "dropdownOptionsAr": "الخيارات (عربي)",
