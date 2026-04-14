@@ -7,7 +7,11 @@ export type ContactFormFieldKey = "name" | "email" | "phone" | "address";
 export interface ContactFormField {
   id: string;
   key: ContactFormFieldKey;
+  labelEn: string;
+  labelAr: string;
   label: string;
+  placeholderEn: string;
+  placeholderAr: string;
   placeholder: string;
   required: boolean;
   sortOrder: number;

@@ -166,7 +166,7 @@ function ContactFormFieldRow({
 export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
   const t = useTranslations("fields");
   const tc = useTranslations("common");
-  const { fields, isLoading, updateField, reorderFields } =
+  const { fields, isLoading, createField, updateField, deleteField, reorderFields } =
     useFieldBuilder(formTemplateId);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingField, setEditingField] = useState<FieldDefinition | null>(null);
@@ -237,12 +237,12 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
 
   async function handleSaveField(data: Record<string, unknown>) {
     try {
-      if (!editingField) {
-        toast.error(tc("error"));
-        return;
+      if (editingField) {
+        await updateField(editingField.id, data);
+      } else {
+        await createField(data);
       }
 
-      await updateField(editingField.id, data);
       setIsDialogOpen(false);
       setEditingField(null);
       toast.success(tc("success"));
@@ -254,6 +254,20 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
   function handleEdit(field: FieldDefinition) {
     setEditingField(field);
     setIsDialogOpen(true);
+  }
+
+  function handleAddField() {
+    setEditingField(null);
+    setIsDialogOpen(true);
+  }
+
+  async function handleDeleteField(fieldId: string) {
+    try {
+      await deleteField(fieldId);
+      toast.success(tc("success"));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : tc("error"));
+    }
   }
 
   const normalizedContactFormFields = useMemo(
@@ -374,6 +388,10 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
           <h2 className="text-2xl font-bold tracking-tight">{t("title")}</h2>
           <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
+        <Button type="button" onClick={handleAddField}>
+          <Plus className="mr-2 h-4 w-4" />
+          {t("addField")}
+        </Button>
       </div>
 
       {fields.length === 0 ? (
@@ -396,6 +414,7 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
                   key={field.id}
                   field={field}
                   onEdit={() => handleEdit(field)}
+                  onDelete={() => handleDeleteField(field.id)}
                 />
               ))}
             </div>
