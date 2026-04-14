@@ -10,6 +10,7 @@ import { logger } from "@/lib/dev-logger";
 import { NotificationPublisher } from "@/lib/events/publisher";
 
 const RESUBMISSION_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
+const DEFAULT_CONTACT_NAME = "Primary Contact";
 
 function normalizeContactRecords(records: unknown): Submission["contactRecords"] {
   if (!Array.isArray(records)) return [];
@@ -18,10 +19,10 @@ function normalizeContactRecords(records: unknown): Submission["contactRecords"]
     const candidate = item as Record<string, unknown>;
     const id = typeof candidate.id === "string" ? candidate.id.trim() : "";
     const name = typeof candidate.name === "string" ? candidate.name.trim() : "";
-    if (!id || !name) return null;
+    if (!id) return null;
     return {
       id,
-      name,
+      name: name || DEFAULT_CONTACT_NAME,
       email: typeof candidate.email === "string" ? candidate.email : "",
       phone: typeof candidate.phone === "string" ? candidate.phone : "",
       contact: typeof candidate.contact === "string" ? candidate.contact : "",

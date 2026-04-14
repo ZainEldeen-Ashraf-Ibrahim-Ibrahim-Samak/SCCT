@@ -34,6 +34,7 @@ interface SubmitFormData {
 }
 
 const OBJECT_ID_PATTERN = /^[a-f0-9]{24}$/i;
+const DEFAULT_CONTACT_NAME = "Primary Contact";
 
 function hasValueContent(value: string | number | string[] | null | undefined): boolean {
   if (Array.isArray(value)) return value.length > 0;
@@ -50,9 +51,10 @@ function normalizeContactRecords(
       const id = String(record.id ?? "").trim();
       if (!id || seenIds.has(id)) return null;
       seenIds.add(id);
+      const normalizedName = String(record.name ?? "").trim();
       return {
         id,
-        name: String(record.name ?? "").trim(),
+        name: normalizedName || DEFAULT_CONTACT_NAME,
         email: record.email ? String(record.email).trim() : undefined,
         phone: record.phone ? String(record.phone).trim() : undefined,
         contact: record.contact ? String(record.contact).trim() : undefined,

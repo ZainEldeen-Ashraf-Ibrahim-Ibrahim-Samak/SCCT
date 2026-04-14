@@ -1,6 +1,6 @@
 ﻿# SCCT Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-04-14
+Auto-generated from all feature plans. Last updated: 2026-04-15
 
 ## Active Technologies
 - [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION] (002-cms-enhancements)
@@ -17,6 +17,8 @@ Auto-generated from all feature plans. Last updated: 2026-04-14
 - MongoDB (Mongoose) (008-regex-field-validation)
 - Node.js LTS, TypeScript + Next.js App Router, React, lucide-react, next-intl (main)
 - Upstash Redis (caching), MongoDB (users/submissions) (main)
+- Node.js (v20+ LTS), TypeScript (strict mode) + Next.js 16 (App Router), Zod, React Hook Form, isomorphic-dompurify (main)
+- MongoDB (Mongoose) - existing models (main)
 
 - TypeScript 5.x on Node.js 20+ (LTS) + Next.js 14+ (App Router), ShadCN UI, Mongoose 8+, Auth.js v5, next-cloudinary, @upstash/redis, @upstash/ratelimit, next-intl, next-themes, @dnd-kit/core, Zod (001-client-data-review)
 
@@ -37,9 +39,9 @@ npm test; npm run lint
 TypeScript 5.x on Node.js 20+ (LTS): Follow standard conventions
 
 ## Recent Changes
+- main: Added Node.js (v20+ LTS), TypeScript (strict mode) + Next.js 16 (App Router), Zod, React Hook Form, isomorphic-dompurify
 - main: Added Node.js LTS, TypeScript + Next.js App Router, React, lucide-react, next-intl
 - main: Added [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION] + [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
-- 008-regex-field-validation: Added TypeScript 5.x, Node.js 20+ (LTS) + Next.js 16.x (App Router), Zod 4.x, next-intl 4.x, Mongoose 8.x
 
 
 <!-- MANUAL ADDITIONS START -->

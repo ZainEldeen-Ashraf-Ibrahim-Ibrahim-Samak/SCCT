@@ -9,6 +9,8 @@
 
 ### Session 2026-04-14
 - Q: Regex Strictness for Descriptions vs Names? → A: Use the same strict regex for both Names and Descriptions (Option A).
+- Q: End-user submission validation strategy? → A: Validate strictly by field type (email, number) and sanitize text fields to prevent XSS.
+- Q: Admin text fields whitelist? → A: Allow basic punctuation (., -, _, ?, !, &, (), ', ") alongside alphanumeric text and spaces.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -40,6 +42,21 @@ Admins must be restricted to safe characters when defining custom fields (e.g., 
 1. **Given** an admin is defining a custom field in the form builder, **When** they enter unsupported characters into the Field Name or Placeholder (English/Arabic), **Then** a clear validation error is shown and the change is not accepted.
 2. **Given** an admin is configuring a Contact Form input inside the field builder, **When** they use safe alphanumeric text, **Then** the configuration is saved successfully.
 
+---
+
+### User Story 3 - Secure End-User Form Submissions (Priority: P1)
+
+End-users submitting responses to client-facing forms must have their input validated structurally (e.g., valid email formats) and sanitized against malicious scripts.
+
+**Why this priority**: While admin interfaces prevent malicious forms from being created, the end-user submissions are the primary vector for capturing data. Unsanitized data can lead to stored XSS when viewed by admins.
+
+**Independent Test**: Attempt to submit a form where a text input contains `<script>alert(1)</script>` and an email field contains `invalid-email`. The system should reject the email format and sanitize the text field.
+
+**Acceptance Scenarios**:
+
+1. **Given** a user is filling out a form, **When** they enter malformed data into typed fields (like email or number), **Then** they receive a specific format validation error.
+2. **Given** a user submits a form, **When** text fields contain potential script tags, **Then** the system sanitizes the input before saving to the database.
+
 ### Edge Cases
 
 - What happens when an admin pastes text that contains hidden non-printable characters (e.g., zero-width spaces)? The system should strip or reject them.
@@ -49,11 +66,13 @@ Admins must be restricted to safe characters when defining custom fields (e.g., 
 
 ### Functional Requirements
 
-- **FR-001**: System MUST strictly validate the Form Name and Form Description against the *exact same* predefined safe-character whitelist (strict alphanumeric, spaces, and minimal punctuation).
-- **FR-002**: System MUST validate all custom field labels (English and Arabic) and placeholders against a safe-character whitelist inside the dynamic form builder.
-- **FR-003**: System MUST validate the Contact Form internal field names and placeholders against a safe-character whitelist.
+- **FR-001**: System MUST strictly validate the Form Name and Form Description against the *exact same* predefined safe-character whitelist: English/Arabic alphanumeric letters, spaces, and standard basic punctuation (`.`, `,`, `-`, `_`, `?`, `!`, `&`, `(`, `)`, `'`, `"`).
+- **FR-002**: System MUST validate all custom field labels (English and Arabic) and placeholders against the safe-character whitelist inside the dynamic form builder.
+- **FR-003**: System MUST validate the Contact Form internal field names and placeholders against the safe-character whitelist.
 - **FR-004**: System MUST present real-time visual feedback (e.g., inline error messages) when an admin types invalid characters into any of the text fields mentioned above.
 - **FR-005**: System MUST block the final submission or save action if any field contains invalid characters.
+- **FR-006**: System MUST validate end-user submissions rigorously according to their specified field type (e.g., standard Regex for Emails and Phone Numbers).
+- **FR-007**: System MUST sanitize all free-text end-user form submissions to strip potentially dangerous HTML/script tags before storing the data.
 
 ### Key Entities *(include if feature involves data)*
 

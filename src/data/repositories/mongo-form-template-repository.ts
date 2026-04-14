@@ -7,6 +7,8 @@ import mongoose from "mongoose";
 import { logger } from "@/lib/dev-logger";
 import { normalizeContactFormFields } from "@/lib/contact-form";
 
+const DEFAULT_CONTACT_NAME = "Primary Contact";
+
 function toEntity(doc: Record<string, unknown>): FormTemplate {
   const rawContactRecords = Array.isArray(doc.contactRecords) ? doc.contactRecords : [];
   const contactRecords = rawContactRecords
@@ -15,10 +17,10 @@ function toEntity(doc: Record<string, unknown>): FormTemplate {
       const record = item as Record<string, unknown>;
       const id = String(record.id ?? "").trim();
       const name = String(record.name ?? "").trim();
-      if (!id || !name) return null;
+      if (!id) return null;
       return {
         id,
-        name,
+        name: name || DEFAULT_CONTACT_NAME,
         email: String(record.email ?? ""),
         phone: String(record.phone ?? ""),
         contact: String(record.contact ?? ""),

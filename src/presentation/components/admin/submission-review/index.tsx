@@ -177,7 +177,7 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
                   {submission.contactRecords.length > 0 ? (
                     <div className="space-y-4">
                       {submission.contactRecords.map((record, index) => (
-                        <div key={record.id} className="space-y-4 rounded-xl border border-border/60 bg-muted/20 p-4 animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-both" style={{ animationDelay: `${index * 100}ms` }}>
+                        <div key={record.id} className="space-y-4 rounded-xl border border-border/60 bg-muted/20 p-4 animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-both">
                           <div className="space-y-1">
                             <h4 className="text-base font-semibold text-primary/80">
                                {submission.contactRecords.length > 1 

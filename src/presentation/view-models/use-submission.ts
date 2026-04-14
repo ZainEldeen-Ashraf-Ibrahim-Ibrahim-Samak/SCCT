@@ -55,6 +55,11 @@ interface EventsPayload {
 const MIN_CONTACT_RECORDS = 1;
 const DEFAULT_CONTACT_NAME = "Primary Contact";
 
+function resolveAutoContactName(name: string): string {
+  const normalized = name.trim();
+  return normalized.length > 0 ? normalized : DEFAULT_CONTACT_NAME;
+}
+
 function createEmptyContactRecord(): ContactRecordDraft {
   return {
     id: `cr_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
@@ -146,6 +151,11 @@ function normalizeContactRecordDrafts(records: ContactRecordDraft[]) {
       },
     ];
   }
+
+  resolved = resolved.map((record) => ({
+    ...record,
+    name: resolveAutoContactName(record.name),
+  }));
 
   return {
     hasMeaningfulContacts: meaningful.length > 0,

@@ -24,7 +24,6 @@ import {
   rectSortingStrategy,
   useSortable,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 
 interface MediaItem {
   url: string;
@@ -44,28 +43,18 @@ function SortableMediaItem({ item, type, disabled, onRemove }: SortableItemProps
     attributes,
     listeners,
     setNodeRef,
-    transform,
-    transition,
     isDragging
   } = useSortable({ id: item.publicId });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 10 : 1,
-    opacity: isDragging ? 0.5 : 1,
-  };
 
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      className="relative group rounded-lg border bg-card overflow-hidden w-full aspect-square shadow-sm transition-shadow hover:shadow-md"
+      className={`relative group rounded-lg border bg-card overflow-hidden w-full aspect-square shadow-sm transition-shadow hover:shadow-md ${isDragging ? "opacity-50 z-10" : ""}`}
     >
       <div
         {...attributes}
         {...listeners}
-        className="absolute top-1 start-1 z-10 p-1 rounded bg-background/80 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing transition-opacity"
+        className="absolute top-1 inset-s-1 z-10 p-1 rounded bg-background/80 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing transition-opacity"
       >
         <GripVertical className="h-4 w-4 text-muted-foreground" />
       </div>
@@ -92,7 +81,7 @@ function SortableMediaItem({ item, type, disabled, onRemove }: SortableItemProps
       {!disabled && (
         <button
           type="button"
-          className="absolute top-1 end-1 h-8 w-8 rounded-full bg-red-600 text-white flex items-center justify-center shadow-2xl z-50 hover:bg-red-700 active:scale-90"
+          className="absolute top-1 inset-e-1 h-8 w-8 rounded-full bg-red-600 text-white flex items-center justify-center shadow-2xl z-50 hover:bg-red-700 active:scale-90"
           onPointerDownCapture={(e) => e.stopPropagation()}
           onClickCapture={(e) => {
             e.stopPropagation();
@@ -368,9 +357,11 @@ export function MediaUpload({
                     {isUploading ? (
                       <div className="flex flex-col items-center gap-2 w-full px-4">
                         <UploadCloud className="h-6 w-6 animate-bounce text-primary" />
-                        <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden">
-                          <div className="bg-primary h-full transition-all duration-200" style={{ width: `${uploadProgress}%` }} />
-                        </div>
+                        <progress
+                          max={100}
+                          value={uploadProgress}
+                          className="w-full h-1.5 overflow-hidden rounded-full [&::-webkit-progress-bar]:bg-secondary [&::-webkit-progress-value]:bg-primary [&::-moz-progress-bar]:bg-primary"
+                        />
                         <span className="text-xs font-medium text-primary">{uploadProgress}%</span>
                       </div>
                     ) : (
@@ -401,7 +392,7 @@ export function MediaUpload({
             <Image src={currentUrl} alt="Upload" fill className="object-cover" sizes="(max-width: 768px) 100vw, 256px" />
           </div>
         ) : (
-          <div className="flex items-center gap-3 p-4 min-w-[200px]">
+          <div className="flex items-center gap-3 p-4 min-w-50">
             <File className="h-8 w-8 text-primary" />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium truncate">{currentUrl.split("/").pop()}</p>
@@ -412,7 +403,7 @@ export function MediaUpload({
           </div>
         )}
         {!disabled && (
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-[9999]">
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-9999">
             <div className="relative">
               <input
                 id={inputId}
@@ -469,7 +460,7 @@ export function MediaUpload({
       />
       <div
         className={`
-          w-full sm:min-w-[240px] h-32 px-8 border-2 border-dashed rounded-xl transition-all 
+          w-full sm:min-w-60 h-32 px-8 border-2 border-dashed rounded-xl transition-all 
           hover:border-primary/50 hover:bg-muted/50 flex flex-col items-center justify-center gap-2 
           text-muted-foreground group
           ${dragActive ? "border-primary bg-primary/5 ring-4 ring-primary/10" : ""}
@@ -477,11 +468,13 @@ export function MediaUpload({
         `}
       >
         {isUploading ? (
-          <div className="flex flex-col items-center justify-center gap-3 w-full max-w-[200px]">
+          <div className="flex flex-col items-center justify-center gap-3 w-full max-w-50">
             <UploadCloud className="h-8 w-8 animate-bounce text-primary" />
-            <div className="w-full bg-secondary rounded-full h-2 overflow-hidden shadow-inner">
-              <div className="bg-primary h-full transition-all duration-200" style={{ width: `${uploadProgress}%` }} />
-            </div>
+            <progress
+              max={100}
+              value={uploadProgress}
+              className="w-full h-2 overflow-hidden rounded-full shadow-inner [&::-webkit-progress-bar]:bg-secondary [&::-webkit-progress-value]:bg-primary [&::-moz-progress-bar]:bg-primary"
+            />
             <span className="text-sm font-semibold text-primary">{uploadProgress}%</span>
           </div>
         ) : (
