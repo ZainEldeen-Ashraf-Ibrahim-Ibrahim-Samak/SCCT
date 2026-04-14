@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Clock, Eye, AlertCircle, File, ArrowLeft, ExternalLink, Download } from "lucide-react";
+import { Clock, Eye, AlertCircle, File, ArrowLeft, ExternalLink, Download, Phone, MessageCircle } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { logger } from "@/lib/dev-logger";
 import { formatDate } from "@/lib/utils";
@@ -177,33 +177,58 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
                   {submission.contactRecords.length > 0 ? (
                     <div className="space-y-4">
                       {submission.contactRecords.map((record, index) => (
-                        <div key={record.id} className="space-y-4 rounded-xl border border-border/60 bg-muted/20 p-4">
+                        <div key={record.id} className="space-y-4 rounded-xl border border-border/60 bg-muted/20 p-4 animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-both" style={{ animationDelay: `${index * 100}ms` }}>
                           <div className="space-y-1">
-                            <h4 className="text-base font-semibold">
-                              {t("contactRecordEntry", { index: index + 1 })}
+                            <h4 className="text-base font-semibold text-primary/80">
+                               {submission.contactRecords.length > 1 
+                                 ? tClient("contactRecordLabel", { index: index + 1 }) 
+                                 : tClient("contactFormTitle")}
                             </h4>
                           </div>
 
                           <div className="grid gap-4 sm:grid-cols-2">
                             {contactFields.length > 0 ? (
                               contactFields.map(field => {
-                                const val = field.key === "name" ? record.name 
+                                const value = field.key === "name" ? record.name 
                                           : field.key === "email" ? record.email 
                                           : field.key === "phone" ? record.phone 
                                           : field.key === "address" ? ((record as any).address || record.notes)
                                           : null;
                                 const label = locale === "ar" ? (field.labelAr || field.label || field.labelEn) : (field.labelEn || field.label || field.labelAr);
+                                
                                 return (
                                   <div key={field.id} className={`space-y-1 ${field.key === "address" ? "sm:col-span-2" : ""}`}>
                                     <Label className="text-xs text-muted-foreground">{label}</Label>
-                                    <p className={`text-sm font-medium ${field.key === "address" ? "whitespace-pre-wrap" : ""}`}>{val || "—"}</p>
+                                    <div className="flex items-center gap-2">
+                                      <p className={`text-sm font-medium ${field.key === "address" ? "whitespace-pre-wrap" : ""}`}>{value || "—"}</p>
+                                      {field.key === "phone" && value && (
+                                        <div className="flex items-center gap-1.5 ml-auto sm:ml-2">
+                                          <a 
+                                            href={`tel:${value}`} 
+                                            className="p-1 px-1.5 rounded-md bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors border border-emerald-200/50"
+                                            title={tc("call")}
+                                          >
+                                            <Phone className="h-3.5 w-3.5" />
+                                          </a>
+                                          <a 
+                                            href={`https://wa.me/${value.replace(/\D/g, "")}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="p-1 px-1.5 rounded-md bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors border border-emerald-200/50"
+                                            title={tc("whatsapp")}
+                                          >
+                                            <MessageCircle className="h-3.5 w-3.5" />
+                                          </a>
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                 );
                               })
                             ) : (
                               <>
                                 <div className="space-y-1">
-                                  <Label className="text-xs text-muted-foreground">{tc("name")}</Label>
+                                  <Label className="text-xs text-muted-foreground">{tClient("contactRecordName")}</Label>
                                   <p className="text-sm font-medium">{record.name || "—"}</p>
                                 </div>
                                 <div className="space-y-1">
@@ -212,7 +237,29 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
                                 </div>
                                 <div className="space-y-1">
                                   <Label className="text-xs text-muted-foreground">{tClient("contactRecordPhone")}</Label>
-                                  <p className="text-sm font-medium">{record.phone || record.contact || "—"}</p>
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-sm font-medium">{record.phone || record.contact || "—"}</p>
+                                    {(record.phone || record.contact) && (
+                                      <div className="flex items-center gap-1.5 ml-auto sm:ml-2">
+                                        <a 
+                                          href={`tel:${record.phone || record.contact}`} 
+                                          className="p-1 px-1.5 rounded-md bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors border border-emerald-200/50"
+                                          title={tc("call")}
+                                        >
+                                          <Phone className="h-3.5 w-3.5" />
+                                        </a>
+                                        <a 
+                                          href={`https://wa.me/${(record.phone || record.contact || "").replace(/\D/g, "")}`}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="p-1 px-1.5 rounded-md bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors border border-emerald-200/50"
+                                          title={tc("whatsapp")}
+                                        >
+                                          <MessageCircle className="h-3.5 w-3.5" />
+                                        </a>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                                 <div className="space-y-1">
                                   <Label className="text-xs text-muted-foreground">{tClient("contactRecordContact")}</Label>

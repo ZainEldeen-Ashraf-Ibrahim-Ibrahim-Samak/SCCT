@@ -1,0 +1,1 @@
+nextPLAN WELL BE THE  regix when create  edit user data in  team , login form , and conanct info in user sumbtion avery type has own regix 

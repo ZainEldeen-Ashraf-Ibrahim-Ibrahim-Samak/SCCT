@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Copy, Eye, MoreHorizontal, Trash2, Loader2, Download, FileText, FileSpreadsheet, File } from "lucide-react";
+import { Copy, Eye, MoreHorizontal, Trash2, Loader2, Download, FileText, FileSpreadsheet, File, Phone, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -349,8 +349,30 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
                   <TableCell className="font-medium group-hover:text-primary transition-colors wrap-break-word">
                     <div>{sub.clientName || t("unnamedSubmission")}</div>
                     {(contactSummary.phone || contactSummary.email) && (
-                      <div className="mt-1 text-xs text-muted-foreground font-normal break-all">
-                        {[contactSummary.phone, contactSummary.email].filter(Boolean).join(" • ")}
+                      <div className="mt-1 text-xs text-muted-foreground font-normal break-all flex items-center gap-2">
+                        <span>{[contactSummary.phone, contactSummary.email].filter(Boolean).join(" • ")}</span>
+                        {contactSummary.phone && (
+                          <div className="flex items-center gap-1.5 ml-1">
+                            <a 
+                              href={`tel:${contactSummary.phone}`} 
+                              title={t("contactPhone")}
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-emerald-600 hover:text-emerald-700 transition-colors"
+                            >
+                              <Phone className="h-3 w-3" />
+                            </a>
+                            <a 
+                              href={`https://wa.me/${contactSummary.phone.replace(/\D/g, "")}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              title={tc("whatsapp")}
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-emerald-600 hover:text-emerald-700 transition-colors"
+                            >
+                              <MessageCircle className="h-3 w-3" />
+                            </a>
+                          </div>
+                        )}
                       </div>
                     )}
                   </TableCell>

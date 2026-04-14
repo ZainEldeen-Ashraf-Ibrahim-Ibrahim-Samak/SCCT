@@ -63,7 +63,9 @@
     "exportExcel": "Excel",
     "exportPDF": "PDF",
     "exportedSuccess": "تم التصدير بنجاح",
-    "loggedInAs": "مسجل الدخول باسم:"
+    "loggedInAs": "مسجل الدخول باسم:",
+    "whatsapp": "واتساب",
+    "call": "اتصال"
   },
   "auth": {
     "login": "تسجيل الدخول",

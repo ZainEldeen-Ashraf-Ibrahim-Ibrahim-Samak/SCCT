@@ -63,7 +63,9 @@
     "exportExcel": "Excel",
     "exportPDF": "PDF",
     "exportedSuccess": "Exported successfully",
-    "loggedInAs": "Logged in as:"
+    "loggedInAs": "Logged in as:",
+    "whatsapp": "WhatsApp",
+    "call": "Call"
   },
   "auth": {
     "login": "Login",
