@@ -20,6 +20,8 @@ export interface ISubmission extends Document {
   contactRecords: Array<{
     id: string;
     name: string;
+    email?: string;
+    phone?: string;
     contact?: string;
     role?: string;
     notes?: string;
@@ -61,6 +63,8 @@ const contactRecordSchema = new Schema(
   {
     id: { type: String, required: true },
     name: { type: String, required: true, trim: true, maxlength: 200 },
+    email: { type: String, default: "", trim: true, maxlength: 200 },
+    phone: { type: String, default: "", trim: true, maxlength: 50 },
     contact: { type: String, default: "", trim: true, maxlength: 200 },
     role: { type: String, default: "", trim: true, maxlength: 100 },
     notes: { type: String, default: "", trim: true, maxlength: 1000 },

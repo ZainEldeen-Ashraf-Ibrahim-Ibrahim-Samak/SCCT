@@ -179,6 +179,14 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
                             <span>{record.name || "—"}</span>
                           </p>
                           <p className="text-sm">
+                            <span className="font-medium">{tClient("contactRecordEmail")}: </span>
+                            <span>{record.email || "—"}</span>
+                          </p>
+                          <p className="text-sm">
+                            <span className="font-medium">{tClient("contactRecordPhone")}: </span>
+                            <span>{record.phone || record.contact || "—"}</span>
+                          </p>
+                          <p className="text-sm">
                             <span className="font-medium">{tClient("contactRecordContact")}: </span>
                             <span>{record.contact || "—"}</span>
                           </p>

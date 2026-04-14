@@ -14,6 +14,8 @@ interface SubmitFormData {
   contactRecords: Array<{
     id: string;
     name: string;
+    email?: string;
+    phone?: string;
     contact?: string;
     role?: string;
     notes?: string;
@@ -43,12 +45,18 @@ function normalizeContactRecords(
     .map((record) => {
       const id = String(record.id ?? "").trim();
       const name = String(record.name ?? "").trim();
-      if (!id || !name || seenIds.has(id)) return null;
+      const email = record.email ? String(record.email).trim() : "";
+      const phone = record.phone ? String(record.phone).trim() : "";
+      const contact = record.contact ? String(record.contact).trim() : "";
+      const hasContactMethod = email.length > 0 || phone.length > 0 || contact.length > 0;
+      if (!id || !name || !hasContactMethod || seenIds.has(id)) return null;
       seenIds.add(id);
       return {
         id,
         name,
-        contact: record.contact ? String(record.contact).trim() : undefined,
+        email: email || undefined,
+        phone: phone || undefined,
+        contact: contact || undefined,
         role: record.role ? String(record.role).trim() : undefined,
         notes: record.notes ? String(record.notes).trim() : undefined,
       };

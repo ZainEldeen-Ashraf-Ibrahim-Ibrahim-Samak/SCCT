@@ -110,6 +110,8 @@ export const reorderFieldsSchema = z.object({
 export const contactRecordSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1).max(200),
+  email: z.string().email().optional().or(z.literal("")),
+  phone: z.string().max(50).optional().default(""),
   contact: z.string().max(200).optional().default(""),
   role: z.string().max(100).optional().default(""),
   notes: z.string().max(1000).optional().default(""),

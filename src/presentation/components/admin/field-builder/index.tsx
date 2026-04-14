@@ -34,6 +34,8 @@ import type { FieldDefinition } from "@/domain/entities/field-definition";
 interface ContactRecordDraft {
   id: string;
   name: string;
+  email: string;
+  phone: string;
   contact: string;
   role: string;
   notes: string;
@@ -43,6 +45,8 @@ function normalizeContactDraft(record: ContactRecordDraft): ContactRecordDraft {
   return {
     id: String(record.id ?? "").trim(),
     name: String(record.name ?? "").trim(),
+    email: String(record.email ?? "").trim(),
+    phone: String(record.phone ?? record.contact ?? "").trim(),
     contact: String(record.contact ?? "").trim(),
     role: String(record.role ?? "").trim(),
     notes: String(record.notes ?? "").trim(),
@@ -59,6 +63,8 @@ function areContactDraftListsEqual(a: ContactRecordDraft[], b: ContactRecordDraf
     return (
       record.id === other.id &&
       record.name === other.name &&
+      record.email === other.email &&
+      record.phone === other.phone &&
       record.contact === other.contact &&
       record.role === other.role &&
       record.notes === other.notes
@@ -70,6 +76,8 @@ function createContactRecord(): ContactRecordDraft {
   return {
     id: `cf_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     name: "",
+    email: "",
+    phone: "",
     contact: "",
     role: "",
     notes: "",
@@ -159,6 +167,29 @@ function SortableContactRecord({
             disabled={disabled}
           />
           {isNameInvalid && <p className="text-xs text-destructive">{tc("required")}</p>}
+        </div>
+
+        <div className="space-y-1">
+          <Label htmlFor={`contact-email-${record.id}`}>{t("contactRecordEmail")}</Label>
+          <Input
+            id={`contact-email-${record.id}`}
+            type="email"
+            value={record.email}
+            onChange={(e) => onUpdate(record.id, { email: e.target.value })}
+            placeholder={t("contactRecordEmail")}
+            disabled={disabled}
+          />
+        </div>
+
+        <div className="space-y-1">
+          <Label htmlFor={`contact-phone-${record.id}`}>{t("contactRecordPhone")}</Label>
+          <Input
+            id={`contact-phone-${record.id}`}
+            value={record.phone}
+            onChange={(e) => onUpdate(record.id, { phone: e.target.value })}
+            placeholder={t("contactRecordPhone")}
+            disabled={disabled}
+          />
         </div>
 
         <div className="space-y-1">
@@ -323,7 +354,11 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
 
   async function handleSaveContacts() {
     setShowContactValidation(true);
-    const normalized = normalizedContactRecords.filter((record) => record.id.length > 0 && record.name.length > 0);
+    const normalized = normalizedContactRecords.filter((record) => {
+      const hasName = record.name.length > 0;
+      const hasContactMethod = record.email.length > 0 || record.phone.length > 0 || record.contact.length > 0;
+      return record.id.length > 0 && hasName && hasContactMethod;
+    });
 
     if (normalized.length < 1 || normalized.length !== normalizedContactRecords.length) {
       toast.error(t("contactRecordMinOne"));
@@ -365,6 +400,8 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
           ? {
               ...record,
               name: patch.name ?? record.name,
+              email: patch.email ?? record.email,
+              phone: patch.phone ?? record.phone,
               contact: patch.contact ?? record.contact,
               role: patch.role ?? record.role,
               notes: patch.notes ?? record.notes,

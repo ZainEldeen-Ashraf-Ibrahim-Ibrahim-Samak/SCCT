@@ -18,6 +18,8 @@ function toEntity(doc: Record<string, unknown>): FormTemplate {
       return {
         id,
         name,
+        email: String(record.email ?? ""),
+        phone: String(record.phone ?? ""),
         contact: String(record.contact ?? ""),
         role: String(record.role ?? ""),
         notes: String(record.notes ?? ""),
@@ -43,7 +45,7 @@ export class MongoFormTemplateRepository implements FormTemplateRepository {
       const doc = await FormTemplateModel.create({
         name: input.name,
         description: input.description ?? "",
-        contactRecords: [{ id: "primary", name: "Primary Contact", contact: "", role: "", notes: "" }],
+        contactRecords: [{ id: "primary", name: "Primary Contact", email: "", phone: "", contact: "", role: "", notes: "" }],
         isActive: true,
       });
       await CacheService.invalidateFormCache();

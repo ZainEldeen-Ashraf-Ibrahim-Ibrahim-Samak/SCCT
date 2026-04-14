@@ -22,6 +22,8 @@ function normalizeContactRecords(records: unknown): Submission["contactRecords"]
     return {
       id,
       name,
+      email: typeof candidate.email === "string" ? candidate.email : "",
+      phone: typeof candidate.phone === "string" ? candidate.phone : "",
       contact: typeof candidate.contact === "string" ? candidate.contact : "",
       role: typeof candidate.role === "string" ? candidate.role : "",
       notes: typeof candidate.notes === "string" ? candidate.notes : "",

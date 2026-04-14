@@ -17,6 +17,8 @@ export type ResubmissionRequestStatus =
 export interface ContactRecord {
   id: string;
   name: string;
+  email?: string;
+  phone?: string;
   contact?: string;
   role?: string;
   notes?: string;

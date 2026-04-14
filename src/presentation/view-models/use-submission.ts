@@ -20,6 +20,8 @@ interface FormFieldData {
 export interface ContactRecordDraft {
   id: string;
   name: string;
+  email: string;
+  phone: string;
   contact: string;
   role: string;
   notes: string;
@@ -54,6 +56,8 @@ function createEmptyContactRecord(): ContactRecordDraft {
   return {
     id: `cr_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     name: "",
+    email: "",
+    phone: "",
     contact: "",
     role: "",
     notes: "",
@@ -107,6 +111,8 @@ function normalizeContactRecordDrafts(records: ContactRecordDraft[]) {
   const normalized = records.map((record) => ({
     ...record,
     name: record.name.trim(),
+    email: record.email.trim(),
+    phone: record.phone.trim(),
     contact: record.contact.trim(),
     role: record.role.trim(),
     notes: record.notes.trim(),
@@ -115,6 +121,8 @@ function normalizeContactRecordDrafts(records: ContactRecordDraft[]) {
   const meaningful = normalized.filter((record) => {
     return (
       record.name.length > 0 ||
+      record.email.length > 0 ||
+      record.phone.length > 0 ||
       record.contact.length > 0 ||
       record.role.length > 0 ||
       record.notes.length > 0
@@ -123,7 +131,7 @@ function normalizeContactRecordDrafts(records: ContactRecordDraft[]) {
 
   let resolved = meaningful.map((record, index) => ({
     ...record,
-    name: record.name || record.contact || `${DEFAULT_CONTACT_NAME} ${index + 1}`,
+    name: record.name || record.email || record.phone || record.contact || `${DEFAULT_CONTACT_NAME} ${index + 1}`,
   }));
 
   if (resolved.length < MIN_CONTACT_RECORDS) {
@@ -132,6 +140,8 @@ function normalizeContactRecordDrafts(records: ContactRecordDraft[]) {
       {
         id: seed?.id || createEmptyContactRecord().id,
         name: DEFAULT_CONTACT_NAME,
+        email: seed?.email || "",
+        phone: seed?.phone || seed?.contact || "",
         contact: seed?.contact || "",
         role: seed?.role || "",
         notes: seed?.notes || "",
@@ -149,19 +159,27 @@ function mapSourceContactRecords(records: unknown): ContactRecordDraft[] {
   if (!Array.isArray(records)) return [createEmptyContactRecord()];
 
   const normalized = records
-    .map((record) => {
+    .map((record, index) => {
       if (!record || typeof record !== "object") return null;
       const item = record as Record<string, unknown>;
       const id = String(item.id ?? "").trim();
       const name = String(item.name ?? "").trim();
-      if (!id || !name) return null;
+      const email = String(item.email ?? "").trim();
+      const phone = String(item.phone ?? item.contact ?? "").trim();
+      const contact = String(item.contact ?? "").trim();
+      const role = String(item.role ?? "").trim();
+      const notes = String(item.notes ?? "").trim();
+      const hasMeaningful = [name, email, phone, contact, role, notes].some((value) => value.length > 0);
+      if (!id || !hasMeaningful) return null;
 
       return {
         id,
-        name,
-        contact: String(item.contact ?? "").trim(),
-        role: String(item.role ?? "").trim(),
-        notes: String(item.notes ?? "").trim(),
+        name: name || email || phone || contact || `${DEFAULT_CONTACT_NAME} ${index + 1}`,
+        email,
+        phone,
+        contact,
+        role,
+        notes,
       };
     })
     .filter((record): record is ContactRecordDraft => !!record);
@@ -179,6 +197,8 @@ function hasMeaningfulDraftData(draft: DraftState | undefined): boolean {
   if ((draft.contactRecords ?? []).some((record) => {
     return (
       record.name.trim().length > 0 ||
+      record.email.trim().length > 0 ||
+      record.phone.trim().length > 0 ||
       record.contact.trim().length > 0 ||
       record.role.trim().length > 0 ||
       record.notes.trim().length > 0
@@ -306,6 +326,8 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
           ? {
               ...record,
               name: patch.name ?? record.name,
+              email: patch.email ?? record.email,
+              phone: patch.phone ?? record.phone,
               contact: patch.contact ?? record.contact,
               role: patch.role ?? record.role,
               notes: patch.notes ?? record.notes,

@@ -90,8 +90,16 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
     const errors: Record<string, boolean> = {};
     let isValid = true;
 
-    const hasContactName = contactRecords.some((record) => record.name.trim().length > 0);
-    if (!hasContactName) {
+    const hasValidContactRecord = contactRecords.some((record) => {
+      const hasName = record.name.trim().length > 0;
+      const hasContactMethod =
+        record.email.trim().length > 0 ||
+        record.phone.trim().length > 0 ||
+        record.contact.trim().length > 0;
+      return hasName && hasContactMethod;
+    });
+
+    if (!hasValidContactRecord) {
       errors.contactRecords = true;
       isValid = false;
     }
@@ -226,7 +234,12 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
               }}
               onUpdate={(id, patch) => {
                 updateContactRecord(id, patch);
-                if (validationErrors.contactRecords && (patch.name?.trim().length ?? 0) > 0) {
+                const hasName = (patch.name?.trim().length ?? 0) > 0;
+                const hasContactMethod =
+                  (patch.email?.trim().length ?? 0) > 0 ||
+                  (patch.phone?.trim().length ?? 0) > 0 ||
+                  (patch.contact?.trim().length ?? 0) > 0;
+                if (validationErrors.contactRecords && (hasName || hasContactMethod)) {
                   setValidationErrors((prev) => ({ ...prev, contactRecords: false }));
                 }
               }}

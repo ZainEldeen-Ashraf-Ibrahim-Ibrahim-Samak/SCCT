@@ -9,6 +9,8 @@ export interface FormTemplate {
   contactRecords: Array<{
     id: string;
     name: string;
+    email?: string;
+    phone?: string;
     contact?: string;
     role?: string;
     notes?: string;

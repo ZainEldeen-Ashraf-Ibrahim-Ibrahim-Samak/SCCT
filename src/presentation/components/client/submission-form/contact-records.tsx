@@ -115,6 +115,29 @@ function SortableContactCard({
         </div>
 
         <div className="space-y-1">
+          <Label htmlFor={`contact-email-${record.id}`}>{t("contactRecordEmail")}</Label>
+          <Input
+            id={`contact-email-${record.id}`}
+            type="email"
+            value={record.email}
+            onChange={(e) => onUpdate(record.id, { email: e.target.value })}
+            placeholder={t("contactRecordEmailPlaceholder")}
+            disabled={disabled}
+          />
+        </div>
+
+        <div className="space-y-1">
+          <Label htmlFor={`contact-phone-${record.id}`}>{t("contactRecordPhone")}</Label>
+          <Input
+            id={`contact-phone-${record.id}`}
+            value={record.phone}
+            onChange={(e) => onUpdate(record.id, { phone: e.target.value })}
+            placeholder={t("contactRecordPhonePlaceholder")}
+            disabled={disabled}
+          />
+        </div>
+
+        <div className="space-y-1">
           <Label htmlFor={`contact-contact-${record.id}`}>{t("contactRecordContact")}</Label>
           <Input
             id={`contact-contact-${record.id}`}
