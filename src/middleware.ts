@@ -10,7 +10,6 @@ type RateBucket = {
 };
 
 declare global {
-  // eslint-disable-next-line no-var
   var __scctApiRateLimitStore: Map<string, RateBucket> | undefined;
 }
 

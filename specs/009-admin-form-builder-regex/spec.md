@@ -35,6 +35,11 @@ Admins must be restricted to safe characters when defining custom fields (e.g., 
 1. **Given** an admin is defining a custom field in the form builder, **When** they enter unsupported characters into the Field Name or Placeholder (English/Arabic), **Then** a clear validation error is shown and the change is not accepted.
 2. **Given** an admin is configuring a Contact Form input inside the field builder, **When** they use safe alphanumeric text, **Then** the configuration is saved successfully.
 
+### Edge Cases
+
+- What happens when an admin pastes text that contains hidden non-printable characters (e.g., zero-width spaces)? The system should strip or reject them.
+- How does the system handle extremely long label strings with valid characters but exceeding DB limits? The frontend validation should restrict maximum length alongside regex formatting.
+
 ## Requirements *(mandatory)*
 
 ### Functional Requirements

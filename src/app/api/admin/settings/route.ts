@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth"; // Assume auth check
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
 import { logger } from "@/lib/dev-logger";
 import { parseSecureJson } from "@/lib/api-security";
+import type { ISettingsConfiguration } from "@/data/models/settings.model";
 
 const useCase = new ManageSettingsUseCase();
 
@@ -29,7 +30,9 @@ export async function PATCH(request: Request) {
       return unauthorizedResponse();
     }
 
-    const parsedBody = await parseSecureJson(request);
+    const parsedBody = await parseSecureJson<
+      Partial<Pick<ISettingsConfiguration, "backup" | "cron">>
+    >(request);
     if (!parsedBody.success) {
       return errorResponse(parsedBody.error, 400, parsedBody.code);
     }
