@@ -332,12 +332,12 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
                     />
                   </TableCell>
                   <TableCell className="font-medium group-hover:text-primary transition-colors wrap-break-word">
-                    {sub.clientName || t("unnamedSubmission")}
-                    <div className="md:hidden mt-1 text-xs text-muted-foreground break-all">
-                      {[contactSummary.email, contactSummary.phone, contactSummary.address]
-                        .filter((value): value is string => !!value)
-                        .join(" • ") || "—"}
-                    </div>
+                    <div>{sub.clientName || t("unnamedSubmission")}</div>
+                    {(contactSummary.phone || contactSummary.email) && (
+                      <div className="mt-1 text-xs text-muted-foreground font-normal break-all">
+                        {[contactSummary.phone, contactSummary.email].filter(Boolean).join(" • ")}
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell className="hidden md:table-cell break-all">{contactSummary.email || "—"}</TableCell>
                   <TableCell className="hidden lg:table-cell break-all">{contactSummary.phone || "—"}</TableCell>
