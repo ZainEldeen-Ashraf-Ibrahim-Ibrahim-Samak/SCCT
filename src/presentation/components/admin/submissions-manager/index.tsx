@@ -180,7 +180,7 @@ export function SubmissionsManager() {
       </div>
 
       <div className="flex flex-col sm:flex-row flex-wrap items-center justify-between gap-4 bg-muted/30 p-4 rounded-xl border">
-        <div className="relative w-full sm:flex-1 sm:min-w-[200px] max-w-sm">
+        <div className="relative w-full sm:flex-1 sm:min-w-50 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input 
             placeholder={t("searchPlaceholder") || "Search submissions..."} 
@@ -194,7 +194,7 @@ export function SubmissionsManager() {
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <span className="text-sm font-medium whitespace-nowrap">{t("filterByForm") || "Form"}:</span>
             <Select value={formFilter} onValueChange={handleFormFilterChange}>
-              <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectTrigger className="w-full sm:w-45">
                 <SelectValue placeholder={t("allForms") || "All Forms"} />
               </SelectTrigger>
               <SelectContent>
@@ -209,7 +209,7 @@ export function SubmissionsManager() {
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <span className="text-sm font-medium whitespace-nowrap">{t("filterByAdmin") || "Admin"}:</span>
             <Select value={adminFilter} onValueChange={handleAdminFilterChange}>
-              <SelectTrigger className="w-full sm:w-[150px]">
+              <SelectTrigger className="w-full sm:w-37.5">
                 <SelectValue placeholder={t("allAdmins") || "All Admins"} />
               </SelectTrigger>
               <SelectContent>
@@ -224,7 +224,7 @@ export function SubmissionsManager() {
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <span className="text-sm font-medium whitespace-nowrap">{td("filterByStatus")}:</span>
             <Select value={statusFilter} onValueChange={handleFilterChange}>
-              <SelectTrigger className="w-full sm:w-[150px]">
+              <SelectTrigger className="w-full sm:w-37.5">
                 <SelectValue placeholder={td("filterByStatus")} />
               </SelectTrigger>
               <SelectContent>
