@@ -94,8 +94,7 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
       const hasName = record.name.trim().length > 0;
       const hasContactMethod =
         record.email.trim().length > 0 ||
-        record.phone.trim().length > 0 ||
-        record.contact.trim().length > 0;
+        record.phone.trim().length > 0;
       return hasName && hasContactMethod;
     });
 
@@ -237,8 +236,7 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
                 const hasName = (patch.name?.trim().length ?? 0) > 0;
                 const hasContactMethod =
                   (patch.email?.trim().length ?? 0) > 0 ||
-                  (patch.phone?.trim().length ?? 0) > 0 ||
-                  (patch.contact?.trim().length ?? 0) > 0;
+                  (patch.phone?.trim().length ?? 0) > 0;
                 if (validationErrors.contactRecords && (hasName || hasContactMethod)) {
                   setValidationErrors((prev) => ({ ...prev, contactRecords: false }));
                 }

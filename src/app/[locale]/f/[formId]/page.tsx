@@ -29,7 +29,7 @@ export default async function PublicFormStartPage({
     const fields = await fieldDefRepo.findByFormId(formId, false);
     const contactRecords = form.contactRecords && form.contactRecords.length > 0
       ? form.contactRecords
-      : [{ id: "primary", name: "Primary Contact", email: "", phone: "", contact: "", role: "", notes: "" }];
+      : [{ id: "primary", name: "Primary Contact", email: "", phone: "", role: "", notes: "" }];
 
     // Create a new empty submission to generate an invite token, marked as draft
     const token = generateAccessToken();

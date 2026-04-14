@@ -45,7 +45,7 @@ const formTemplateSchema = new Schema<IFormTemplate>(
     },
     contactRecords: {
       type: [contactRecordSchema],
-      default: [{ id: "primary", name: "Primary Contact", email: "", phone: "", contact: "", role: "", notes: "" }],
+      default: [{ id: "primary", name: "Primary Contact", email: "", phone: "", role: "", notes: "" }],
     },
     isActive: {
       type: Boolean,

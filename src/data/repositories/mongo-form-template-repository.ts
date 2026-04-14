@@ -45,7 +45,7 @@ export class MongoFormTemplateRepository implements FormTemplateRepository {
       const doc = await FormTemplateModel.create({
         name: input.name,
         description: input.description ?? "",
-        contactRecords: [{ id: "primary", name: "Primary Contact", email: "", phone: "", contact: "", role: "", notes: "" }],
+        contactRecords: [{ id: "primary", name: "Primary Contact", email: "", phone: "", role: "", notes: "" }],
         isActive: true,
       });
       await CacheService.invalidateFormCache();

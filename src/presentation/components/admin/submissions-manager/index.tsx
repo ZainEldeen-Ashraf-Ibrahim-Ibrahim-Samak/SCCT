@@ -67,7 +67,9 @@ export function SubmissionsManager() {
 
   const getSearchableContact = (sub: Submission) => {
     const fromContactRecords = sub.contactRecords
-      .map((record) => (record.contact ?? "").trim())
+      .map((record) => [record.phone, record.email, record.contact])
+      .flat()
+      .map((value) => (value ?? "").trim())
       .find((contact) => contact.length > 0);
 
     if (fromContactRecords) {

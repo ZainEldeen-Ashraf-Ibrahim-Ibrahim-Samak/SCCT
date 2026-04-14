@@ -22,7 +22,6 @@ export interface ContactRecordDraft {
   name: string;
   email: string;
   phone: string;
-  contact: string;
   role: string;
   notes: string;
 }
@@ -58,7 +57,6 @@ function createEmptyContactRecord(): ContactRecordDraft {
     name: "",
     email: "",
     phone: "",
-    contact: "",
     role: "",
     notes: "",
   };
@@ -113,7 +111,6 @@ function normalizeContactRecordDrafts(records: ContactRecordDraft[]) {
     name: record.name.trim(),
     email: record.email.trim(),
     phone: record.phone.trim(),
-    contact: record.contact.trim(),
     role: record.role.trim(),
     notes: record.notes.trim(),
   }));
@@ -123,7 +120,6 @@ function normalizeContactRecordDrafts(records: ContactRecordDraft[]) {
       record.name.length > 0 ||
       record.email.length > 0 ||
       record.phone.length > 0 ||
-      record.contact.length > 0 ||
       record.role.length > 0 ||
       record.notes.length > 0
     );
@@ -131,7 +127,7 @@ function normalizeContactRecordDrafts(records: ContactRecordDraft[]) {
 
   let resolved = meaningful.map((record, index) => ({
     ...record,
-    name: record.name || record.email || record.phone || record.contact || `${DEFAULT_CONTACT_NAME} ${index + 1}`,
+    name: record.name || record.email || record.phone || `${DEFAULT_CONTACT_NAME} ${index + 1}`,
   }));
 
   if (resolved.length < MIN_CONTACT_RECORDS) {
@@ -141,8 +137,7 @@ function normalizeContactRecordDrafts(records: ContactRecordDraft[]) {
         id: seed?.id || createEmptyContactRecord().id,
         name: DEFAULT_CONTACT_NAME,
         email: seed?.email || "",
-        phone: seed?.phone || seed?.contact || "",
-        contact: seed?.contact || "",
+        phone: seed?.phone || "",
         role: seed?.role || "",
         notes: seed?.notes || "",
       },
@@ -166,18 +161,16 @@ function mapSourceContactRecords(records: unknown): ContactRecordDraft[] {
       const name = String(item.name ?? "").trim();
       const email = String(item.email ?? "").trim();
       const phone = String(item.phone ?? item.contact ?? "").trim();
-      const contact = String(item.contact ?? "").trim();
       const role = String(item.role ?? "").trim();
       const notes = String(item.notes ?? "").trim();
-      const hasMeaningful = [name, email, phone, contact, role, notes].some((value) => value.length > 0);
+      const hasMeaningful = [name, email, phone, role, notes].some((value) => value.length > 0);
       if (!id || !hasMeaningful) return null;
 
       return {
         id,
-        name: name || email || phone || contact || `${DEFAULT_CONTACT_NAME} ${index + 1}`,
+        name: name || email || phone || `${DEFAULT_CONTACT_NAME} ${index + 1}`,
         email,
         phone,
-        contact,
         role,
         notes,
       };
@@ -199,7 +192,6 @@ function hasMeaningfulDraftData(draft: DraftState | undefined): boolean {
       record.name.trim().length > 0 ||
       record.email.trim().length > 0 ||
       record.phone.trim().length > 0 ||
-      record.contact.trim().length > 0 ||
       record.role.trim().length > 0 ||
       record.notes.trim().length > 0
     );
@@ -328,7 +320,6 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
               name: patch.name ?? record.name,
               email: patch.email ?? record.email,
               phone: patch.phone ?? record.phone,
-              contact: patch.contact ?? record.contact,
               role: patch.role ?? record.role,
               notes: patch.notes ?? record.notes,
             }

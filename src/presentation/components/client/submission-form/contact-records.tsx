@@ -69,6 +69,11 @@ function SortableContactCard({
   };
 
   const nameInvalid = showValidation && record.name.trim().length === 0;
+  const contactMethodInvalid =
+    showValidation &&
+    record.name.trim().length > 0 &&
+    record.email.trim().length === 0 &&
+    record.phone.trim().length === 0;
 
   return (
     <div ref={setNodeRef} style={style} className="rounded-lg border bg-background/80 p-4 space-y-3">
@@ -123,6 +128,7 @@ function SortableContactCard({
             onChange={(e) => onUpdate(record.id, { email: e.target.value })}
             placeholder={t("contactRecordEmailPlaceholder")}
             disabled={disabled}
+            className={contactMethodInvalid ? "border-destructive focus-visible:ring-destructive" : ""}
           />
         </div>
 
@@ -134,18 +140,9 @@ function SortableContactCard({
             onChange={(e) => onUpdate(record.id, { phone: e.target.value })}
             placeholder={t("contactRecordPhonePlaceholder")}
             disabled={disabled}
+            className={contactMethodInvalid ? "border-destructive focus-visible:ring-destructive" : ""}
           />
-        </div>
-
-        <div className="space-y-1">
-          <Label htmlFor={`contact-contact-${record.id}`}>{t("contactRecordContact")}</Label>
-          <Input
-            id={`contact-contact-${record.id}`}
-            value={record.contact}
-            onChange={(e) => onUpdate(record.id, { contact: e.target.value })}
-            placeholder={t("contactRecordContactPlaceholder")}
-            disabled={disabled}
-          />
+          {contactMethodInvalid && <p className="text-xs text-destructive">{t("contactRecordPhoneOrEmailRequired")}</p>}
         </div>
 
         <div className="space-y-1">
@@ -196,7 +193,8 @@ export function ContactRecords({
       {
         id: "fallback_contact_record",
         name: "",
-        contact: "",
+        email: "",
+        phone: "",
         role: "",
         notes: "",
       },

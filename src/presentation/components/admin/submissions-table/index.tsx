@@ -27,9 +27,14 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
   const router = useRouter();
 
   const getPrimaryContact = (submission: Submission) => {
-    const fromContactRecords = submission.contactRecords.find((record) => (record.contact ?? "").trim().length > 0);
-    if (fromContactRecords?.contact) {
-      return fromContactRecords.contact;
+    const fromContactRecords = submission.contactRecords
+      .map((record) => [record.phone, record.email, record.contact])
+      .flat()
+      .map((value) => (value ?? "").trim())
+      .find((value) => value.length > 0);
+
+    if (fromContactRecords) {
+      return fromContactRecords;
     }
 
     const fromLegacyContact = submission.clientContact?.trim();

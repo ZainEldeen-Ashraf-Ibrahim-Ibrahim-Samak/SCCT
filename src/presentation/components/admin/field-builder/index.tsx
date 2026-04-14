@@ -36,7 +36,6 @@ interface ContactRecordDraft {
   name: string;
   email: string;
   phone: string;
-  contact: string;
   role: string;
   notes: string;
 }
@@ -46,8 +45,7 @@ function normalizeContactDraft(record: ContactRecordDraft): ContactRecordDraft {
     id: String(record.id ?? "").trim(),
     name: String(record.name ?? "").trim(),
     email: String(record.email ?? "").trim(),
-    phone: String(record.phone ?? record.contact ?? "").trim(),
-    contact: String(record.contact ?? "").trim(),
+    phone: String(record.phone ?? "").trim(),
     role: String(record.role ?? "").trim(),
     notes: String(record.notes ?? "").trim(),
   };
@@ -65,7 +63,6 @@ function areContactDraftListsEqual(a: ContactRecordDraft[], b: ContactRecordDraf
       record.name === other.name &&
       record.email === other.email &&
       record.phone === other.phone &&
-      record.contact === other.contact &&
       record.role === other.role &&
       record.notes === other.notes
     );
@@ -78,7 +75,6 @@ function createContactRecord(): ContactRecordDraft {
     name: "",
     email: "",
     phone: "",
-    contact: "",
     role: "",
     notes: "",
   };
@@ -124,6 +120,11 @@ function SortableContactRecord({
   };
 
   const isNameInvalid = showValidation && record.name.trim().length === 0;
+  const contactMethodInvalid =
+    showValidation &&
+    record.name.trim().length > 0 &&
+    record.email.trim().length === 0 &&
+    record.phone.trim().length === 0;
 
   return (
     <div ref={setNodeRef} style={style} className="rounded-md border bg-background p-3 space-y-3">
@@ -178,6 +179,7 @@ function SortableContactRecord({
             onChange={(e) => onUpdate(record.id, { email: e.target.value })}
             placeholder={t("contactRecordEmail")}
             disabled={disabled}
+            className={contactMethodInvalid ? "border-destructive focus-visible:ring-destructive" : ""}
           />
         </div>
 
@@ -189,18 +191,9 @@ function SortableContactRecord({
             onChange={(e) => onUpdate(record.id, { phone: e.target.value })}
             placeholder={t("contactRecordPhone")}
             disabled={disabled}
+            className={contactMethodInvalid ? "border-destructive focus-visible:ring-destructive" : ""}
           />
-        </div>
-
-        <div className="space-y-1">
-          <Label htmlFor={`contact-contact-${record.id}`}>{t("contactRecordContact")}</Label>
-          <Input
-            id={`contact-contact-${record.id}`}
-            value={record.contact}
-            onChange={(e) => onUpdate(record.id, { contact: e.target.value })}
-            placeholder={t("contactRecordContact")}
-            disabled={disabled}
-          />
+          {contactMethodInvalid && <p className="text-xs text-destructive">{t("contactRecordPhoneOrEmailRequired")}</p>}
         </div>
 
         <div className="space-y-1 md:col-span-2">
@@ -356,7 +349,7 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
     setShowContactValidation(true);
     const normalized = normalizedContactRecords.filter((record) => {
       const hasName = record.name.length > 0;
-      const hasContactMethod = record.email.length > 0 || record.phone.length > 0 || record.contact.length > 0;
+      const hasContactMethod = record.email.length > 0 || record.phone.length > 0;
       return record.id.length > 0 && hasName && hasContactMethod;
     });
 
@@ -402,7 +395,6 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
               name: patch.name ?? record.name,
               email: patch.email ?? record.email,
               phone: patch.phone ?? record.phone,
-              contact: patch.contact ?? record.contact,
               role: patch.role ?? record.role,
               notes: patch.notes ?? record.notes,
             }
