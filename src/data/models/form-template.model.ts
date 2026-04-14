@@ -16,7 +16,11 @@ export interface IFormTemplate extends Document {
   contactFormFields: Array<{
     id: string;
     key: "name" | "email" | "phone" | "address";
+    labelEn: string;
+    labelAr: string;
     label: string;
+    placeholderEn: string;
+    placeholderAr: string;
     placeholder: string;
     required: boolean;
     sortOrder: number;
@@ -47,7 +51,11 @@ const contactFormFieldSchema = new Schema(
       required: true,
       enum: ["name", "email", "phone", "address"],
     },
+    labelEn: { type: String, required: true, trim: true, maxlength: 200 },
+    labelAr: { type: String, required: true, trim: true, maxlength: 200 },
     label: { type: String, required: true, trim: true, maxlength: 200 },
+    placeholderEn: { type: String, default: "", trim: true, maxlength: 200 },
+    placeholderAr: { type: String, default: "", trim: true, maxlength: 200 },
     placeholder: { type: String, default: "", trim: true, maxlength: 200 },
     required: { type: Boolean, default: false },
     sortOrder: { type: Number, required: true, min: 0, default: 0 },

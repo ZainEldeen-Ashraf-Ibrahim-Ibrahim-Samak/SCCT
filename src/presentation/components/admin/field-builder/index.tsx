@@ -38,7 +38,11 @@ function areContactFormFieldsEqual(a: ContactFormFieldDraft[], b: ContactFormFie
     return (
       field.id === other.id &&
       field.key === other.key &&
+      field.labelEn === other.labelEn &&
+      field.labelAr === other.labelAr &&
       field.label === other.label &&
+      field.placeholderEn === other.placeholderEn &&
+      field.placeholderAr === other.placeholderAr &&
       field.placeholder === other.placeholder &&
       field.required === other.required &&
       field.sortOrder === other.sortOrder
@@ -124,25 +128,51 @@ function ContactFormFieldRow({
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor={`contact-label-${field.id}`} className="text-xs text-muted-foreground uppercase">{t("contactFormInputName")}</Label>
+          <Label htmlFor={`contact-label-en-${field.id}`} className="text-xs text-muted-foreground uppercase">{t("contactFormInputNameEn")}</Label>
           <Input
-            id={`contact-label-${field.id}`}
-            value={field.label}
-            onChange={(e) => onUpdate(field.id, { label: e.target.value })}
-            placeholder={t("contactFormInputNamePlaceholder")}
+            id={`contact-label-en-${field.id}`}
+            value={field.labelEn}
+            onChange={(e) => onUpdate(field.id, { labelEn: e.target.value })}
+            placeholder={t("contactFormInputNameEnPlaceholder")}
             disabled={disabled}
             className="bg-muted/50 focus-visible:bg-background"
           />
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor={`contact-placeholder-${field.id}`} className="text-xs text-muted-foreground uppercase">{t("contactFormInputPlaceholder")}</Label>
+          <Label htmlFor={`contact-label-ar-${field.id}`} className="text-xs text-muted-foreground uppercase">{t("contactFormInputNameAr")}</Label>
           <Input
-            id={`contact-placeholder-${field.id}`}
-            value={field.placeholder}
-            onChange={(e) => onUpdate(field.id, { placeholder: e.target.value })}
-            placeholder={t("contactFormInputPlaceholderHint")}
+            id={`contact-label-ar-${field.id}`}
+            value={field.labelAr}
+            onChange={(e) => onUpdate(field.id, { labelAr: e.target.value })}
+            placeholder={t("contactFormInputNameArPlaceholder")}
             disabled={disabled}
+            dir="rtl"
+            className="bg-muted/50 focus-visible:bg-background"
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor={`contact-placeholder-en-${field.id}`} className="text-xs text-muted-foreground uppercase">{t("contactFormInputPlaceholderEn")}</Label>
+          <Input
+            id={`contact-placeholder-en-${field.id}`}
+            value={field.placeholderEn}
+            onChange={(e) => onUpdate(field.id, { placeholderEn: e.target.value })}
+            placeholder={t("contactFormInputPlaceholderEnHint")}
+            disabled={disabled}
+            className="bg-muted/50 focus-visible:bg-background"
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor={`contact-placeholder-ar-${field.id}`} className="text-xs text-muted-foreground uppercase">{t("contactFormInputPlaceholderAr")}</Label>
+          <Input
+            id={`contact-placeholder-ar-${field.id}`}
+            value={field.placeholderAr}
+            onChange={(e) => onUpdate(field.id, { placeholderAr: e.target.value })}
+            placeholder={t("contactFormInputPlaceholderArHint")}
+            disabled={disabled}
+            dir="rtl"
             className="bg-muted/50 focus-visible:bg-background"
           />
         </div>
@@ -349,13 +379,24 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
     setContactFormFields((prev) =>
       prev.map((field) =>
         field.id === id
-          ? {
-              ...field,
-              key: patch.key ?? field.key,
-              label: patch.label ?? field.label,
-              placeholder: patch.placeholder ?? field.placeholder,
-              required: patch.required ?? field.required,
-            }
+          ? (() => {
+              const nextLabelEn = patch.labelEn ?? field.labelEn ?? patch.label ?? field.label;
+              const nextLabelAr = patch.labelAr ?? field.labelAr ?? patch.label ?? field.label;
+              const nextPlaceholderEn = patch.placeholderEn ?? field.placeholderEn ?? patch.placeholder ?? field.placeholder;
+              const nextPlaceholderAr = patch.placeholderAr ?? field.placeholderAr ?? patch.placeholder ?? field.placeholder;
+
+              return {
+                ...field,
+                key: patch.key ?? field.key,
+                labelEn: nextLabelEn,
+                labelAr: nextLabelAr,
+                label: patch.label ?? nextLabelEn,
+                placeholderEn: nextPlaceholderEn,
+                placeholderAr: nextPlaceholderAr,
+                placeholder: patch.placeholder ?? nextPlaceholderEn,
+                required: patch.required ?? field.required,
+              };
+            })()
           : field,
       ),
     );

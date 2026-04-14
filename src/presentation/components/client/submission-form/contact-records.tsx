@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { ContactRecordDraft } from "@/presentation/view-models/use-submission";
@@ -23,6 +23,7 @@ export function ContactRecords({
   onUpdate,
 }: ContactRecordsProps) {
   const t = useTranslations("client");
+  const locale = useLocale();
 
   const contactRecord = useMemo<ContactRecordDraft>(() => {
     if (records.length > 0) return records[0];
@@ -90,6 +91,22 @@ export function ContactRecords({
     return t("contactRecordAddressPlaceholder");
   };
 
+  const getLocalizedLabel = (field: ContactFormField) => {
+    if (locale === "ar") {
+      return field.labelAr || field.label || field.labelEn;
+    }
+
+    return field.labelEn || field.label || field.labelAr;
+  };
+
+  const getLocalizedPlaceholder = (field: ContactFormField) => {
+    if (locale === "ar") {
+      return field.placeholderAr || field.placeholder || field.placeholderEn || getFallbackPlaceholder(field);
+    }
+
+    return field.placeholderEn || field.placeholder || field.placeholderAr || getFallbackPlaceholder(field);
+  };
+
   return (
     <div className="space-y-4 rounded-xl border border-border/60 bg-muted/20 p-4">
       <div className="space-y-1">
@@ -112,7 +129,7 @@ export function ContactRecords({
             className={field.key === "address" ? "space-y-1 sm:col-span-2" : "space-y-1"}
           >
             <Label htmlFor={`contact-${field.key}-${field.id}`} className="flex items-center gap-1">
-              <span>{field.label}</span>
+              <span>{getLocalizedLabel(field)}</span>
               {field.required && <span className="text-destructive">*</span>}
             </Label>
             <Input
@@ -120,7 +137,7 @@ export function ContactRecords({
               type={getInputType(field)}
               value={getFieldValue(field)}
               onChange={(e) => updateFieldValue(field, e.target.value)}
-              placeholder={field.placeholder || getFallbackPlaceholder(field)}
+              placeholder={getLocalizedPlaceholder(field)}
               disabled={disabled}
               required={field.required}
             />

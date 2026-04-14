@@ -125,7 +125,11 @@ export const contactRecordSchema = z.object({
 export const contactFormFieldSchema = z.object({
   id: z.string().min(1),
   key: z.enum(["name", "email", "phone", "address"]),
-  label: z.string().min(1).max(200),
+  labelEn: z.string().min(1).max(200),
+  labelAr: z.string().min(1).max(200),
+  label: z.string().max(200).optional().default(""),
+  placeholderEn: z.string().max(200).optional().default(""),
+  placeholderAr: z.string().max(200).optional().default(""),
   placeholder: z.string().max(200).optional().default(""),
   required: z.boolean().optional().default(false),
   sortOrder: z.number().int().min(0),
