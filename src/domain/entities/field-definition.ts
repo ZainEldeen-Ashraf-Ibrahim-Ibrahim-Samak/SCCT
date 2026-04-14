@@ -13,6 +13,7 @@ export interface ValidationRules {
   max?: number;
   maxFileSize?: number;
   allowedFileTypes?: string[];
+  regexType?: "email" | "phone" | "name";
 }
 
 export interface FieldDefinition {

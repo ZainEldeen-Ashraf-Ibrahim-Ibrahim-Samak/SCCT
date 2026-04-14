@@ -10,6 +10,9 @@ import { MediaUpload } from "./media-upload";
 import type { FieldDefinition } from "@/domain/entities/field-definition";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
+import EmailRegix from "@/components/validation/EmailRegix";
+import PhoneRegix from "@/components/validation/PhoneRegix";
+import NameRegix from "@/components/validation/NameRegix";
 
 interface FieldRendererProps {
   field: FieldDefinition;
@@ -161,6 +164,15 @@ export function FieldRenderer({
             disabled={disabled}
             className={hasError ? "border-destructive focus-visible:ring-destructive" : ""}
           />
+          {field.validationRules?.regexType === 'email' && (
+            <EmailRegix email={textValue} showTypoSuggestions={true} />
+          )}
+          {field.validationRules?.regexType === 'phone' && (
+            <PhoneRegix number={textValue} setNumber={(val) => onChangeValue(val)} />
+          )}
+          {field.validationRules?.regexType === 'name' && (
+            <NameRegix name={textValue} />
+          )}
         </div>
       );
 

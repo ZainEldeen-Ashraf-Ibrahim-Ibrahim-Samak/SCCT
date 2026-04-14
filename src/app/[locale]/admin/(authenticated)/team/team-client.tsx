@@ -38,11 +38,14 @@ import {
   updateTeamMemberRole,
 } from "@/domain/use-cases/admin/manage-team";
 import { useTranslations } from "next-intl";
+import EmailRegix from "@/components/validation/EmailRegix";
+import PhoneRegix from "@/components/validation/PhoneRegix";
 
 type TeamMember = {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   role: "admin" | "user";
   createdAt?: string;
 };
@@ -65,12 +68,14 @@ export function TeamClient({
   const [newMember, setNewMember] = useState({
     name: "",
     email: "",
+    phone: "",
     role: "user" as "admin" | "user",
     password: "",
   });
   const [editingMember, setEditingMember] = useState({
     name: "",
     email: "",
+    phone: "",
     password: "",
   });
   const router = useRouter();
@@ -94,7 +99,7 @@ export function TeamClient({
       if (result.data) {
         setMembers([result.data, ...members]);
         setIsCreateOpen(false);
-        setNewMember({ name: "", email: "", role: "user", password: "" });
+        setNewMember({ name: "", email: "", phone: "", role: "user", password: "" });
         toast.success(t("createSuccess"));
         router.refresh();
       }
@@ -148,6 +153,7 @@ export function TeamClient({
     setEditingMember({
       name: member.name,
       email: member.email,
+      phone: member.phone || "",
       password: "",
     });
     setIsEditOpen(true);
@@ -176,6 +182,7 @@ export function TeamClient({
                   ...member,
                   name: updated.data.name,
                   email: updated.data.email,
+                  phone: updated.data.phone,
                   role: updated.data.role,
                 }
               : member,
@@ -183,7 +190,7 @@ export function TeamClient({
         );
         setIsEditOpen(false);
         setEditingMemberId(null);
-        setEditingMember({ name: "", email: "", password: "" });
+        setEditingMember({ name: "", email: "", phone: "", password: "" });
         toast.success(t("updateSuccess"));
         router.refresh();
       }
@@ -236,6 +243,24 @@ export function TeamClient({
                     onChange={(e) =>
                       setNewMember({ ...newMember, email: e.target.value })
                     }
+                  />
+                  <EmailRegix email={newMember.email} showTypoSuggestions={true} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    dir="ltr"
+                    className="text-left"
+                    value={newMember.phone}
+                    onChange={(e) =>
+                      setNewMember({ ...newMember, phone: e.target.value })
+                    }
+                  />
+                  <PhoneRegix 
+                    number={newMember.phone} 
+                    setNumber={(val) => setNewMember({ ...newMember, phone: val })} 
                   />
                 </div>
                 <div className="grid gap-2">
@@ -296,7 +321,7 @@ export function TeamClient({
           setIsEditOpen(open);
           if (!open) {
             setEditingMemberId(null);
-            setEditingMember({ name: "", email: "", password: "" });
+            setEditingMember({ name: "", email: "", phone: "", password: "" });
           }
         }}
       >
@@ -333,6 +358,27 @@ export function TeamClient({
                       email: e.target.value,
                     })
                   }
+                />
+                <EmailRegix email={editingMember.email} showTypoSuggestions={true} />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-phone">Phone</Label>
+                <Input
+                  id="edit-phone"
+                  type="tel"
+                  dir="ltr"
+                  className="text-left"
+                  value={editingMember.phone}
+                  onChange={(e) =>
+                    setEditingMember({
+                      ...editingMember,
+                      phone: e.target.value,
+                    })
+                  }
+                />
+                <PhoneRegix 
+                  number={editingMember.phone} 
+                  setNumber={(val) => setEditingMember({ ...editingMember, phone: val })} 
                 />
               </div>
               <div className="grid gap-2">
@@ -384,7 +430,10 @@ export function TeamClient({
             {members.map((member) => (
               <TableRow key={member.id}>
                 <TableCell className="font-medium">{member.name}</TableCell>
-                <TableCell>{member.email}</TableCell>
+                <TableCell>
+                  <div>{member.email}</div>
+                  {member.phone && <div className="text-xs text-muted-foreground mt-1" dir="ltr">{member.phone}</div>}
+                </TableCell>
                 <TableCell>
                   <Select
                     value={member.role}

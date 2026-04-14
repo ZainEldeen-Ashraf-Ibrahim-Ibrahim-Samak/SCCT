@@ -2,6 +2,7 @@ import { ManageSettingsUseCase } from "@/domain/use-cases/admin/manage-settings"
 import { auth } from "@/lib/auth"; // Assume auth check
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
 import { logger } from "@/lib/dev-logger";
+import { parseSecureJson } from "@/lib/api-security";
 
 const useCase = new ManageSettingsUseCase();
 
@@ -28,7 +29,11 @@ export async function PATCH(request: Request) {
       return unauthorizedResponse();
     }
 
-    const body = await request.json();
+    const parsedBody = await parseSecureJson(request);
+    if (!parsedBody.success) {
+      return errorResponse(parsedBody.error, 400, parsedBody.code);
+    }
+    const body = parsedBody.data;
     const updaterId = session.user.id || "admin";
 
     const updated = await useCase.updateSettings(updaterId, {

@@ -17,6 +17,8 @@ import {
 import { LanguageSwitcher } from "@/presentation/components/shared/language-switcher";
 import { ThemeToggle } from "@/presentation/components/shared/theme-toggle";
 import { Loader2 } from "lucide-react";
+import EmailRegix from "@/components/validation/EmailRegix";
+import { EMAIL_REGEX } from "@/constants/constants";
 
 export default function LoginPage() {
   const t = useTranslations("auth");
@@ -29,6 +31,12 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    
+    if (email && !EMAIL_REGEX.test(email)) {
+      setError(t("loginError"));
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -83,6 +91,7 @@ export default function LoginPage() {
                 autoComplete="email"
                 disabled={isLoading}
               />
+              <EmailRegix email={email} showTypoSuggestions={false} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">{t("password")}</Label>

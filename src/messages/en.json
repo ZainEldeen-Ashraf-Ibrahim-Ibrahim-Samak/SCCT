@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "SCCT",
+    "appName": "SCCT DAMAGES",
     "loading": "Loading...",
     "save": "Save",
     "cancel": "Cancel",
@@ -472,5 +472,20 @@
   "settings": {
     "title": "Settings",
     "subtitle": "Manage your settings"
+  },
+  "VALIDATION": {
+    "VALID_PHONE": "Valid Phone Number",
+    "INVALID_PHONE_DETAILS": "Phone numbers must begin with +20 followed by exactly 10 digits.",
+    "VALID_EMAIL": "Valid Email Address",
+    "INVALID_EMAIL": "Please enter a valid email address",
+    "VALID_NAME": "Valid Name",
+    "INVALID_NAME": "Invalid Name",
+    "INVALID_NAME_DETAILS": "Please use ONLY recognized alphanumeric characters or spaces."
+  },
+  "CHANGE_EMAIL": {
+    "ERRORS": {
+      "DOMAIN_TYPO": "Did you mean {domain}?",
+      "SAME_EMAIL": "New email cannot be the same as current email"
+    }
   }
 }

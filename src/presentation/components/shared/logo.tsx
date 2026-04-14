@@ -7,7 +7,7 @@ export function Logo({ className = "" }: { className?: string }) {
     <Link href="/admin" className={`flex items-center gap-2 ${className}`}>
       <Image
         src="/favicon.ico"
-        alt="SCCT Logo"
+        alt="SCCT DAMAGES Logo"
         width={32}
         height={32}
         className="object-contain shrink-0"

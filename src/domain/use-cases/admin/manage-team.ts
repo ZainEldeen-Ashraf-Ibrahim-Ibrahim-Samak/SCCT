@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { getUserModel } from "@/data/models/user.model";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
+import { EMAIL_REGEX, PHONE_REGEX } from "@/constants/constants";
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
@@ -27,19 +28,29 @@ export async function getTeamMembers() {
     id: user._id.toString(),
     email: user.email,
     name: user.name,
+    phone: user.phone,
     role: user.role,
     createdAt: user.createdAt?.toISOString(),
   }));
 }
 
-export async function createTeamMember(data: { name: string; email: string; role: "admin" | "user"; password?: string }) {
+export async function createTeamMember(data: { name: string; email: string; phone?: string; role: "admin" | "user"; password?: string }) {
   try {
     await checkAdmin();
     const UserModel = await getUserModel();
 
     const normalizedEmail = normalizeEmail(data.email);
     const normalizedName = data.name.trim();
+    const normalizedPhone = data.phone?.trim() || "";
     const rawPassword = data.password?.trim() || "password123";
+
+    if (!EMAIL_REGEX.test(normalizedEmail)) {
+      return { error: "Invalid email format" };
+    }
+    
+    if (normalizedPhone && !PHONE_REGEX.test(normalizedPhone)) {
+      return { error: "Invalid phone number format" };
+    }
 
     const existingUser = await UserModel.findOne({ email: normalizedEmail });
     if (existingUser) {
@@ -51,6 +62,7 @@ export async function createTeamMember(data: { name: string; email: string; role
     const newUser = await UserModel.create({
       name: normalizedName,
       email: normalizedEmail,
+      phone: normalizedPhone,
       role: data.role,
       password: hashedPassword,
     });
@@ -60,6 +72,7 @@ export async function createTeamMember(data: { name: string; email: string; role
       id: newUser._id.toString(),
       name: newUser.name,
       email: newUser.email,
+      phone: newUser.phone,
       role: newUser.role,
     };
 
@@ -76,6 +89,7 @@ export async function updateTeamMember(
   data: {
     name: string;
     email: string;
+    phone?: string;
     password?: string;
   },
 ) {
@@ -90,6 +104,15 @@ export async function updateTeamMember(
 
     const normalizedEmail = normalizeEmail(data.email);
     const normalizedName = data.name.trim();
+    const normalizedPhone = data.phone?.trim() || "";
+
+    if (!EMAIL_REGEX.test(normalizedEmail)) {
+      return { error: "Invalid email format" };
+    }
+
+    if (normalizedPhone && !PHONE_REGEX.test(normalizedPhone)) {
+      return { error: "Invalid phone number format" };
+    }
 
     const existingUser = await UserModel.findOne({
       email: normalizedEmail,
@@ -101,6 +124,7 @@ export async function updateTeamMember(
 
     user.name = normalizedName;
     user.email = normalizedEmail;
+    user.phone = normalizedPhone;
 
     const nextPassword = data.password?.trim();
     if (nextPassword) {
@@ -116,6 +140,7 @@ export async function updateTeamMember(
         id: user._id.toString(),
         name: user.name,
         email: user.email,
+        phone: user.phone,
         role: user.role,
       }
     };

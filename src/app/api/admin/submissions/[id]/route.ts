@@ -5,6 +5,7 @@ import { updateSubmissionStatusSchema } from "@/lib/validations";
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
 import { logger } from "@/lib/dev-logger";
 import { CacheService } from "@/data/services/cache-service";
+import { parseSecureJson } from "@/lib/api-security";
 
 const repo = new MongoSubmissionRepository();
 const resubmissionRepo = new MongoResubmissionRequestRepository();
@@ -19,7 +20,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   try {
     const { id } = await params;
-    const body = await request.json();
+    const parsedBody = await parseSecureJson(request);
+    if (!parsedBody.success) {
+      return errorResponse(parsedBody.error, 400, parsedBody.code);
+    }
+    const body = parsedBody.data;
     const parsed = updateSubmissionStatusSchema.safeParse(body);
 
     if (!parsed.success) {

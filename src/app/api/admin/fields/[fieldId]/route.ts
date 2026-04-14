@@ -4,6 +4,7 @@ import { ManageFieldsUseCase } from "@/domain/use-cases/admin/manage-fields";
 import { updateFieldDefinitionSchema } from "@/lib/validations";
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
 import { logger } from "@/lib/dev-logger";
+import { parseSecureJson } from "@/lib/api-security";
 
 const repo = new MongoFieldDefinitionRepository();
 const useCase = new ManageFieldsUseCase(repo);
@@ -20,7 +21,11 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
   try {
     const { fieldId } = await params;
-    const body = await request.json();
+    const parsedBody = await parseSecureJson(request);
+    if (!parsedBody.success) {
+      return errorResponse(parsedBody.error, 400, parsedBody.code);
+    }
+    const body = parsedBody.data;
     const parsed = updateFieldDefinitionSchema.safeParse(body);
 
     if (!parsed.success) {

@@ -4,6 +4,7 @@ import { ManageFormsUseCase } from "@/domain/use-cases/admin/manage-forms";
 import { createFormTemplateSchema } from "@/lib/validations";
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
 import { logger } from "@/lib/dev-logger";
+import { parseSecureJson } from "@/lib/api-security";
 
 const repo = new MongoFormTemplateRepository();
 const useCase = new ManageFormsUseCase(repo);
@@ -32,7 +33,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = await request.json();
+    const parsedBody = await parseSecureJson(request);
+    if (!parsedBody.success) {
+      return errorResponse(parsedBody.error, 400, parsedBody.code);
+    }
+    const body = parsedBody.data;
     const parsed = createFormTemplateSchema.safeParse(body);
 
     if (!parsed.success) {

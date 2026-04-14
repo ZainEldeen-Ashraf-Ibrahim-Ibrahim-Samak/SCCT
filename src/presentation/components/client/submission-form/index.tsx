@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle, CheckCircle2, Loader2, Send } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { EMAIL_REGEX, PHONE_REGEX, NAME_REGEX } from "@/constants/constants";
 
 interface SubmissionFormProps {
   tokenOrId: string;
@@ -111,20 +112,50 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
       if (hasMissingRequiredContactField) {
         errors.contactRecords = true;
         isValid = false;
+      } else {
+        // Validate contact record regex formats
+        if (primaryContact.email && !EMAIL_REGEX.test(primaryContact.email)) {
+          errors.contactRecords = true;
+          isValid = false;
+        }
+        if (primaryContact.phone && !PHONE_REGEX.test(primaryContact.phone)) {
+          errors.contactRecords = true;
+          isValid = false;
+        }
+        if (primaryContact.name && !NAME_REGEX.test(primaryContact.name)) {
+          errors.contactRecords = true;
+          isValid = false;
+        }
       }
     }
 
     fields.forEach((f) => {
-      if (f.validationRules?.required) {
-        const val = formData[f.id];
-        const hasMedia = val?.mediaUrl && val.mediaUrl.trim().length > 0;
-        const hasMediaItems = val?.mediaItems && val.mediaItems.length > 0;
-        const hasText = val?.value !== undefined && val?.value !== null && String(val.value).trim().length > 0;
-        const hasList = Array.isArray(val?.value) && val.value.length > 0;
+      const val = formData[f.id];
+      const hasMedia = val?.mediaUrl && val.mediaUrl.trim().length > 0;
+      const hasMediaItems = val?.mediaItems && val.mediaItems.length > 0;
+      const hasText = val?.value !== undefined && val?.value !== null && String(val.value).trim().length > 0;
+      const hasList = Array.isArray(val?.value) && val.value.length > 0;
 
+      if (f.validationRules?.required) {
         if (!hasMedia && !hasText && !hasList && !hasMediaItems) {
           errors[f.id] = true;
           isValid = false;
+        }
+      }
+
+      if (hasText && f.validationRules?.regexType) {
+        const textVal = String(val.value).trim();
+        if (f.validationRules.regexType === "email" && !EMAIL_REGEX.test(textVal)) {
+           errors[f.id] = true;
+           isValid = false;
+        }
+        if (f.validationRules.regexType === "phone" && !PHONE_REGEX.test(textVal)) {
+           errors[f.id] = true;
+           isValid = false;
+        }
+        if (f.validationRules.regexType === "name" && !NAME_REGEX.test(textVal)) {
+           errors[f.id] = true;
+           isValid = false;
         }
       }
     });

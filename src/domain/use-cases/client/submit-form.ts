@@ -8,6 +8,7 @@ import { generateAccessToken } from "@/lib/utils";
 import { NotificationPublisher } from "@/lib/events/publisher";
 import { logger } from "@/lib/dev-logger";
 import { redis } from "@/lib/redis";
+import { EMAIL_REGEX, PHONE_REGEX, NAME_REGEX } from "@/constants/constants";
 
 interface SubmitFormData {
   clientName: string;
@@ -103,6 +104,18 @@ export class SubmitFormUseCase {
       return { success: false, error: "At least one contact record is required" };
     }
 
+    for (const contact of normalizedContacts) {
+      if (contact.email && !EMAIL_REGEX.test(contact.email)) {
+        return { success: false, error: "Invalid contact email format" };
+      }
+      if (contact.phone && !PHONE_REGEX.test(contact.phone)) {
+        return { success: false, error: "Invalid contact phone format" };
+      }
+      if (contact.name && !NAME_REGEX.test(contact.name)) {
+        return { success: false, error: "Invalid contact name format" };
+      }
+    }
+
     logger.info("Submit form context resolved", {
       tokenOrFormId,
       resolvedFormId: activeForm.id,
@@ -139,6 +152,21 @@ export class SubmitFormUseCase {
         const allowed = new Set([...(field.dropdownOptionsEn ?? []), ...(field.dropdownOptionsAr ?? [])]);
         if (uniqueValues.some((v) => !allowed.has(v))) {
           return { success: false, error: `Field '${field.nameEn}' contains invalid options` };
+        }
+      }
+
+      if (field.validationRules?.regexType) {
+        const textVal = String(submittedValue.value ?? "").trim();
+        if (textVal.length > 0) {
+          if (field.validationRules.regexType === "email" && !EMAIL_REGEX.test(textVal)) {
+            return { success: false, error: `Field '${field.nameEn}' has an invalid email format` };
+          }
+          if (field.validationRules.regexType === "phone" && !PHONE_REGEX.test(textVal)) {
+            return { success: false, error: `Field '${field.nameEn}' has an invalid phone format` };
+          }
+          if (field.validationRules.regexType === "name" && !NAME_REGEX.test(textVal)) {
+            return { success: false, error: `Field '${field.nameEn}' has an invalid name format` };
+          }
         }
       }
     }
@@ -222,6 +250,18 @@ export class SubmitFormUseCase {
       return { success: false, error: "At least one contact record is required" };
     }
 
+    for (const contact of normalizedContacts) {
+      if (contact.email && !EMAIL_REGEX.test(contact.email)) {
+        return { success: false, error: "Invalid contact email format" };
+      }
+      if (contact.phone && !PHONE_REGEX.test(contact.phone)) {
+        return { success: false, error: "Invalid contact phone format" };
+      }
+      if (contact.name && !NAME_REGEX.test(contact.name)) {
+        return { success: false, error: "Invalid contact name format" };
+      }
+    }
+
     if (!data.fieldValues || data.fieldValues.length === 0) {
       return { success: false, error: "Submission must contain field values" };
     }
@@ -251,6 +291,21 @@ export class SubmitFormUseCase {
         const allowed = new Set([...(field.dropdownOptionsEn ?? []), ...(field.dropdownOptionsAr ?? [])]);
         if (uniqueValues.some((v) => !allowed.has(v))) {
           return { success: false, error: `Field '${field.nameEn}' contains invalid options` };
+        }
+      }
+
+      if (field.validationRules?.regexType) {
+        const textVal = String(submittedValue.value ?? "").trim();
+        if (textVal.length > 0) {
+          if (field.validationRules.regexType === "email" && !EMAIL_REGEX.test(textVal)) {
+            return { success: false, error: `Field '${field.nameEn}' has an invalid email format` };
+          }
+          if (field.validationRules.regexType === "phone" && !PHONE_REGEX.test(textVal)) {
+            return { success: false, error: `Field '${field.nameEn}' has an invalid phone format` };
+          }
+          if (field.validationRules.regexType === "name" && !NAME_REGEX.test(textVal)) {
+            return { success: false, error: `Field '${field.nameEn}' has an invalid name format` };
+          }
         }
       }
     }

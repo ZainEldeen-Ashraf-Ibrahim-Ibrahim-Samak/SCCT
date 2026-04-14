@@ -33,10 +33,10 @@ There are no strict project initialization tasks since the repository and archit
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T001 [P] Populate centralized regex registry (EMAIL_REGEX, PHONE_REGEX, NAME_REGEX) in `src/constants/constants.ts`
-- [ ] T002 [P] Implement `PhoneRegix` wrapper component with Arabic numeral conversion in `src/components/validation/PhoneRegix.tsx`
-- [ ] T003 [P] Implement `EmailRegix` wrapper component with local typo detection in `src/components/validation/EmailRegix.tsx`
-- [ ] T004 [P] Implement `NameRegix` wrapper component for alphanumeric/Arabic characters in `src/components/validation/NameRegix.tsx`
+- [X] T001 [P] Populate centralized regex registry (EMAIL_REGEX, PHONE_REGEX, NAME_REGEX) in `src/constants/constants.ts`
+- [X] T002 [P] Implement `PhoneRegix` wrapper component with Arabic numeral conversion in `src/components/validation/PhoneRegix.tsx`
+- [X] T003 [P] Implement `EmailRegix` wrapper component with local typo detection in `src/components/validation/EmailRegix.tsx`
+- [X] T004 [P] Implement `NameRegix` wrapper component for alphanumeric/Arabic characters in `src/components/validation/NameRegix.tsx`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -50,8 +50,8 @@ There are no strict project initialization tasks since the repository and archit
 
 ### Implementation for User Story 1
 
-- [ ] T005 [US1] Inject `EmailRegix` and `PhoneRegix` real-time validation wrappers into the Team Management form components (e.g. `src/presentation/components/admin/team-management/member-form.tsx`).
-- [ ] T006 [US1] Apply `EMAIL_REGEX` and `PHONE_REGEX` to server-side creation payload parsing if applicable.
+- [X] T005 [US1] Inject `EmailRegix` and `PhoneRegix` real-time validation wrappers into the Team Management form components (e.g. `src/presentation/components/admin/team-management/member-form.tsx`).
+- [X] T006 [US1] Apply `EMAIL_REGEX` and `PHONE_REGEX` to server-side creation payload parsing if applicable.
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -65,9 +65,9 @@ There are no strict project initialization tasks since the repository and archit
 
 ### Implementation for User Story 2
 
-- [ ] T007 [P] [US2] Update `src/presentation/components/client/submission-form/index.tsx` (Dynamic Renderer) to render `PhoneRegix`, `EmailRegix`, or `NameRegix` matching configured type requirements.
-- [ ] T008 [P] [US2] Apply strict validation in the server ingestion hook `src/domain/use-cases/client/submit-form.ts`.
-- [ ] T009 [US2] Prevent submission in the frontend `useSubmission` hook if the real-time wrapper component reports invalid formatting.
+- [X] T007 [P] [US2] Update `src/presentation/components/client/submission-form/index.tsx` (Dynamic Renderer) to render `PhoneRegix`, `EmailRegix`, or `NameRegix` matching configured type requirements.
+- [X] T008 [P] [US2] Apply strict validation in the server ingestion hook `src/domain/use-cases/client/submit-form.ts`.
+- [X] T009 [US2] Prevent submission in the frontend `useSubmission` hook if the real-time wrapper component reports invalid formatting.
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -81,8 +81,8 @@ There are no strict project initialization tasks since the repository and archit
 
 ### Implementation for User Story 3
 
-- [ ] T010 [P] [US3] Instantiate `EmailRegix` component inside the primary Login form interface to provide sub-100ms keystroke feedback.
-- [ ] T011 [US3] Ensure the login button is disabled while `EmailRegix` returns an invalid state.
+- [X] T010 [P] [US3] Instantiate `EmailRegix` component inside the primary Login form interface to provide sub-100ms keystroke feedback.
+- [X] T011 [US3] Ensure the login button is disabled while `EmailRegix` returns an invalid state.
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -92,12 +92,12 @@ There are no strict project initialization tasks since the repository and archit
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T012 [P] Sync Arabic translation keys to `src/messages/ar.json` containing `VALIDATION.VALID_PHONE`, `VALIDATION.INVALID_PHONE_DETAILS`, `CHANGE_EMAIL.ERRORS.DOMAIN_TYPO`, etc.
-- [ ] T013 [P] Sync English translation keys to `src/messages/en.json` containing the same validation namespace keys.
-- [ ] T014 Run validation components inside the test suite to ensure they correctly switch `dir="rtl"` vs `"ltr"` depending on Next-Intl active locale.
-- [ ] T015 Verify `formatPhoneNumber` strictly preserves Egyptian country code (`+20`) and converts `01X...` properly.
-- [ ] T016 [Principle VIII] Execute full production build (`npm run build`)
-- [ ] T017 [Principle VIII] Execute E2E test suite (if applicable)
+- [X] T012 [P] Sync Arabic translation keys to `src/messages/ar.json` containing `VALIDATION.VALID_PHONE`, `VALIDATION.INVALID_PHONE_DETAILS`, `CHANGE_EMAIL.ERRORS.DOMAIN_TYPO`, etc.
+- [X] T013 [P] Sync English translation keys to `src/messages/en.json` containing the same validation namespace keys.
+- [X] T014 Run validation components inside the test suite to ensure they correctly switch `dir="rtl"` vs `"ltr"` depending on Next-Intl active locale.
+- [X] T015 Verify `formatPhoneNumber` strictly preserves Egyptian country code (`+20`) and converts `01X...` properly.
+- [X] T016 [Principle VIII] Execute full production build (`npm run build`)
+- [X] T017 [Principle VIII] Execute E2E test suite (if applicable)
 
 ---
 

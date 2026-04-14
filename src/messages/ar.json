@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "SCCT",
+    "appName": "SCCT DAMAGES",
     "loading": "جارٍ التحميل...",
     "save": "حفظ",
     "cancel": "إلغاء",
@@ -472,5 +472,20 @@
   "settings": {
     "title": "الإعدادات",
     "subtitle": "إدارة إعداداتك"
+  },
+  "VALIDATION": {
+    "VALID_PHONE": "رقم هاتف صالح",
+    "INVALID_PHONE_DETAILS": "رقم الهاتف يجب أن يبدأ بـ +20 متبوعًا بـ 10 أرقام.",
+    "VALID_EMAIL": "عنوان بريد إلكتروني صالح",
+    "INVALID_EMAIL": "يرجى إدخال عنوان بريد إلكتروني صالح",
+    "VALID_NAME": "اسم صالح",
+    "INVALID_NAME": "اسم غير صالح",
+    "INVALID_NAME_DETAILS": "يرجى استخدام الحروف والمسافات المتعارف عليها فقط."
+  },
+  "CHANGE_EMAIL": {
+    "ERRORS": {
+      "DOMAIN_TYPO": "هل تقصد {domain}؟",
+      "SAME_EMAIL": "لا يمكن أن يكون البريد الإلكتروني الجديد هو نفسه البريد الحالي"
+    }
   }
 }

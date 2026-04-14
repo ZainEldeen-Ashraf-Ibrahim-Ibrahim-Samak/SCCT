@@ -7,6 +7,7 @@ import { SubmitFormUseCase, ViewSubmissionUseCase } from "@/domain/use-cases/cli
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { logger } from "@/lib/dev-logger";
 import { NotificationPublisher } from "@/lib/events/publisher";
+import { parseSecureJson } from "@/lib/api-security";
 
 const submissionRepo = new MongoSubmissionRepository();
 const fieldValueRepo = new MongoFieldValueRepository();
@@ -72,7 +73,11 @@ export async function POST(
 ) {
   try {
     const { token } = await params;
-    const body = await request.json();
+    const parsedBody = await parseSecureJson(request);
+    if (!parsedBody.success) {
+      return errorResponse(parsedBody.error, 400, parsedBody.code);
+    }
+    const body = parsedBody.data;
     const parsed = createSubmissionSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -132,7 +137,11 @@ export async function POST(
 export async function PATCH(request: Request, { params }: { params: Promise<{ token: string }> }) {
   try {
     const { token } = await params;
-    const body = await request.json();
+    const parsedBody = await parseSecureJson(request);
+    if (!parsedBody.success) {
+      return errorResponse(parsedBody.error, 400, parsedBody.code);
+    }
+    const body = parsedBody.data;
     const parsed = createSubmissionSchema.safeParse(body);
 
     if (!parsed.success) {
