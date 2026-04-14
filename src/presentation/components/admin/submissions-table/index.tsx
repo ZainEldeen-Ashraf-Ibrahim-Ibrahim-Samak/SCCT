@@ -126,10 +126,25 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
 
   const getExportColumns = () => [
     { header: t("clientName"), key: "clientName" as const },
-    { header: t("contactEmail"), key: (row: Submission) => getContactSummary(row).email || "—" },
-    { header: t("contactPhone"), key: (row: Submission) => getContactSummary(row).phone || "—" },
-    { header: t("contactAddress"), key: (row: Submission) => getContactSummary(row).address || "—" },
-    { header: tc("status"), key: "status" as const },
+    { 
+      header: t("contactRecords") || "Contact Details", 
+      key: (row: Submission) => {
+        if (row.contactRecords && row.contactRecords.length > 0) {
+          return row.contactRecords.map(r => {
+             const parts = [];
+             if (r.name) parts.push(r.name);
+             if (r.email) parts.push(r.email);
+             if (r.phone) parts.push(r.phone);
+             if (r.contact) parts.push(r.contact);
+             if (r.role) parts.push(r.role);
+             if ((r as any).address) parts.push((r as any).address);
+             return parts.join(" - ");
+          }).join(" | ");
+        }
+        return row.clientContact || "—";
+      }
+    },
+    { header: tc("status"), key: (row: Submission) => t(`statuses.${row.status}`) },
     { header: t("submittedAt"), key: (row: Submission) => formatDate(row.submittedAt) },
   ];
 
