@@ -1,8 +1,10 @@
-﻿# SCCT Development Guidelines
+# SCCT Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-04-14
+Auto-generated from all feature plans. Last updated: 2026-04-15
 
 ## Active Technologies
+- TypeScript 5.x with Node.js LTS tooling; Next.js 16.2.3 web core + Next.js (App Router), next-intl, Zod + @t3-oss/env-nextjs, qrcode.react (existing QR generation), companion mobile shell adapter (Capacitor class of runtime) (main)
+- Existing MongoDB, Upstash Redis, and Cloudinary remain unchanged; mobile flow adds no new persistence requirement (main)
 
 - TypeScript / Node.js (LTS) + Next.js (App Router), ShadCN UI, Mongoose, next-intl (main)
 
@@ -23,6 +25,7 @@ npm test; npm run lint
 TypeScript / Node.js (LTS): Follow standard conventions
 
 ## Recent Changes
+- main: Added TypeScript 5.x with Node.js LTS tooling; Next.js 16.2.3 web core + Next.js (App Router), next-intl, Zod + @t3-oss/env-nextjs, qrcode.react (existing QR generation), companion mobile shell adapter (Capacitor class of runtime)
 
 - main: Added TypeScript / Node.js (LTS) + Next.js (App Router), ShadCN UI, Mongoose, next-intl
 

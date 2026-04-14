@@ -25,6 +25,9 @@ export type Locale = z.infer<typeof LocaleEnum>;
 export const ThemeEnum = z.enum(["light", "dark"]);
 export type Theme = z.infer<typeof ThemeEnum>;
 
+// ── Constants ────────────────────────────────────────────────────────
+export const SAFE_TEXT_REGEX = /^[\u0600-\u06FFa-zA-Z0-9\s.,?!&\-()'"_]*$/u;
+
 // ── Validation Rules Schema ────────────────────────────────────────
 
 export const validationRulesSchema = z
@@ -44,11 +47,12 @@ export const validationRulesSchema = z
 export const createFieldDefinitionSchema = z
   .object({
     formTemplateId: z.string().min(1, "Form template ID is required"),
-    nameEn: z.string().min(1).max(200, "Name must be 200 characters or fewer"),
+    nameEn: z.string().min(1).max(200, "Name must be 200 characters or fewer").regex(SAFE_TEXT_REGEX, "Contains invalid characters"),
     nameAr: z
       .string()
       .min(1)
-      .max(200, "Arabic name must be 200 characters or fewer"),
+      .max(200, "Arabic name must be 200 characters or fewer")
+      .regex(SAFE_TEXT_REGEX, "Contains invalid characters"),
     inputType: InputTypeEnum,
     isMultiple: z.boolean().optional().default(false),
     validationRules: validationRulesSchema.optional().default({}),
@@ -87,8 +91,8 @@ export const createFieldDefinitionSchema = z
   );
 
 export const updateFieldDefinitionSchema = z.object({
-  nameEn: z.string().min(1).max(200).optional(),
-  nameAr: z.string().min(1).max(200).optional(),
+  nameEn: z.string().min(1).max(200).regex(SAFE_TEXT_REGEX, "Contains invalid characters").optional(),
+  nameAr: z.string().min(1).max(200).regex(SAFE_TEXT_REGEX, "Contains invalid characters").optional(),
   inputType: InputTypeEnum.optional(),
   isMultiple: z.boolean().optional(),
   validationRules: validationRulesSchema.optional(),
@@ -125,12 +129,12 @@ export const contactRecordSchema = z.object({
 export const contactFormFieldSchema = z.object({
   id: z.string().min(1),
   key: z.enum(["name", "email", "phone", "address"]),
-  labelEn: z.string().min(1).max(200),
-  labelAr: z.string().min(1).max(200),
-  label: z.string().max(200).optional().default(""),
-  placeholderEn: z.string().max(200).optional().default(""),
-  placeholderAr: z.string().max(200).optional().default(""),
-  placeholder: z.string().max(200).optional().default(""),
+  labelEn: z.string().min(1).max(200).regex(SAFE_TEXT_REGEX, "Contains invalid characters"),
+  labelAr: z.string().min(1).max(200).regex(SAFE_TEXT_REGEX, "Contains invalid characters"),
+  label: z.string().max(200).regex(SAFE_TEXT_REGEX, "Contains invalid characters").optional().default(""),
+  placeholderEn: z.string().max(200).regex(SAFE_TEXT_REGEX, "Contains invalid characters").optional().default(""),
+  placeholderAr: z.string().max(200).regex(SAFE_TEXT_REGEX, "Contains invalid characters").optional().default(""),
+  placeholder: z.string().max(200).regex(SAFE_TEXT_REGEX, "Contains invalid characters").optional().default(""),
   required: z.boolean().optional().default(false),
   sortOrder: z.number().int().min(0),
 });
@@ -141,13 +145,14 @@ export const createFormTemplateSchema = z.object({
   name: z
     .string()
     .min(1, "Name is required")
-    .max(200, "Name must be 200 characters or fewer"),
-  description: z.string().optional().default(""),
+    .max(200, "Name must be 200 characters or fewer")
+    .regex(SAFE_TEXT_REGEX, "Contains invalid characters"),
+  description: z.string().regex(SAFE_TEXT_REGEX, "Contains invalid characters").optional().default(""),
 });
 
 export const updateFormTemplateSchema = z.object({
-  name: z.string().min(1).max(200).optional(),
-  description: z.string().optional(),
+  name: z.string().min(1).max(200).regex(SAFE_TEXT_REGEX, "Contains invalid characters").optional(),
+  description: z.string().regex(SAFE_TEXT_REGEX, "Contains invalid characters").optional(),
   isActive: z.boolean().optional(),
   contactRecords: z.array(contactRecordSchema).min(1).optional(),
   contactFormFields: z.array(contactFormFieldSchema).min(1).optional(),

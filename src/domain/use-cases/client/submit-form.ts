@@ -9,6 +9,7 @@ import { NotificationPublisher } from "@/lib/events/publisher";
 import { logger } from "@/lib/dev-logger";
 import { redis } from "@/lib/redis";
 import { EMAIL_REGEX, PHONE_REGEX, NAME_REGEX } from "@/constants/constants";
+import { sanitizeInput } from "@/lib/utils/sanitize";
 
 interface SubmitFormData {
   clientName: string;
@@ -196,7 +197,7 @@ export class SubmitFormUseCase {
           fieldDefinitionId: def.id,
           fieldNameSnapshot: def.nameEn, // Defaulting to English snapshot, display maps appropriately
           fieldTypeSnapshot: def.inputType,
-          value: fv.value ?? null,
+          value: typeof fv.value === "string" ? sanitizeInput(fv.value) : (fv.value ?? null),
           mediaUrl: fv.mediaUrl ?? null,
           mediaPublicId: fv.mediaPublicId ?? null,
           mediaItems: fv.mediaItems ?? [],
@@ -323,7 +324,7 @@ export class SubmitFormUseCase {
           fieldDefinitionId: def.id,
           fieldNameSnapshot: def.nameEn,
           fieldTypeSnapshot: def.inputType,
-          value: fv.value ?? null,
+          value: typeof fv.value === "string" ? sanitizeInput(fv.value) : (fv.value ?? null),
           mediaUrl: fv.mediaUrl ?? null,
           mediaPublicId: fv.mediaPublicId ?? null,
           mediaItems: fv.mediaItems ?? [],
