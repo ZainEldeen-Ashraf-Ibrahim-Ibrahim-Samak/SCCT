@@ -218,7 +218,6 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
   const [savedContactRecords, setSavedContactRecords] = useState<ContactRecordDraft[]>([createContactRecord()]);
   const [isLoadingContacts, setIsLoadingContacts] = useState(true);
   const [isSavingContacts, setIsSavingContacts] = useState(false);
-  const [showContactValidation, setShowContactValidation] = useState(false);
 
   const fetchFormContacts = useCallback(async () => {
     setIsLoadingContacts(true);
@@ -234,7 +233,6 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
 
       setContactRecords(normalized);
       setSavedContactRecords(normalized);
-      setShowContactValidation(false);
     } catch (error) {
       const fallback = [createContactRecord()];
       setContactRecords(fallback);
@@ -330,7 +328,6 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
   }
 
   async function handleSaveContacts() {
-    setShowContactValidation(true);
     const normalized = normalizedContactRecords.filter((record) => record.id.length > 0);
 
     if (normalized.length < 1 || normalized.length !== normalizedContactRecords.length) {
@@ -351,7 +348,6 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
       }
       setContactRecords(normalized);
       setSavedContactRecords(normalized);
-      setShowContactValidation(false);
       toast.success(tc("success"));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : tc("error"));
@@ -361,12 +357,10 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
   }
 
   function handleAddContact() {
-    setShowContactValidation(false);
     setContactRecords((prev) => [...prev, createContactRecord()]);
   }
 
   function handleUpdateContact(id: string, patch: Partial<Omit<ContactRecordDraft, "id">>) {
-    setShowContactValidation(false);
     setContactRecords((prev) =>
       prev.map((record) =>
         record.id === id
@@ -384,7 +378,6 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
   }
 
   function handleRemoveContact(id: string) {
-    setShowContactValidation(false);
     setContactRecords((prev) => (prev.length <= 1 ? prev : prev.filter((record) => record.id !== id)));
   }
 
@@ -392,7 +385,6 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    setShowContactValidation(false);
     setContactRecords((prev) => {
       const oldIndex = prev.findIndex((record) => record.id === String(active.id));
       const newIndex = prev.findIndex((record) => record.id === String(over.id));
@@ -483,9 +475,7 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
                         index={index}
                         canRemove={contactRecords.length > 1}
                         disabled={isSavingContacts}
-                        showValidation={showContactValidation}
                         t={t}
-                        tc={tc}
                         onUpdate={handleUpdateContact}
                         onRemove={handleRemoveContact}
                       />
