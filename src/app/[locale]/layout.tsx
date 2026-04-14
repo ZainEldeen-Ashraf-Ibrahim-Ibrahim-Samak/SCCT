@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://scct-three.vercel.app/"),
+  metadataBase: new URL("https://scct-damages.vercel.app/"),
   title: `${SITE_NAME} — Client Data Collection`,
   description:
     "Dynamic client data collection and admin review system with bilingual support",

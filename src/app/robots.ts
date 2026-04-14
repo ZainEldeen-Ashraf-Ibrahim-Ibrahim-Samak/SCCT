@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: '/admin/',
     },
-    sitemap: 'https://scct-three.vercel.app/sitemap.xml',
+    sitemap: 'https://scct-damages.vercel.app/sitemap.xml',
   }
 }

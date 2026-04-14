@@ -165,7 +165,14 @@ async function handleApiSecurity(request: NextRequest): Promise<NextResponse> {
   }
 
   if (pathname.startsWith("/api/admin")) {
-    const token = await getToken({ req: request, secret: process.env.AUTH_SECRET });
+    const secureCookie =
+      request.nextUrl.protocol === "https:" || process.env.NODE_ENV === "production";
+
+    const token = await getToken({
+      req: request,
+      secret: process.env.AUTH_SECRET,
+      secureCookie,
+    });
 
     if (!token) {
       const response = NextResponse.json(
