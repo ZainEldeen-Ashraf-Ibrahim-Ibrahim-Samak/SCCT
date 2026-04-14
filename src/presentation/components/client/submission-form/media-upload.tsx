@@ -147,6 +147,7 @@ export function MediaUpload({
   );
 
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [dragActive, setDragActive] = useState(false);
   const mountedRef = useRef(false);
 
@@ -209,14 +210,37 @@ export function MediaUpload({
         const resourceType = type === "image" ? "image" : "auto";
         const cloudUrl = `https://api.cloudinary.com/v1_1/${cloudname}/${resourceType}/upload`;
 
-        const res = await fetch(cloudUrl, {
-          method: "POST",
-          body: formData,
+        setUploadProgress(0);
+
+        const data: any = await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", cloudUrl);
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable && mountedRef.current) {
+              const percent = Math.round((e.loaded / e.total) * 100);
+              setUploadProgress(percent);
+            }
+          };
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                resolve(JSON.parse(xhr.responseText));
+              } catch (e) {
+                resolve(xhr.responseText);
+              }
+            } else {
+              try {
+                reject(JSON.parse(xhr.responseText));
+              } catch (e) {
+                reject(new Error(xhr.responseText));
+              }
+            }
+          };
+          xhr.onerror = () => reject(new Error("Network Error"));
+          xhr.send(formData);
         });
 
-        const data = await res.json();
-
-        if (!res.ok) {
+        if (data.error) {
           logger.error("Cloudinary upload error", data);
           toast.error(data.error?.message || t("uploadError"));
           hasUploadFailure = true;
@@ -342,7 +366,13 @@ export function MediaUpload({
                     ${isUploading ? "opacity-50" : ""}
                   `}>
                     {isUploading ? (
-                      <UploadCloud className="h-6 w-6 animate-bounce" />
+                      <div className="flex flex-col items-center gap-2 w-full px-4">
+                        <UploadCloud className="h-6 w-6 animate-bounce text-primary" />
+                        <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden">
+                          <div className="bg-primary h-full transition-all duration-200" style={{ width: `${uploadProgress}%` }} />
+                        </div>
+                        <span className="text-xs font-medium text-primary">{uploadProgress}%</span>
+                      </div>
                     ) : (
                       <>
                         <Plus className="h-6 w-6" />
