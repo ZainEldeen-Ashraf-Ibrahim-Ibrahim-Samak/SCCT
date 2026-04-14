@@ -21,9 +21,10 @@ interface SubmissionsTableProps {
   isLoading: boolean;
   onDelete: (id: string) => Promise<void>;
   onRefresh: () => void;
+  formNamesById?: Record<string, string>;
 }
 
-export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }: SubmissionsTableProps) {
+export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh, formNamesById = {} }: SubmissionsTableProps) {
   const t = useTranslations("submissions");
   const tc = useTranslations("common");
   const router = useRouter();
@@ -125,6 +126,10 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
   };
 
   const getExportColumns = () => [
+    {
+      header: t("formName"),
+      key: (row: Submission) => formNamesById[row.formTemplateId] || "—",
+    },
     { header: t("clientName"), key: "clientName" as const },
     { 
       header: t("contactRecords") || "Contact Details", 
@@ -177,6 +182,7 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
               </TableHead>
               <TableHead className="whitespace-nowrap"><Skeleton className="h-4 w-24" /></TableHead>
               <TableHead className="hidden md:table-cell whitespace-nowrap"><Skeleton className="h-4 w-24" /></TableHead>
+              <TableHead className="hidden md:table-cell whitespace-nowrap"><Skeleton className="h-4 w-24" /></TableHead>
               <TableHead className="hidden lg:table-cell whitespace-nowrap"><Skeleton className="h-4 w-24" /></TableHead>
               <TableHead className="hidden xl:table-cell whitespace-nowrap"><Skeleton className="h-4 w-24" /></TableHead>
               <TableHead className="whitespace-nowrap"><Skeleton className="h-4 w-24" /></TableHead>
@@ -194,6 +200,7 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
                     <Skeleton className="h-4 w-32" />
                     <Skeleton className="h-3 w-20 mt-2 md:hidden" />
                   </TableCell>
+                  <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-28" /></TableCell>
                   <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
                   <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
                   <TableCell className="hidden xl:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
@@ -320,6 +327,7 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
                 />
               </TableHead>
               <TableHead className="whitespace-nowrap">{t("clientName")}</TableHead>
+              <TableHead className="hidden md:table-cell whitespace-nowrap">{t("formName")}</TableHead>
               <TableHead className="hidden md:table-cell whitespace-nowrap">{t("contactEmail")}</TableHead>
               <TableHead className="hidden lg:table-cell whitespace-nowrap">{t("contactPhone")}</TableHead>
               <TableHead className="hidden xl:table-cell whitespace-nowrap">{t("contactAddress")}</TableHead>
@@ -333,6 +341,7 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
               const latestUpdater = getLatestUpdater(sub);
               const contactSummary = getContactSummary(sub);
               const isSelected = selectedIds.includes(sub.id);
+              const formName = formNamesById[sub.formTemplateId] || "—";
               return (
                 <TableRow 
                   key={sub.id} 
@@ -348,6 +357,9 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
                   </TableCell>
                   <TableCell className="font-medium group-hover:text-primary transition-colors wrap-break-word">
                     <div>{sub.clientName || t("unnamedSubmission")}</div>
+                    <div className="mt-1 text-xs text-muted-foreground font-normal md:hidden">
+                      {t("formName")}: {formName}
+                    </div>
                     {(contactSummary.phone || contactSummary.email) && (
                       <div className="mt-1 text-xs text-muted-foreground font-normal break-all flex items-center gap-2">
                         <span>{[contactSummary.phone, contactSummary.email].filter(Boolean).join(" • ")}</span>
@@ -376,6 +388,7 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
                       </div>
                     )}
                   </TableCell>
+                  <TableCell className="hidden md:table-cell break-all">{formName}</TableCell>
                   <TableCell className="hidden md:table-cell break-all">{contactSummary.email || "—"}</TableCell>
                   <TableCell className="hidden lg:table-cell break-all">{contactSummary.phone || "—"}</TableCell>
                   <TableCell className="hidden xl:table-cell break-all">{contactSummary.address || "—"}</TableCell>

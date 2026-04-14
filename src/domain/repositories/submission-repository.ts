@@ -13,7 +13,8 @@ export interface SubmissionRepository {
     page: number,
     limit: number,
     status?: string,
-    adminName?: string
+    adminName?: string,
+    formTemplateId?: string,
   ): Promise<{ submissions: Submission[]; total: number; totalPages: number }>;
   getCounts(): Promise<{ pending: number; draft: number; viewed: number; needs_rewrite: number; total: number }>;
   updateStatus(id: string, input: UpdateSubmissionStatusInput): Promise<Submission | null>;

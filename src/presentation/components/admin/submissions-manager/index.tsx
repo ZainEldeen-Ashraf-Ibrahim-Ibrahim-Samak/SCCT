@@ -12,6 +12,11 @@ import { FileText, Clock, Eye, AlertCircle, ChevronLeft, ChevronRight, Search } 
 import { Input } from "@/components/ui/input";
 import { useSearchParams } from "next/navigation";
 
+interface FormOption {
+  id: string;
+  name: string;
+}
+
 export function SubmissionsManager() {
   const t = useTranslations("submissions");
   const td = useTranslations("dashboard");
@@ -22,15 +27,22 @@ export function SubmissionsManager() {
   
   const [statusFilter, setStatusFilter] = useState("all");
   const [adminFilter, setAdminFilter] = useState("all");
+  const [formFilter, setFormFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [uniqueAdmins, setUniqueAdmins] = useState<string[]>([]);
+  const [formOptions, setFormOptions] = useState<FormOption[]>([]);
+
+  const formNameById = formOptions.reduce<Record<string, string>>((acc, form) => {
+    acc[form.id] = form.name;
+    return acc;
+  }, {});
 
   useEffect(() => {
     // In a real app, search might be a separate API param. 
     // For now we use the existing fetchSubmissions which might only filter by status.
-    fetchSubmissions(page, statusFilter, adminFilter);
-  }, [page, statusFilter, adminFilter, fetchSubmissions]);
+    fetchSubmissions(page, statusFilter, adminFilter, formFilter);
+  }, [page, statusFilter, adminFilter, formFilter, fetchSubmissions]);
 
   // Sync with real-time updates
   useEffect(() => {
@@ -43,13 +55,29 @@ export function SubmissionsManager() {
       })
       .catch((err) => console.error("Failed to load admins list", err));
 
+    fetch("/api/admin/forms", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setFormOptions(
+            json.data
+              .map((form: { id?: string; name?: string }) => ({
+                id: String(form.id ?? "").trim(),
+                name: String(form.name ?? "").trim(),
+              }))
+              .filter((form: FormOption) => form.id.length > 0 && form.name.length > 0),
+          );
+        }
+      })
+      .catch((err) => console.error("Failed to load forms list", err));
+
     const handleUpdate = () => {
-      fetchSubmissions(page, statusFilter, adminFilter);
+      fetchSubmissions(page, statusFilter, adminFilter, formFilter);
     };
 
     window.addEventListener("submissions-updated", handleUpdate);
     return () => window.removeEventListener("submissions-updated", handleUpdate);
-  }, [page, statusFilter, adminFilter, fetchSubmissions]);
+  }, [page, statusFilter, adminFilter, formFilter, fetchSubmissions]);
 
   const handleFilterChange = (val: string | null) => {
     if (val) {
@@ -61,6 +89,13 @@ export function SubmissionsManager() {
   const handleAdminFilterChange = (val: string | null) => {
     if (val) {
       setAdminFilter(val);
+      setPage(1);
+    }
+  };
+
+  const handleFormFilterChange = (val: string | null) => {
+    if (val) {
+      setFormFilter(val);
       setPage(1);
     }
   };
@@ -157,6 +192,21 @@ export function SubmissionsManager() {
         
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <div className="flex items-center gap-2 w-full sm:w-auto">
+            <span className="text-sm font-medium whitespace-nowrap">{t("filterByForm") || "Form"}:</span>
+            <Select value={formFilter} onValueChange={handleFormFilterChange}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder={t("allForms") || "All Forms"} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("allForms") || "All Forms"}</SelectItem>
+                {formOptions.map((form) => (
+                  <SelectItem key={form.id} value={form.id}>{form.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <span className="text-sm font-medium whitespace-nowrap">{t("filterByAdmin") || "Admin"}:</span>
             <Select value={adminFilter} onValueChange={handleAdminFilterChange}>
               <SelectTrigger className="w-full sm:w-[150px]">
@@ -194,7 +244,8 @@ export function SubmissionsManager() {
           submissions={filteredSubmissions} 
           isLoading={isLoading} 
           onDelete={deleteSubmission}
-          onRefresh={() => fetchSubmissions(page, statusFilter)} 
+          onRefresh={() => fetchSubmissions(page, statusFilter, adminFilter, formFilter)}
+          formNamesById={formNameById}
         />
       </div>
 

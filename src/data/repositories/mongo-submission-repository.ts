@@ -157,7 +157,8 @@ export class MongoSubmissionRepository implements SubmissionRepository {
     page: number,
     limit: number,
     status?: string,
-    adminName?: string
+    adminName?: string,
+    formTemplateId?: string,
   ): Promise<{ submissions: Submission[]; total: number; totalPages: number }> {
     try {
       const compute = async () => {
@@ -167,6 +168,10 @@ export class MongoSubmissionRepository implements SubmissionRepository {
         
         if (status && status !== "all") {
           filter.status = status;
+        }
+
+        if (formTemplateId && formTemplateId !== "all") {
+          filter.formTemplateId = formTemplateId;
         }
 
         const skip = (page - 1) * limit;
@@ -202,12 +207,20 @@ export class MongoSubmissionRepository implements SubmissionRepository {
         };
       };
 
-      if ((!status || status === "all") && (!adminName || adminName === "all")) {
+      if (
+        (!status || status === "all") &&
+        (!adminName || adminName === "all") &&
+        (!formTemplateId || formTemplateId === "all")
+      ) {
         return await CacheService.getSubmissionsList("all", page, compute);
       }
-      return await CacheService.getSubmissionsList(`${status || "all"}_${adminName || "all"}`, page, compute);
+      return await CacheService.getSubmissionsList(
+        `${status || "all"}_${adminName || "all"}_${formTemplateId || "all"}`,
+        page,
+        compute,
+      );
     } catch (error) {
-      logger.error("Failed to list paginated submissions", { page, limit, status, error });
+      logger.error("Failed to list paginated submissions", { page, limit, status, adminName, formTemplateId, error });
       throw error;
     }
   }
