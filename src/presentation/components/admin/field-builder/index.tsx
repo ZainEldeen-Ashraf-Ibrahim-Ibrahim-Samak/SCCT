@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useFieldBuilder } from "@/presentation/view-models/use-field-builder";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -89,124 +90,126 @@ function ContactFormFieldRow({
   };
 
   return (
-    <div
+    <Card
       ref={setNodeRef}
       style={style}
       className={`rounded-md border bg-background p-4 space-y-4 shadow-sm transition-shadow ${isDragging ? "shadow-lg z-10" : "hover:shadow-sm"}`}
     >
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="cursor-grab active:cursor-grabbing touch-none text-muted-foreground hover:text-foreground"
-            aria-label={t("dragToReorder")}
-            {...attributes}
-            {...listeners}
-            disabled={disabled}
-          >
-            <GripVertical className="h-4 w-4" />
-          </button>
-          <Label className="text-sm font-semibold">{t("contactFormInputLabel", { index: index + 1 })}</Label>
+      <CardContent className="p-4 space-y-4">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="cursor-grab active:cursor-grabbing touch-none text-muted-foreground hover:text-foreground"
+              aria-label={t("dragToReorder")}
+              {...attributes}
+              {...listeners}
+              disabled={disabled}
+            >
+              <GripVertical className="h-4 w-4" />
+            </button>
+            <Label className="text-sm font-semibold">{t("contactFormInputLabel", { index: index + 1 })}</Label>
+          </div>
+
+          {canRemove && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => onRemove(field.id)}
+              className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              title={t("contactFormRemoveInput")}
+              disabled={disabled}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
 
-        {canRemove && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => onRemove(field.id)}
-            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-            title={t("contactFormRemoveInput")}
-            disabled={disabled}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor={`contact-key-${field.id}`} className="text-xs text-muted-foreground uppercase">{t("contactFormInputType")}</Label>
+            <select
+              id={`contact-key-${field.id}`}
+              value={field.key}
+              onChange={(e) => onUpdate(field.id, { key: e.target.value as ContactFormFieldKey })}
+              disabled={disabled}
+              aria-label={t("contactFormInputType")}
+              title={t("contactFormInputType")}
+              className="h-10 w-full rounded-md border border-input bg-muted/50 px-3 text-sm"
+            >
+              {CONTACT_FORM_FIELD_KEYS.map((key) => (
+                <option key={key} value={key}>
+                  {t(`contactInputKinds.${key}`)}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor={`contact-key-${field.id}`} className="text-xs text-muted-foreground uppercase">{t("contactFormInputType")}</Label>
-          <select
-            id={`contact-key-${field.id}`}
-            value={field.key}
-            onChange={(e) => onUpdate(field.id, { key: e.target.value as ContactFormFieldKey })}
-            disabled={disabled}
-            aria-label={t("contactFormInputType")}
-            title={t("contactFormInputType")}
-            className="h-10 w-full rounded-md border border-input bg-muted/50 px-3 text-sm"
-          >
-            {CONTACT_FORM_FIELD_KEYS.map((key) => (
-              <option key={key} value={key}>
-                {t(`contactInputKinds.${key}`)}
-              </option>
-            ))}
-          </select>
-        </div>
+          <div className="space-y-1.5">
+            <Label htmlFor={`contact-label-en-${field.id}`} className="text-xs text-muted-foreground uppercase">{t("contactFormInputNameEn")}</Label>
+            <Input
+              id={`contact-label-en-${field.id}`}
+              value={field.labelEn}
+              onChange={(e) => onUpdate(field.id, { labelEn: e.target.value })}
+              placeholder={t("contactFormInputNameEnPlaceholder")}
+              disabled={disabled}
+              className="bg-muted/50 focus-visible:bg-background"
+            />
+          </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor={`contact-label-en-${field.id}`} className="text-xs text-muted-foreground uppercase">{t("contactFormInputNameEn")}</Label>
-          <Input
-            id={`contact-label-en-${field.id}`}
-            value={field.labelEn}
-            onChange={(e) => onUpdate(field.id, { labelEn: e.target.value })}
-            placeholder={t("contactFormInputNameEnPlaceholder")}
-            disabled={disabled}
-            className="bg-muted/50 focus-visible:bg-background"
-          />
-        </div>
+          <div className="space-y-1.5">
+            <Label htmlFor={`contact-label-ar-${field.id}`} className="text-xs text-muted-foreground uppercase">{t("contactFormInputNameAr")}</Label>
+            <Input
+              id={`contact-label-ar-${field.id}`}
+              value={field.labelAr}
+              onChange={(e) => onUpdate(field.id, { labelAr: e.target.value })}
+              placeholder={t("contactFormInputNameArPlaceholder")}
+              disabled={disabled}
+              dir="rtl"
+              className="bg-muted/50 focus-visible:bg-background"
+            />
+          </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor={`contact-label-ar-${field.id}`} className="text-xs text-muted-foreground uppercase">{t("contactFormInputNameAr")}</Label>
-          <Input
-            id={`contact-label-ar-${field.id}`}
-            value={field.labelAr}
-            onChange={(e) => onUpdate(field.id, { labelAr: e.target.value })}
-            placeholder={t("contactFormInputNameArPlaceholder")}
-            disabled={disabled}
-            dir="rtl"
-            className="bg-muted/50 focus-visible:bg-background"
-          />
-        </div>
+          <div className="space-y-1.5">
+            <Label htmlFor={`contact-placeholder-en-${field.id}`} className="text-xs text-muted-foreground uppercase">{t("contactFormInputPlaceholderEn")}</Label>
+            <Input
+              id={`contact-placeholder-en-${field.id}`}
+              value={field.placeholderEn}
+              onChange={(e) => onUpdate(field.id, { placeholderEn: e.target.value })}
+              placeholder={t("contactFormInputPlaceholderEnHint")}
+              disabled={disabled}
+              className="bg-muted/50 focus-visible:bg-background"
+            />
+          </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor={`contact-placeholder-en-${field.id}`} className="text-xs text-muted-foreground uppercase">{t("contactFormInputPlaceholderEn")}</Label>
-          <Input
-            id={`contact-placeholder-en-${field.id}`}
-            value={field.placeholderEn}
-            onChange={(e) => onUpdate(field.id, { placeholderEn: e.target.value })}
-            placeholder={t("contactFormInputPlaceholderEnHint")}
-            disabled={disabled}
-            className="bg-muted/50 focus-visible:bg-background"
-          />
-        </div>
+          <div className="space-y-1.5">
+            <Label htmlFor={`contact-placeholder-ar-${field.id}`} className="text-xs text-muted-foreground uppercase">{t("contactFormInputPlaceholderAr")}</Label>
+            <Input
+              id={`contact-placeholder-ar-${field.id}`}
+              value={field.placeholderAr}
+              onChange={(e) => onUpdate(field.id, { placeholderAr: e.target.value })}
+              placeholder={t("contactFormInputPlaceholderArHint")}
+              disabled={disabled}
+              dir="rtl"
+              className="bg-muted/50 focus-visible:bg-background"
+            />
+          </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor={`contact-placeholder-ar-${field.id}`} className="text-xs text-muted-foreground uppercase">{t("contactFormInputPlaceholderAr")}</Label>
-          <Input
-            id={`contact-placeholder-ar-${field.id}`}
-            value={field.placeholderAr}
-            onChange={(e) => onUpdate(field.id, { placeholderAr: e.target.value })}
-            placeholder={t("contactFormInputPlaceholderArHint")}
-            disabled={disabled}
-            dir="rtl"
-            className="bg-muted/50 focus-visible:bg-background"
-          />
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id={`contact-required-${field.id}`}
+              checked={field.required}
+              onCheckedChange={(checked) => onUpdate(field.id, { required: checked === true })}
+              disabled={disabled}
+            />
+            <Label htmlFor={`contact-required-${field.id}`} className="text-sm">
+              {tc("required")}
+            </Label>
+          </div>
         </div>
-
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id={`contact-required-${field.id}`}
-            checked={field.required}
-            onCheckedChange={(checked) => onUpdate(field.id, { required: checked === true })}
-            disabled={disabled}
-          />
-          <Label htmlFor={`contact-required-${field.id}`} className="text-sm">
-            {tc("required")}
-          </Label>
-        </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
