@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Plus, Trash2 } from "lucide-react";
 import type { ContactRecordDraft } from "@/presentation/view-models/use-submission";
 import { MediaUpload } from "./media-upload";
 
@@ -14,28 +15,48 @@ interface ContactRecordsProps {
   disabled?: boolean;
   showValidation?: boolean;
   onUpdate: (id: string, patch: Partial<Omit<ContactRecordDraft, "id">>) => void;
+  onAdd?: () => void;
+  onRemove?: (id: string) => void;
 }
 
 interface ContactCardProps {
   record: ContactRecordDraft;
   index: number;
   disabled: boolean;
+  canRemove: boolean;
   showValidation: boolean;
   onUpdate: ContactRecordsProps["onUpdate"];
+  onRemove?: (id: string) => void;
 }
 
 function ContactCard({
   record,
   index,
   disabled,
+  canRemove,
   onUpdate,
+  onRemove,
 }: ContactCardProps) {
   const t = useTranslations("client");
 
   return (
-    <div className="rounded-lg border bg-background/80 p-4 space-y-3">
+    <div className="rounded-lg border bg-background/80 p-4 space-y-3 relative group">
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm font-medium">{t("contactRecordLabel", { index: index + 1 })}</p>
+        
+        {canRemove && onRemove && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => onRemove(record.id)}
+            disabled={disabled}
+            className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+            title={t("remove")}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -127,6 +148,8 @@ export function ContactRecords({
   disabled = false,
   showValidation = false,
   onUpdate,
+  onAdd,
+  onRemove,
 }: ContactRecordsProps) {
   const t = useTranslations("client");
 
@@ -153,6 +176,19 @@ export function ContactRecords({
           </h4>
           <p className="text-xs text-muted-foreground">{t("contactRecordRequired")}</p>
         </div>
+        {onAdd && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onAdd}
+            disabled={disabled}
+            className="flex-shrink-0"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            {t("addContactRecord")}
+          </Button>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -163,7 +199,9 @@ export function ContactRecords({
             index={index}
             disabled={disabled}
             showValidation={showValidation}
+            canRemove={visibleRecords.length > 1}
             onUpdate={onUpdate}
+            onRemove={onRemove}
           />
         ))}
       </div>

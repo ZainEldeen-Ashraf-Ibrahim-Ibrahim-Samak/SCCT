@@ -223,58 +223,61 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
                   setValidationErrors((prev) => ({ ...prev, contactRecords: false }));
                 }
               }}
-            />
+                onAdd={addContactRecord}
+                onRemove={removeContactRecord}
+                onReorder={reorderContactRecords}
+              />
 
-            <div className="space-y-6">
-              {fields.map((field) => {
-                 const currentVal = formData[field.id];
-                 return (
-                   <div key={field.id} className="p-1">
-                     <FieldRenderer
-                        field={field}
-                        value={currentVal?.value}
-                        mediaUrl={currentVal?.mediaUrl}
-                        mediaPublicId={currentVal?.mediaPublicId}
-                        mediaItems={currentVal?.mediaItems}
-                        onChangeValue={(v) => {
-                           setFieldValue(field.id, v);
-                           if (validationErrors[field.id]) setValidationErrors(prev => ({ ...prev, [field.id]: false }));
-                        }}
-                        onChangeMedia={(url, pid) => {
-                           setMediaValue(field.id, url, pid);
-                           if (validationErrors[field.id]) setValidationErrors(prev => ({ ...prev, [field.id]: false }));
-                        }}
-                        onChangeMediaItems={(items) => {
-                           setMediaItems(field.id, items);
-                           if (validationErrors[field.id]) setValidationErrors(prev => ({ ...prev, [field.id]: false }));
-                        }}
-                        hasError={validationErrors[field.id]}
-                        disabled={isViewOnly}
-                      />
-                   </div>
-                 );
-              })}
-            </div>
-          </CardContent>
+              <div className="space-y-6">
+                {fields.map((field) => {
+                   const currentVal = formData[field.id];
+                   return (
+                     <div key={field.id} className="p-1">
+                       <FieldRenderer
+                          field={field}
+                          value={currentVal?.value}
+                          mediaUrl={currentVal?.mediaUrl}
+                          mediaPublicId={currentVal?.mediaPublicId}
+                          mediaItems={currentVal?.mediaItems}
+                          onChangeValue={(v) => {
+                             setFieldValue(field.id, v);
+                             if (validationErrors[field.id]) setValidationErrors(prev => ({ ...prev, [field.id]: false }));
+                          }}
+                          onChangeMedia={(url, pid) => {
+                             setMediaValue(field.id, url, pid);
+                             if (validationErrors[field.id]) setValidationErrors(prev => ({ ...prev, [field.id]: false }));
+                          }}
+                          onChangeMediaItems={(items) => {
+                             setMediaItems(field.id, items);
+                             if (validationErrors[field.id]) setValidationErrors(prev => ({ ...prev, [field.id]: false }));
+                          }}
+                          hasError={validationErrors[field.id]}
+                          disabled={isViewOnly}
+                        />
+                     </div>
+                   );
+                })}
+              </div>
+            </CardContent>
 
-          {error && error !== "not_found" && (
-            <div className="px-6 pb-2">
-               <p className="text-sm text-destructive">{error}</p>
-            </div>
-          )}
+            {error && error !== "not_found" && (
+              <div className="px-6 pb-2">
+                 <p className="text-sm text-destructive">{error}</p>
+              </div>
+            )}
 
-          {!isViewOnly && (
-            <CardFooter className="bg-muted/10 pt-6 mt-4 border-t">
-              <Button type="submit" className="w-full sm:w-auto" size="lg" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <Loader2 className="me-2 h-5 w-5 animate-spin" />
-                ) : (
-                  <Send className="me-2 h-5 w-5" />
-                )}
-                {isNew || isDraft ? t("submitButton") : t("resubmitButton")}
-              </Button>
-            </CardFooter>
-          )}
+            {!isViewOnly && (
+              <CardFooter className="bg-muted/10 pt-6 mt-4 border-t">
+                <Button type="submit" className="w-full sm:w-auto" size="lg" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <Loader2 className="me-2 h-5 w-5 animate-spin" />
+                  ) : (
+                    <Send className="me-2 h-5 w-5" />
+                  )}
+                  {isNew || isDraft ? t("submitButton") : t("resubmitButton")}
+                </Button>
+              </CardFooter>
+            )}
         </form>
       </Card>
     </div>
