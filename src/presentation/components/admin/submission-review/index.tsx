@@ -149,10 +149,7 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-2xl">{submission.clientName || t("unnamedSubmission")}</CardTitle>
-                  <CardDescription className="text-base mt-1">
-                    {submission.clientContact || t("noContactInfoProvided")}
-                  </CardDescription>
+                    <CardTitle className="text-2xl">{t("submissionData")}</CardTitle>
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <Badge variant={submission.status === "needs_rewrite" ? "destructive" : "secondary"} className="text-sm px-3 py-1 flex items-center gap-1.5">
