@@ -117,7 +117,10 @@ export const contactRecordSchema = z.object({
   notes: z.string().max(1000).optional().default("").or(z.null()),
   mediaUrl: z.string().optional().nullable(),
   mediaPublicId: z.string().optional().nullable(),
-});
+}).refine(
+  (data) => !!(data.name || data.email || data.phone || data.contact || data.role || data.notes || data.mediaUrl),
+  { message: "At least one input must be provided for the contact record" }
+);
 
 // ── Form Template Schemas ──────────────────────────────────────────
 

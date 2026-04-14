@@ -93,3 +93,13 @@ src/
 **Architecture**:
 - Update schema rules in validations.ts.
 - Update UI components: Client's Submission Form Contact Records, and Admin's Submissions Table / Details View.
+
+### Phase 9: User Story 6 - Export Submissions to CSV & PDF
+**Goal**: Enable downloading single submissions or selections of submissions directly to CSV and PDF formats from the admin interface.
+
+**Architecture**:
+- For **CSV**: Implement a frontend utility to iterate over `Submission` arrays, mapping their contact fields and dynamic `fieldValues` into a tabular grid format, generating a native Blob and triggering a save file action. (Optional: install `papaparse` if the custom fields require complex escaping).
+- For **PDF**: 
+  - Submissions list table mode: Provide a print-friendly CSS view and trigger browser printing, OR use a library.
+  - Single submission mode: Enable a print-style layout hiding navigation elements, allowing exact 1-to-1 PDF printing natively, or generate via `jsPDF` / `html2pdf.js`.
+- Provide specific UI integration points in `submission-review/index.tsx` (single) and `submissions-table/index.tsx` (batch).

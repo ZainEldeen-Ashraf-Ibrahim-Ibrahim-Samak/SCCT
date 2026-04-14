@@ -217,20 +217,12 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
               records={contactRecords}
               disabled={isViewOnly || isSubmitting}
               showValidation={!!validationErrors.contactRecords}
-              onAdd={() => {
-                addContactRecord();
-                if (validationErrors.contactRecords) {
-                  setValidationErrors((prev) => ({ ...prev, contactRecords: false }));
-                }
-              }}
               onUpdate={(id, patch) => {
                 updateContactRecord(id, patch);
                 if (validationErrors.contactRecords) {
                   setValidationErrors((prev) => ({ ...prev, contactRecords: false }));
                 }
               }}
-              onRemove={removeContactRecord}
-              onReorder={reorderContactRecords}
             />
 
             <div className="space-y-6">

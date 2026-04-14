@@ -155,3 +155,12 @@ pm run build) to ensure all structural changes are stable.
 equired\ attributes from contact fields. Check and gracefully render empty states in the contact manager view.
 - [x] T030 [US5] Update \src/presentation/components/admin/submission-review/index.tsx\ and \src/app/[locale]/admin/submissions/columns.tsx\ (or the specific admin table/view handling contact info) to gracefully display optional/missing contact data (e.g., fallback \-\ or \N/A\ or purely omitted).
 - [x] T031 [US5] Update \src/presentation/view-models/use-submission.ts\ to not flag missing contact details as validation errors, providing validation strictly verifies \contactRecords.length >= 1\.
+
+## Phase 9: Export Submissions to CSV & PDF (User Story 6)
+**Goal**: Allow users to export a single submission or multiple submissions (from the table) into CSV and PDF formats.
+
+### Implementation for User Story 6
+- [ ] T032 [US6] Add dependencies for CSV & PDF export (if required, like `papaparse` or `jspdf` / `html2canvas`) or implement native Blob/print CSS logic.
+- [ ] T033 [US6] Create export functionality for the Admin Submissions Table. Add "Export to CSV" and "Export to PDF" options (for selected or all).
+- [ ] T034 [US6] Create export functionality for the Admin Single Submission Review. Add "Export" buttons for the individual submission view.
+- [ ] T035 [US6] Update translations for the new export buttons.

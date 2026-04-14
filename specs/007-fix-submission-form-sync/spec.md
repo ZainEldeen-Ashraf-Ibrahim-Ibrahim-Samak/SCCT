@@ -145,3 +145,12 @@ As an admin and user, I can submit the form and view the contact info table with
 **Acceptance Scenarios**:
 1. **Given** a user is completing a submission, **When** they fill out a contact record, **Then** all internal fields (name, email, phone, etc.) are optional in the UI, but the array must contain at least one record.
 2. **Given** an admin is viewing the submission table, **When** they review contact details, **Then** the UI gracefully handles any missing contact info fields without errors.
+
+### User Story 6 - Export Submissions as CSV and PDF (Priority: P2)
+
+As an admin, I can export submissions as CSV or PDF files, either for a single submission or for selected/all submissions from the submissions table, so I can analyze and store the data offline.
+
+**Acceptance Scenarios**:
+1. **Given** an admin is viewing the submissions table, **When** they select multiple submissions or click an "Export All" button, **Then** they can download a combined CSV or PDF report.
+2. **Given** an admin is viewing a single submission's details, **When** they click "Export", **Then** they can download a PDF or CSV report containing that specific submission's data.
+
