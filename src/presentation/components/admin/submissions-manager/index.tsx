@@ -65,19 +65,25 @@ export function SubmissionsManager() {
     }
   };
 
-  const getLatestUpdater = (sub: Submission) => {
-    if (sub.auditTrail && sub.auditTrail.length > 0) {
-      const updatedEntries = [...sub.auditTrail].reverse().find(entry => entry.newStatus === sub.status);
-      if (updatedEntries) {
-        return updatedEntries.adminName;
-      }
+  const getSearchableContact = (sub: Submission) => {
+    const fromContactRecords = sub.contactRecords
+      .map((record) => (record.contact ?? "").trim())
+      .find((contact) => contact.length > 0);
+
+    if (fromContactRecords) {
+      return fromContactRecords;
     }
-    return null;
+
+    return (sub.clientContact ?? "").trim();
   };
 
   const filteredSubmissions = submissions.filter(sub => {
+    const searchableContact = getSearchableContact(sub);
     return search 
-      ? (sub.clientName?.toLowerCase().includes(search.toLowerCase()) || sub.clientContact?.toLowerCase().includes(search.toLowerCase())) 
+      ? (
+          sub.clientName?.toLowerCase().includes(search.toLowerCase()) ||
+          searchableContact.toLowerCase().includes(search.toLowerCase())
+        )
       : true;
   });
 

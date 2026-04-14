@@ -234,7 +234,7 @@ export function FormManager() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  <Link href={`/admin/forms/${form.id}/fields`}>
+                  <Link href={`/admin/forms/${form.id}`}>
                     <Button variant="outline" size="sm">
                       <Settings className="me-1 h-3 w-3" />
                       {t("title")}

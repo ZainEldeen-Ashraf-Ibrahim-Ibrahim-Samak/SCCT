@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDate, buildSubmissionUrl } from "@/lib/utils";
 import { toast } from "sonner";
-import { Link, useRouter, usePathname } from "@/i18n/navigation";
+import { useRouter } from "@/i18n/navigation";
 import type { Submission } from "@/domain/entities/submission";
 
 interface SubmissionsTableProps {
@@ -25,6 +25,16 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
   const t = useTranslations("submissions");
   const tc = useTranslations("common");
   const router = useRouter();
+
+  const getPrimaryContact = (submission: Submission) => {
+    const fromContactRecords = submission.contactRecords.find((record) => (record.contact ?? "").trim().length > 0);
+    if (fromContactRecords?.contact) {
+      return fromContactRecords.contact;
+    }
+
+    const fromLegacyContact = submission.clientContact?.trim();
+    return fromLegacyContact && fromLegacyContact.length > 0 ? fromLegacyContact : null;
+  };
 
   // Controlled state for the delete confirmation dialog — decoupled from the dropdown
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -47,7 +57,7 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
       await onDelete(deleteTargetId);
       toast.success(t("submissionDeleted"));
       onRefresh();
-    } catch (err) {
+    } catch {
       toast.error(tc("error"));
     } finally {
       setDeleteDialogOpen(false);
@@ -142,15 +152,16 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
           <TableBody>
             {submissions.map((sub) => {
               const latestUpdater = getLatestUpdater(sub);
+              const primaryContact = getPrimaryContact(sub);
               return (
                 <TableRow key={sub.id} className="cursor-pointer group" onClick={() => router.push(`/admin/submissions/${sub.id}`)}>
                   <TableCell className="font-medium group-hover:text-primary transition-colors break-words">
                     {sub.clientName || t("unnamedSubmission")}
                     <div className="md:hidden mt-1 text-xs text-muted-foreground break-all">
-                      {sub.clientContact || "—"}
+                      {primaryContact || "—"}
                     </div>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell break-all">{sub.clientContact || "—"}</TableCell>
+                  <TableCell className="hidden md:table-cell break-all">{primaryContact || "—"}</TableCell>
                   <TableCell>
                     <div className="flex flex-col items-start gap-1">
                       {getStatusBadge(sub.status)}

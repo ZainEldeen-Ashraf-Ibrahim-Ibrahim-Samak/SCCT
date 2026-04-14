@@ -4,7 +4,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useSubmissionsList } from "@/presentation/view-models/use-submissions-list";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -25,6 +25,7 @@ interface SubmissionReviewProps {
 export function SubmissionReview({ id }: SubmissionReviewProps) {
   const t = useTranslations("submissions");
   const tc = useTranslations("common");
+  const tClient = useTranslations("client");
   const locale = useLocale();
   const router = useRouter();
   const submissionDataTitle =
@@ -166,6 +167,37 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-8">
+                <div className="space-y-3">
+                  <Label className="text-base font-semibold text-foreground/80">{t("contactRecords")}</Label>
+                  {submission.contactRecords.length > 0 ? (
+                    <div className="space-y-3">
+                      {submission.contactRecords.map((record, index) => (
+                        <div key={record.id} className="rounded-lg border bg-muted/30 p-4 space-y-2">
+                          <p className="text-sm font-semibold">{t("contactRecordEntry", { index: index + 1 })}</p>
+                          <p className="text-sm">
+                            <span className="font-medium">{tc("name")}: </span>
+                            <span>{record.name || "—"}</span>
+                          </p>
+                          <p className="text-sm">
+                            <span className="font-medium">{tClient("contactRecordContact")}: </span>
+                            <span>{record.contact || "—"}</span>
+                          </p>
+                          <p className="text-sm">
+                            <span className="font-medium">{tClient("contactRecordRole")}: </span>
+                            <span>{record.role || "—"}</span>
+                          </p>
+                          <p className="text-sm whitespace-pre-wrap">
+                            <span className="font-medium">{tClient("contactRecordNotes")}: </span>
+                            <span>{record.notes || "—"}</span>
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground italic text-sm">{t("noContactInfoProvided")}</p>
+                  )}
+                </div>
+
                 {submission.formSnapshot.map((field) => {
                   const val = values.find(v => v.fieldDefinitionId === field.id);
                   const displayName = locale === "ar" ? field.nameAr || field.nameEn : field.nameEn;
