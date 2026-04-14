@@ -24,6 +24,45 @@ interface FieldRendererProps {
   disabled?: boolean;
 }
 
+function normalizeTextLikeValue(raw: unknown): string {
+  if (typeof raw === "string") return raw;
+  if (typeof raw === "number") return String(raw);
+  return "";
+}
+
+function normalizeSingleDropdownValue(raw: unknown): string {
+  if (typeof raw === "string") return raw;
+  if (typeof raw === "number") return String(raw);
+
+  if (Array.isArray(raw)) {
+    const firstMeaningful = raw.find(
+      (item) => typeof item === "string" || typeof item === "number",
+    );
+    return firstMeaningful === undefined ? "" : String(firstMeaningful);
+  }
+
+  if (raw && typeof raw === "object" && "value" in raw) {
+    const candidate = (raw as { value?: unknown }).value;
+    if (typeof candidate === "string" || typeof candidate === "number") {
+      return String(candidate);
+    }
+  }
+
+  return "";
+}
+
+function normalizeMultiDropdownValue(raw: unknown): string[] {
+  if (Array.isArray(raw)) {
+    return raw
+      .filter((item) => typeof item === "string" || typeof item === "number")
+      .map((item) => String(item).trim())
+      .filter((item) => item.length > 0);
+  }
+
+  const single = normalizeSingleDropdownValue(raw).trim();
+  return single.length > 0 ? [single] : [];
+}
+
 export function FieldRenderer({
   field,
   value,
@@ -76,7 +115,7 @@ export function FieldRenderer({
 
   switch (field.inputType) {
     case "text":
-      const textValue = (value as string) || "";
+      const textValue = normalizeTextLikeValue(value);
 
       if (disabled) {
         return (
@@ -165,7 +204,7 @@ export function FieldRenderer({
       );
 
     case "date":
-      const dateValue = (value as string) || "";
+      const dateValue = normalizeTextLikeValue(value);
 
       if (disabled) {
         return (
@@ -194,7 +233,7 @@ export function FieldRenderer({
       );
 
     case "dropdown":
-      const dropdownValue = (value as string) || "";
+      const dropdownValue = normalizeSingleDropdownValue(value);
 
       if (disabled) {
         return (
@@ -210,11 +249,7 @@ export function FieldRenderer({
       const options = locale === "ar" ? field.dropdownOptionsAr : field.dropdownOptionsEn;
 
       if (field.isMultiple) {
-        const selectedValues = Array.isArray(value)
-          ? value.map((v) => String(v))
-          : typeof value === "string" && value.trim().length > 0
-            ? [value]
-            : [];
+        const selectedValues = normalizeMultiDropdownValue(value);
 
         if (disabled) {
           return (

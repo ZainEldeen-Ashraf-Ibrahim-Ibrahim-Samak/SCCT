@@ -27,6 +27,8 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
   const tc = useTranslations("common");
   const locale = useLocale();
   const router = useRouter();
+  const submissionDataTitle =
+    locale === "ar" ? "بيانات الطلب" : "Submission Data";
   
   const { updateStatus } = useSubmissionsList();
   
@@ -149,7 +151,7 @@ export function SubmissionReview({ id }: SubmissionReviewProps) {
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <div>
-                    <CardTitle className="text-2xl">{t("submissionData")}</CardTitle>
+                    <CardTitle className="text-2xl">{submissionDataTitle}</CardTitle>
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <Badge variant={submission.status === "needs_rewrite" ? "destructive" : "secondary"} className="text-sm px-3 py-1 flex items-center gap-1.5">

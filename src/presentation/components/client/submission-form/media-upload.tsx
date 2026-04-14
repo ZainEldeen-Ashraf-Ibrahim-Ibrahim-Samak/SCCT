@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Image as ImageIcon, File, X, UploadCloud, GripVertical, Plus } from "lucide-react";
 import Image from "next/image";
 import { formatFileSize } from "@/lib/utils";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { logger } from "@/lib/dev-logger";
 import {
@@ -148,8 +148,17 @@ export function MediaUpload({
 
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const mountedRef = useRef(false);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const handleFiles = async (incomingFiles: FileList | File[]) => {
+    if (disabled || isUploading) return;
     const files = Array.from(incomingFiles);
     if (files.length === 0) return;
 
@@ -158,6 +167,7 @@ export function MediaUpload({
     const uploadedItems: MediaItem[] = [];
     let hasUploadFailure = false;
 
+    if (!mountedRef.current) return;
     setIsUploading(true);
 
     try {
@@ -234,7 +244,9 @@ export function MediaUpload({
       logger.error("Upload error", err);
       toast.error(t("uploadError"));
     } finally {
-      setIsUploading(false);
+      if (mountedRef.current) {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -252,6 +264,7 @@ export function MediaUpload({
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
+    if (disabled || isUploading) return;
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       void handleFiles(e.dataTransfer.files);
     }
@@ -259,9 +272,11 @@ export function MediaUpload({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
+    if (disabled || isUploading) return;
     if (e.target.files && e.target.files.length > 0) {
       void handleFiles(e.target.files);
     }
+    e.target.value = "";
   };
 
   const handleRemoveItem = (publicId: string) => {

@@ -141,6 +141,7 @@
     "filterByAdmin": "تم التحديث بواسطة",
     "allAdmins": "كل المشرفين",
     "title": "الطلبات",
+    "submissionData": "بيانات الطلب",
     "clientName": "اسم العميل",
     "clientContact": "معلومات الاتصال",
     "submittedAt": "تاريخ الإرسال",

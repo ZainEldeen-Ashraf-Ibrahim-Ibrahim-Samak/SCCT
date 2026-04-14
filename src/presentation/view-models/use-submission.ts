@@ -145,6 +145,30 @@ function normalizeContactRecordDrafts(records: ContactRecordDraft[]) {
   };
 }
 
+function mapSourceContactRecords(records: unknown): ContactRecordDraft[] {
+  if (!Array.isArray(records)) return [createEmptyContactRecord()];
+
+  const normalized = records
+    .map((record) => {
+      if (!record || typeof record !== "object") return null;
+      const item = record as Record<string, unknown>;
+      const id = String(item.id ?? "").trim();
+      const name = String(item.name ?? "").trim();
+      if (!id || !name) return null;
+
+      return {
+        id,
+        name,
+        contact: String(item.contact ?? "").trim(),
+        role: String(item.role ?? "").trim(),
+        notes: String(item.notes ?? "").trim(),
+      };
+    })
+    .filter((record): record is ContactRecordDraft => !!record);
+
+  return normalized.length > 0 ? normalized : [createEmptyContactRecord()];
+}
+
 function hasMeaningfulDraftData(draft: DraftState | undefined): boolean {
   if (!draft) return false;
 
@@ -194,6 +218,7 @@ interface UseSubmissionReturn {
   addContactRecord: () => void;
   updateContactRecord: (id: string, patch: Partial<Omit<ContactRecordDraft, "id">>) => void;
   removeContactRecord: (id: string) => void;
+  reorderContactRecords: (orderedIds: string[]) => void;
   setFieldValue: (id: string, value: string | number | string[] | null) => void;
   setMediaValue: (id: string, url: string, publicId: string) => void;
   setMediaItems: (id: string, items: { url: string; publicId: string }[]) => void;
@@ -207,6 +232,9 @@ interface UseSubmissionReturn {
 
 export function useSubmission(tokenOrId: string): UseSubmissionReturn {
   const locale = useLocale();
+  const mountedRef = useRef(false);
+  const statusFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [isNew, setIsNew] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -239,6 +267,18 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
   const formVersionRef = useRef<string | null>(null);
 
   const isEditingRef = useRef(false);
+
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return () => {
+      mountedRef.current = false;
+      if (statusFlashTimeoutRef.current) {
+        clearTimeout(statusFlashTimeoutRef.current);
+        statusFlashTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   // Track whether the user has started editing (any draft mutation after initial load)
   const setClientName = (name: string) => {
@@ -289,6 +329,30 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
     });
   };
 
+  const reorderContactRecords = (orderedIds: string[]) => {
+    isEditingRef.current = true;
+    updateDraft((prev) => {
+      const records = prev.contactRecords ?? [];
+      if (records.length <= 1) return prev;
+
+      const idOrder = orderedIds.filter((id) => typeof id === "string" && id.trim().length > 0);
+      if (idOrder.length === 0) return prev;
+
+      const mapById = new Map(records.map((record) => [record.id, record]));
+      const moved = idOrder
+        .map((id) => mapById.get(id))
+        .filter((record): record is ContactRecordDraft => !!record);
+
+      const movedIds = new Set(moved.map((record) => record.id));
+      const untouched = records.filter((record) => !movedIds.has(record.id));
+
+      return {
+        ...prev,
+        contactRecords: [...moved, ...untouched],
+      };
+    });
+  };
+
   const setFieldValue = (id: string, value: string | number | string[] | null) => {
     isEditingRef.current = true;
     updateDraft(prev => ({
@@ -306,7 +370,13 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       ...prev,
       formData: {
         ...prev.formData,
-        [id]: { ...prev.formData[id], mediaItems: items, fieldDefinitionId: id },
+        [id]: {
+          ...prev.formData[id],
+          mediaItems: items,
+          mediaUrl: items.length > 0 ? null : prev.formData[id]?.mediaUrl ?? null,
+          mediaPublicId: items.length > 0 ? null : prev.formData[id]?.mediaPublicId ?? null,
+          fieldDefinitionId: id,
+        },
       }
     }));
   };
@@ -317,7 +387,13 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       ...prev,
       formData: {
         ...prev.formData,
-        [id]: { ...prev.formData[id], mediaUrl: url, mediaPublicId: publicId, fieldDefinitionId: id },
+        [id]: {
+          ...prev.formData[id],
+          mediaUrl: url,
+          mediaPublicId: publicId,
+          mediaItems: [],
+          fieldDefinitionId: id,
+        },
       }
     }));
   };
@@ -327,10 +403,10 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
   // Stable fetchContent — depends only on tokenOrId and draftLoaded.
   // Reads draft state via ref to avoid recreating the callback on every keystroke.
   const fetchContent = useCallback(async (background = false) => {
-    if (!draftLoaded) return;
+    if (!draftLoaded || !mountedRef.current) return;
 
-    if (!background) setIsLoading(true);
-    setError(null);
+    if (!background && mountedRef.current) setIsLoading(true);
+    if (mountedRef.current) setError(null);
     try {
       // If we used window.history.pushState, tokenOrId might still reflect the old token
       // We must grab the actual token from the URL for the fetch if it changed
@@ -342,6 +418,8 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       }
       const json = await res.json();
       if (!json.success) throw new Error(json.error);
+
+      if (!mountedRef.current) return;
 
       const data = json.data;
       setIsNew(data.isNew);
@@ -368,7 +446,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
           });
           updateDraft({
             clientName: "",
-            contactRecords: [createEmptyContactRecord()],
+            contactRecords: mapSourceContactRecords(data.formTemplate?.contactRecords),
             formData: initialForm,
           });
         }
@@ -383,14 +461,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
         // Keep local draft only while user is actively editing and there is meaningful draft content.
         const shouldHydrateFromServer = formVersionChanged || !isEditingRef.current || !hasDraftData;
         if (shouldHydrateFromServer) {
-          const nextDraftContactRecords: ContactRecordDraft[] =
-            (data.submission?.contactRecords ?? []).map((record: { id: string; name: string; contact?: string; role?: string; notes?: string }) => ({
-              id: record.id,
-              name: record.name,
-              contact: record.contact ?? "",
-              role: record.role ?? "",
-              notes: record.notes ?? "",
-            })) || [];
+          const nextDraftContactRecords = mapSourceContactRecords(data.submission?.contactRecords ?? []);
 
           const currentDraftFormData = currentDraft?.formData ?? {};
           const dropped: string[] = [];
@@ -445,9 +516,13 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "error");
+      if (mountedRef.current) {
+        setError(err instanceof Error ? err.message : "error");
+      }
     } finally {
-      setIsLoading(false);
+      if (mountedRef.current) {
+        setIsLoading(false);
+      }
     }
   }, [tokenOrId, draftLoaded, updateDraft]);
 
@@ -468,6 +543,8 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       eventSource.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data) as EventsPayload;
+          if (!mountedRef.current) return;
+
           if (data.type === "STATUS_CHANGED") {
             const newStatus = data.status;
             if (newStatus === "viewed") {
@@ -480,7 +557,14 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
             }
 
             setStatusChangedLive(true);
-            setTimeout(() => setStatusChangedLive(false), 2000);
+            if (statusFlashTimeoutRef.current) {
+              clearTimeout(statusFlashTimeoutRef.current);
+            }
+            statusFlashTimeoutRef.current = setTimeout(() => {
+              if (mountedRef.current) {
+                setStatusChangedLive(false);
+              }
+            }, 2000);
             fetchContent(true);
           }
         } catch {
@@ -498,6 +582,10 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
 
     return () => {
       clearTimeout(reconnectTimeout);
+      if (statusFlashTimeoutRef.current) {
+        clearTimeout(statusFlashTimeoutRef.current);
+        statusFlashTimeoutRef.current = null;
+      }
       if (eventSource) eventSource.close();
     };
   }, [fetchContent, tokenOrId]);
@@ -572,9 +660,13 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       // Silently refresh data to get 'isViewOnly=true' without flashing skeletons
       await fetchContent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Submission failed");
+      if (mountedRef.current) {
+        setError(err instanceof Error ? err.message : "Submission failed");
+      }
     } finally {
-      setIsSubmitting(false);
+      if (mountedRef.current) {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -625,9 +717,13 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
       // Silently refresh data without flashing skeletons
       await fetchContent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Resubmission failed");
+      if (mountedRef.current) {
+        setError(err instanceof Error ? err.message : "Resubmission failed");
+      }
     } finally {
-      setIsSubmitting(false);
+      if (mountedRef.current) {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -648,6 +744,7 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
     addContactRecord,
     updateContactRecord,
     removeContactRecord,
+    reorderContactRecords,
     setFieldValue,
     setMediaValue,
     setMediaItems,

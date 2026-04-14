@@ -16,14 +16,16 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
+  useSortable,
 } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2 } from "lucide-react";
+import { GripVertical, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { FieldCard } from "./field-card";
 import { FieldFormDialog } from "./field-form-dialog";
@@ -76,6 +78,125 @@ function createContactRecord(): ContactRecordDraft {
 
 interface FieldBuilderProps {
   formTemplateId: string;
+}
+
+interface SortableContactRecordProps {
+  record: ContactRecordDraft;
+  index: number;
+  canRemove: boolean;
+  disabled: boolean;
+  showValidation: boolean;
+  t: (key: string, values?: Record<string, string | number>) => string;
+  tc: (key: string) => string;
+  onUpdate: (id: string, patch: Partial<Omit<ContactRecordDraft, "id">>) => void;
+  onRemove: (id: string) => void;
+}
+
+function SortableContactRecord({
+  record,
+  index,
+  canRemove,
+  disabled,
+  showValidation,
+  t,
+  tc,
+  onUpdate,
+  onRemove,
+}: SortableContactRecordProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: record.id,
+    disabled,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 5 : 1,
+    opacity: isDragging ? 0.65 : 1,
+  };
+
+  const isNameInvalid = showValidation && record.name.trim().length === 0;
+
+  return (
+    <div ref={setNodeRef} style={style} className="rounded-md border bg-background p-3 space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label={t("dragToReorder")}
+            title={t("dragToReorder")}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md border bg-muted/30 text-muted-foreground disabled:opacity-50"
+            disabled={disabled}
+            {...attributes}
+            {...listeners}
+          >
+            <GripVertical className="h-4 w-4" />
+          </button>
+          <Label>{t("contactRecordLabel", { index: index + 1 })}</Label>
+        </div>
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={() => onRemove(record.id)}
+          disabled={!canRemove || disabled}
+          title={t("removeContactRecord")}
+        >
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </Button>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="space-y-1">
+          <Label htmlFor={`contact-name-${record.id}`}>{t("contactRecordName")}</Label>
+          <Input
+            id={`contact-name-${record.id}`}
+            value={record.name}
+            onChange={(e) => onUpdate(record.id, { name: e.target.value })}
+            placeholder={t("contactRecordName")}
+            className={isNameInvalid ? "border-destructive focus-visible:ring-destructive" : ""}
+            disabled={disabled}
+          />
+          {isNameInvalid && <p className="text-xs text-destructive">{tc("required")}</p>}
+        </div>
+
+        <div className="space-y-1">
+          <Label htmlFor={`contact-contact-${record.id}`}>{t("contactRecordContact")}</Label>
+          <Input
+            id={`contact-contact-${record.id}`}
+            value={record.contact}
+            onChange={(e) => onUpdate(record.id, { contact: e.target.value })}
+            placeholder={t("contactRecordContact")}
+            disabled={disabled}
+          />
+        </div>
+
+        <div className="space-y-1 md:col-span-2">
+          <Label htmlFor={`contact-role-${record.id}`}>{t("contactRecordRole")}</Label>
+          <Input
+            id={`contact-role-${record.id}`}
+            value={record.role}
+            onChange={(e) => onUpdate(record.id, { role: e.target.value })}
+            placeholder={t("contactRecordRole")}
+            disabled={disabled}
+          />
+        </div>
+
+        <div className="space-y-1 md:col-span-2">
+          <Label htmlFor={`contact-notes-${record.id}`}>{t("contactRecordNotes")}</Label>
+          <Textarea
+            id={`contact-notes-${record.id}`}
+            value={record.notes}
+            onChange={(e) => onUpdate(record.id, { notes: e.target.value })}
+            placeholder={t("contactRecordNotes")}
+            className="min-h-16"
+            disabled={disabled}
+          />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
@@ -258,6 +379,23 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
     setContactRecords((prev) => (prev.length <= 1 ? prev : prev.filter((record) => record.id !== id)));
   }
 
+  function handleReorderContacts(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    setShowContactValidation(false);
+    setContactRecords((prev) => {
+      const oldIndex = prev.findIndex((record) => record.id === String(active.id));
+      const newIndex = prev.findIndex((record) => record.id === String(over.id));
+      if (oldIndex < 0 || newIndex < 0) return prev;
+
+      const next = [...prev];
+      const [moved] = next.splice(oldIndex, 1);
+      next.splice(newIndex, 0, moved);
+      return next;
+    });
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -325,75 +463,28 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
         <div className="space-y-3">
           {isLoadingContacts
             ? [1, 2].map((item) => <Skeleton key={item} className="h-52 w-full rounded-md" />)
-            : contactRecords.map((record, index) => {
-                const isNameInvalid = showContactValidation && record.name.trim().length === 0;
-
-                return (
-                  <div key={record.id} className="rounded-md border bg-background p-3 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label>{t("contactRecordLabel", { index: index + 1 })}</Label>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleRemoveContact(record.id)}
-                        disabled={contactRecords.length <= 1 || isSavingContacts}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <div className="space-y-1">
-                        <Label htmlFor={`contact-name-${record.id}`}>{t("contactRecordName")}</Label>
-                        <Input
-                          id={`contact-name-${record.id}`}
-                          value={record.name}
-                          onChange={(e) => handleUpdateContact(record.id, { name: e.target.value })}
-                          placeholder={t("contactRecordName")}
-                          className={isNameInvalid ? "border-destructive focus-visible:ring-destructive" : ""}
-                          disabled={isSavingContacts}
-                        />
-                        {isNameInvalid && <p className="text-xs text-destructive">{tc("required")}</p>}
-                      </div>
-
-                      <div className="space-y-1">
-                        <Label htmlFor={`contact-contact-${record.id}`}>{t("contactRecordContact")}</Label>
-                        <Input
-                          id={`contact-contact-${record.id}`}
-                          value={record.contact}
-                          onChange={(e) => handleUpdateContact(record.id, { contact: e.target.value })}
-                          placeholder={t("contactRecordContact")}
-                          disabled={isSavingContacts}
-                        />
-                      </div>
-
-                      <div className="space-y-1 md:col-span-2">
-                        <Label htmlFor={`contact-role-${record.id}`}>{t("contactRecordRole")}</Label>
-                        <Input
-                          id={`contact-role-${record.id}`}
-                          value={record.role}
-                          onChange={(e) => handleUpdateContact(record.id, { role: e.target.value })}
-                          placeholder={t("contactRecordRole")}
-                          disabled={isSavingContacts}
-                        />
-                      </div>
-
-                      <div className="space-y-1 md:col-span-2">
-                        <Label htmlFor={`contact-notes-${record.id}`}>{t("contactRecordNotes")}</Label>
-                        <Textarea
-                          id={`contact-notes-${record.id}`}
-                          value={record.notes}
-                          onChange={(e) => handleUpdateContact(record.id, { notes: e.target.value })}
-                          placeholder={t("contactRecordNotes")}
-                          className="min-h-16"
-                          disabled={isSavingContacts}
-                        />
-                      </div>
-                    </div>
+            : (
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleReorderContacts}>
+                <SortableContext items={contactRecords.map((record) => record.id)} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-3">
+                    {contactRecords.map((record, index) => (
+                      <SortableContactRecord
+                        key={record.id}
+                        record={record}
+                        index={index}
+                        canRemove={contactRecords.length > 1}
+                        disabled={isSavingContacts}
+                        showValidation={showContactValidation}
+                        t={t}
+                        tc={tc}
+                        onUpdate={handleUpdateContact}
+                        onRemove={handleRemoveContact}
+                      />
+                    ))}
                   </div>
-                );
-              })}
+                </SortableContext>
+              </DndContext>
+            )}
         </div>
 
         <div className="flex items-center justify-between gap-3">

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useSubmission } from "@/presentation/view-models/use-submission";
 import { FieldRenderer } from "./field-renderer";
+import { ContactRecords } from "./contact-records";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,6 +28,11 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
     fields,
     submission,
     formData,
+    contactRecords,
+    addContactRecord,
+    updateContactRecord,
+    removeContactRecord,
+    reorderContactRecords,
     setFieldValue,
     setMediaValue,
     setMediaItems,
@@ -83,6 +89,12 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
   const validate = () => {
     const errors: Record<string, boolean> = {};
     let isValid = true;
+
+    const hasContactName = contactRecords.some((record) => record.name.trim().length > 0);
+    if (!hasContactName) {
+      errors.contactRecords = true;
+      isValid = false;
+    }
 
     fields.forEach((f) => {
       if (f.validationRules?.required) {
@@ -202,6 +214,26 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
 
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-8">
+            <ContactRecords
+              records={contactRecords}
+              disabled={isViewOnly || isSubmitting}
+              showValidation={!!validationErrors.contactRecords}
+              onAdd={() => {
+                addContactRecord();
+                if (validationErrors.contactRecords) {
+                  setValidationErrors((prev) => ({ ...prev, contactRecords: false }));
+                }
+              }}
+              onUpdate={(id, patch) => {
+                updateContactRecord(id, patch);
+                if (validationErrors.contactRecords && (patch.name?.trim().length ?? 0) > 0) {
+                  setValidationErrors((prev) => ({ ...prev, contactRecords: false }));
+                }
+              }}
+              onRemove={removeContactRecord}
+              onReorder={reorderContactRecords}
+            />
+
             <div className="space-y-6">
               {fields.map((field) => {
                  const currentVal = formData[field.id];
