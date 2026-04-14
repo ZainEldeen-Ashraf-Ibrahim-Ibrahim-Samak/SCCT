@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Copy, Eye, MoreHorizontal, Trash2 } from "lucide-react";
+import { Copy, Eye, MoreHorizontal, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -41,9 +42,26 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
     return fromLegacyContact && fromLegacyContact.length > 0 ? fromLegacyContact : null;
   };
 
-  // Controlled state for the delete confirmation dialog — decoupled from the dropdown
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isDeletingMany, setIsDeletingMany] = useState(false);
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === submissions.length && submissions.length > 0) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(submissions.map(s => s.id));
+    }
+  };
+
+  const toggleSelectRow = (id: string) => {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter(sId => sId !== id));
+    } else {
+      setSelectedIds([...selectedIds, id]);
+    }
+  };
 
   const handleCopyLink = (token: string) => {
     const url = buildSubmissionUrl(token);
@@ -56,15 +74,29 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
     setDeleteDialogOpen(true);
   };
 
+  const handleDeleteSelectedClick = () => {
+    if (selectedIds.length === 0) return;
+    setDeleteTargetId("MANY");
+    setDeleteDialogOpen(true);
+  };
+
   const handleDeleteConfirm = async () => {
     if (!deleteTargetId) return;
     try {
-      await onDelete(deleteTargetId);
-      toast.success(t("submissionDeleted"));
+      if (deleteTargetId === "MANY") {
+        setIsDeletingMany(true);
+        await Promise.all(selectedIds.map(id => onDelete(id)));
+        toast.success(t("submissionsDeleted") || tc("deleted"));
+        setSelectedIds([]);
+      } else {
+        await onDelete(deleteTargetId);
+        toast.success(t("submissionDeleted"));
+      }
       onRefresh();
     } catch {
       toast.error(tc("error"));
     } finally {
+      setIsDeletingMany(false);
       setDeleteDialogOpen(false);
       setDeleteTargetId(null);
     }
@@ -81,6 +113,9 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <Skeleton className="h-4 w-4 rounded" />
+              </TableHead>
               <TableHead className="whitespace-nowrap"><Skeleton className="h-4 w-24" /></TableHead>
               <TableHead className="hidden md:table-cell whitespace-nowrap"><Skeleton className="h-4 w-24" /></TableHead>
               <TableHead className="whitespace-nowrap"><Skeleton className="h-4 w-24" /></TableHead>
@@ -91,6 +126,9 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
           <TableBody>
              {[1, 2, 3, 4, 5].map((i) => (
                 <TableRow key={i}>
+                  <TableCell>
+                    <Skeleton className="h-4 w-4 rounded" />
+                  </TableCell>
                   <TableCell className="w-full sm:w-auto">
                     <Skeleton className="h-4 w-32" />
                     <Skeleton className="h-3 w-20 mt-2 md:hidden" />
@@ -143,10 +181,37 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
 
   return (
     <>
-      <div className="rounded-md border">
+      {selectedIds.length > 0 && (
+        <div className="flex items-center justify-between p-3 bg-muted/20 border border-b-0 rounded-t-md">
+          <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+            {selectedIds.length} {t("selected", { count: selectedIds.length }) || tc("selected")}
+          </span>
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            onClick={handleDeleteSelectedClick}
+            disabled={isDeletingMany}
+          >
+            {isDeletingMany ? (
+              <Loader2 className="me-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="me-2 h-4 w-4" />
+            )}
+            {tc("deleteSelected")}
+          </Button>
+        </div>
+      )}
+      <div className={`rounded-md border ${selectedIds.length > 0 ? "rounded-t-none border-t-0" : ""}`}>
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <Checkbox 
+                  checked={selectedIds.length === submissions.length && submissions.length > 0}
+                  onCheckedChange={toggleSelectAll}
+                  aria-label="Select all"
+                />
+              </TableHead>
               <TableHead className="whitespace-nowrap">{t("clientName")}</TableHead>
               <TableHead className="hidden md:table-cell whitespace-nowrap">{t("clientContact")}</TableHead>
               <TableHead className="whitespace-nowrap">{tc("status")}</TableHead>
@@ -158,9 +223,21 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
             {submissions.map((sub) => {
               const latestUpdater = getLatestUpdater(sub);
               const primaryContact = getPrimaryContact(sub);
+              const isSelected = selectedIds.includes(sub.id);
               return (
-                <TableRow key={sub.id} className="cursor-pointer group" onClick={() => router.push(`/admin/submissions/${sub.id}`)}>
-                  <TableCell className="font-medium group-hover:text-primary transition-colors break-words">
+                <TableRow 
+                  key={sub.id} 
+                  className={`cursor-pointer group ${isSelected ? "bg-muted/50" : ""}`}
+                  onClick={() => router.push(`/admin/submissions/${sub.id}`)}
+                >
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <Checkbox 
+                      checked={isSelected}
+                      onCheckedChange={() => toggleSelectRow(sub.id)}
+                      aria-label={`Select ${sub.clientName || 'submission'}`}
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium group-hover:text-primary transition-colors wrap-break-word">
                     {sub.clientName || t("unnamedSubmission")}
                     <div className="md:hidden mt-1 text-xs text-muted-foreground break-all">
                       {primaryContact || "—"}

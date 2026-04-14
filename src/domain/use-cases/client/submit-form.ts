@@ -44,19 +44,14 @@ function normalizeContactRecords(
   return records
     .map((record) => {
       const id = String(record.id ?? "").trim();
-      const name = String(record.name ?? "").trim();
-      const email = record.email ? String(record.email).trim() : "";
-      const phone = record.phone ? String(record.phone).trim() : "";
-      const contact = record.contact ? String(record.contact).trim() : "";
-      const hasContactMethod = email.length > 0 || phone.length > 0 || contact.length > 0;
-      if (!id || !name || !hasContactMethod || seenIds.has(id)) return null;
+      if (!id || seenIds.has(id)) return null;
       seenIds.add(id);
       return {
         id,
-        name,
-        email: email || undefined,
-        phone: phone || undefined,
-        contact: contact || undefined,
+        name: String(record.name ?? "").trim(),
+        email: record.email ? String(record.email).trim() : undefined,
+        phone: record.phone ? String(record.phone).trim() : undefined,
+        contact: record.contact ? String(record.contact).trim() : undefined,
         role: record.role ? String(record.role).trim() : undefined,
         notes: record.notes ? String(record.notes).trim() : undefined,
       };

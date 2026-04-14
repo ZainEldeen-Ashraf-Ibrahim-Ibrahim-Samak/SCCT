@@ -55,7 +55,6 @@ function SortableContactCard({
   onRemove,
 }: ContactCardProps) {
   const t = useTranslations("client");
-  const tc = useTranslations("common");
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: record.id,
     disabled,
@@ -67,13 +66,6 @@ function SortableContactCard({
     opacity: isDragging ? 0.65 : 1,
     zIndex: isDragging ? 5 : 1,
   };
-
-  const nameInvalid = showValidation && record.name.trim().length === 0;
-  const contactMethodInvalid =
-    showValidation &&
-    record.name.trim().length > 0 &&
-    record.email.trim().length === 0 &&
-    record.phone.trim().length === 0;
 
   return (
     <div ref={setNodeRef} style={style} className="rounded-lg border bg-background/80 p-4 space-y-3">
@@ -114,9 +106,7 @@ function SortableContactCard({
             onChange={(e) => onUpdate(record.id, { name: e.target.value })}
             placeholder={t("contactRecordNamePlaceholder")}
             disabled={disabled}
-            className={nameInvalid ? "border-destructive focus-visible:ring-destructive" : ""}
           />
-          {nameInvalid && <p className="text-xs text-destructive">{tc("required")}</p>}
         </div>
 
         <div className="space-y-1">
@@ -128,7 +118,6 @@ function SortableContactCard({
             onChange={(e) => onUpdate(record.id, { email: e.target.value })}
             placeholder={t("contactRecordEmailPlaceholder")}
             disabled={disabled}
-            className={contactMethodInvalid ? "border-destructive focus-visible:ring-destructive" : ""}
           />
         </div>
 
@@ -140,9 +129,7 @@ function SortableContactCard({
             onChange={(e) => onUpdate(record.id, { phone: e.target.value })}
             placeholder={t("contactRecordPhonePlaceholder")}
             disabled={disabled}
-            className={contactMethodInvalid ? "border-destructive focus-visible:ring-destructive" : ""}
           />
-          {contactMethodInvalid && <p className="text-xs text-destructive">{t("contactRecordPhoneOrEmailRequired")}</p>}
         </div>
 
         <div className="space-y-1">

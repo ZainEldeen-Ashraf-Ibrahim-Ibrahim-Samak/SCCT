@@ -108,6 +108,7 @@ function summarizeFieldPayload(fieldValues: SubmissionFieldPayload[]) {
 function normalizeContactRecordDrafts(records: ContactRecordDraft[]) {
   const normalized = records.map((record) => ({
     ...record,
+    id: record.id.trim(),
     name: record.name.trim(),
     email: record.email.trim(),
     phone: record.phone.trim(),
@@ -125,17 +126,14 @@ function normalizeContactRecordDrafts(records: ContactRecordDraft[]) {
     );
   });
 
-  let resolved = meaningful.map((record, index) => ({
-    ...record,
-    name: record.name || record.email || record.phone || `${DEFAULT_CONTACT_NAME} ${index + 1}`,
-  }));
+  let resolved = normalized.filter((record) => record.id.length > 0);
 
   if (resolved.length < MIN_CONTACT_RECORDS) {
-    const seed = normalized[0];
+    const seed = resolved[0] ?? normalized[0];
     resolved = [
       {
         id: seed?.id || createEmptyContactRecord().id,
-        name: DEFAULT_CONTACT_NAME,
+        name: seed?.name || "",
         email: seed?.email || "",
         phone: seed?.phone || "",
         role: seed?.role || "",
@@ -154,25 +152,19 @@ function mapSourceContactRecords(records: unknown): ContactRecordDraft[] {
   if (!Array.isArray(records)) return [createEmptyContactRecord()];
 
   const normalized = records
-    .map((record, index) => {
+    .map((record) => {
       if (!record || typeof record !== "object") return null;
       const item = record as Record<string, unknown>;
       const id = String(item.id ?? "").trim();
-      const name = String(item.name ?? "").trim();
-      const email = String(item.email ?? "").trim();
-      const phone = String(item.phone ?? item.contact ?? "").trim();
-      const role = String(item.role ?? "").trim();
-      const notes = String(item.notes ?? "").trim();
-      const hasMeaningful = [name, email, phone, role, notes].some((value) => value.length > 0);
-      if (!id || !hasMeaningful) return null;
+      if (!id) return null;
 
       return {
         id,
-        name: name || email || phone || `${DEFAULT_CONTACT_NAME} ${index + 1}`,
-        email,
-        phone,
-        role,
-        notes,
+        name: String(item.name ?? "").trim(),
+        email: String(item.email ?? "").trim(),
+        phone: String(item.phone ?? item.contact ?? "").trim(),
+        role: String(item.role ?? "").trim(),
+        notes: String(item.notes ?? "").trim(),
       };
     })
     .filter((record): record is ContactRecordDraft => !!record);

@@ -89,9 +89,7 @@ interface SortableContactRecordProps {
   index: number;
   canRemove: boolean;
   disabled: boolean;
-  showValidation: boolean;
   t: (key: string, values?: Record<string, string | number>) => string;
-  tc: (key: string) => string;
   onUpdate: (id: string, patch: Partial<Omit<ContactRecordDraft, "id">>) => void;
   onRemove: (id: string) => void;
 }
@@ -101,9 +99,7 @@ function SortableContactRecord({
   index,
   canRemove,
   disabled,
-  showValidation,
   t,
-  tc,
   onUpdate,
   onRemove,
 }: SortableContactRecordProps) {
@@ -118,13 +114,6 @@ function SortableContactRecord({
     zIndex: isDragging ? 5 : 1,
     opacity: isDragging ? 0.65 : 1,
   };
-
-  const isNameInvalid = showValidation && record.name.trim().length === 0;
-  const contactMethodInvalid =
-    showValidation &&
-    record.name.trim().length > 0 &&
-    record.email.trim().length === 0 &&
-    record.phone.trim().length === 0;
 
   return (
     <div ref={setNodeRef} style={style} className="rounded-md border bg-background p-3 space-y-3">
@@ -164,10 +153,8 @@ function SortableContactRecord({
             value={record.name}
             onChange={(e) => onUpdate(record.id, { name: e.target.value })}
             placeholder={t("contactRecordName")}
-            className={isNameInvalid ? "border-destructive focus-visible:ring-destructive" : ""}
             disabled={disabled}
           />
-          {isNameInvalid && <p className="text-xs text-destructive">{tc("required")}</p>}
         </div>
 
         <div className="space-y-1">
@@ -179,7 +166,6 @@ function SortableContactRecord({
             onChange={(e) => onUpdate(record.id, { email: e.target.value })}
             placeholder={t("contactRecordEmail")}
             disabled={disabled}
-            className={contactMethodInvalid ? "border-destructive focus-visible:ring-destructive" : ""}
           />
         </div>
 
@@ -191,9 +177,7 @@ function SortableContactRecord({
             onChange={(e) => onUpdate(record.id, { phone: e.target.value })}
             placeholder={t("contactRecordPhone")}
             disabled={disabled}
-            className={contactMethodInvalid ? "border-destructive focus-visible:ring-destructive" : ""}
           />
-          {contactMethodInvalid && <p className="text-xs text-destructive">{t("contactRecordPhoneOrEmailRequired")}</p>}
         </div>
 
         <div className="space-y-1 md:col-span-2">
@@ -347,11 +331,7 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
 
   async function handleSaveContacts() {
     setShowContactValidation(true);
-    const normalized = normalizedContactRecords.filter((record) => {
-      const hasName = record.name.length > 0;
-      const hasContactMethod = record.email.length > 0 || record.phone.length > 0;
-      return record.id.length > 0 && hasName && hasContactMethod;
-    });
+    const normalized = normalizedContactRecords.filter((record) => record.id.length > 0);
 
     if (normalized.length < 1 || normalized.length !== normalizedContactRecords.length) {
       toast.error(t("contactRecordMinOne"));
