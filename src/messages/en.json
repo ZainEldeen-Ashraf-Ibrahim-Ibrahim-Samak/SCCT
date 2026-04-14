@@ -55,7 +55,14 @@
     "setActive": "Set Active",
     "deleteConfirm": "Are you sure you want to delete this form?",
     "deleteWarning": "This action cannot be undone.",
-    "deleteSelected": "Delete Selected"
+    "deleteSelected": "Delete Selected",
+    "export": "Export",
+    "exportSelected": "Export Selected",
+    "exportAll": "Export All",
+    "exportCSV": "CSV",
+    "exportExcel": "Excel",
+    "exportPDF": "PDF",
+    "exportedSuccess": "Exported successfully"
   },
   "auth": {
     "login": "Login",

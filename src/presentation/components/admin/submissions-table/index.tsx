@@ -2,18 +2,19 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Copy, Eye, MoreHorizontal, Trash2, Loader2 } from "lucide-react";
+import { Copy, Eye, MoreHorizontal, Trash2, Loader2, Download, FileText, FileSpreadsheet, File } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDate, buildSubmissionUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRouter } from "@/i18n/navigation";
 import type { Submission } from "@/domain/entities/submission";
+import { exportToCSV, exportToExcel, exportToPDF } from "@/lib/export";
 
 interface SubmissionsTableProps {
   submissions: Submission[];
@@ -107,6 +108,27 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
     setDeleteTargetId(null);
   };
 
+  const getExportColumns = () => [
+    { header: t("clientName"), key: "clientName" as const },
+    { header: t("clientContact"), key: (row: Submission) => getPrimaryContact(row) || "—" },
+    { header: tc("status"), key: "status" as const },
+    { header: t("submittedAt"), key: (row: Submission) => formatDate(row.submittedAt) },
+  ];
+
+  const handleExport = (format: "csv" | "excel" | "pdf", data: Submission[], filenamePrefix: string) => {
+    const filename = `${filenamePrefix}-${new Date().toISOString().split("T")[0]}`;
+    const columns = getExportColumns();
+    
+    if (format === "csv") {
+      exportToCSV(data, filename, columns);
+    } else if (format === "excel") {
+      exportToExcel(data, filename, columns);
+    } else if (format === "pdf") {
+      exportToPDF(data, filename, t("exportTitle") || "Submissions Export", columns);
+    }
+    toast.success(tc("exportedSuccess") || "Exported successfully");
+  };
+
   if (isLoading && submissions.length === 0) {
     return (
       <div className="rounded-md border">
@@ -186,21 +208,65 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
           <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
             {selectedIds.length} {t("selected", { count: selectedIds.length }) || tc("selected")}
           </span>
-          <Button 
-            variant="destructive" 
-            size="sm" 
-            onClick={handleDeleteSelectedClick}
-            disabled={isDeletingMany}
-          >
-            {isDeletingMany ? (
-              <Loader2 className="me-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Trash2 className="me-2 h-4 w-4" />
-            )}
-            {tc("deleteSelected")}
-          </Button>
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger nativeButton={true} render={<Button variant="outline" size="sm" />}>
+                <Download className="me-2 h-4 w-4" />
+                {tc("exportSelected")}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleExport("csv", submissions.filter(s => selectedIds.includes(s.id)), "selected-submissions")}>
+                  <FileText className="me-2 h-4 w-4" />
+                  {tc("exportCSV")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport("excel", submissions.filter(s => selectedIds.includes(s.id)), "selected-submissions")}>
+                  <FileSpreadsheet className="me-2 h-4 w-4" />
+                  {tc("exportExcel")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport("pdf", submissions.filter(s => selectedIds.includes(s.id)), "selected-submissions")}>
+                  <File className="me-2 h-4 w-4" />
+                  {tc("exportPDF")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              onClick={handleDeleteSelectedClick}
+              disabled={isDeletingMany}
+            >
+              {isDeletingMany ? (
+                <Loader2 className="me-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="me-2 h-4 w-4" />
+              )}
+              {tc("deleteSelected")}
+            </Button>
+          </div>
         </div>
       )}
+      <div className={`flex items-center justify-end mb-4 ${selectedIds.length > 0 ? "hidden" : ""}`}>
+        <DropdownMenu>
+          <DropdownMenuTrigger nativeButton={true} render={<Button variant="outline" size="sm" />}>
+            <Download className="me-2 h-4 w-4" />
+            {tc("exportAll")}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => handleExport("csv", submissions, "all-submissions")}>
+              <FileText className="me-2 h-4 w-4" />
+              {tc("exportCSV")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleExport("excel", submissions, "all-submissions")}>
+              <FileSpreadsheet className="me-2 h-4 w-4" />
+              {tc("exportExcel")}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleExport("pdf", submissions, "all-submissions")}>
+              <File className="me-2 h-4 w-4" />
+              {tc("exportPDF")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
       <div className={`rounded-md border ${selectedIds.length > 0 ? "rounded-t-none border-t-0" : ""}`}>
         <Table>
           <TableHeader>
@@ -277,6 +343,28 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh }
                           <Copy className="me-2 h-4 w-4" />
                           {t("copyLink")}
                         </DropdownMenuItem>
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger>
+                            <Download className="me-2 h-4 w-4" />
+                            {tc("export")}
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuPortal>
+                            <DropdownMenuSubContent alignOffset={-5}>
+                              <DropdownMenuItem onClick={() => handleExport("csv", [sub], `submission-${sub.id}`)}>
+                                <FileText className="me-2 h-4 w-4" />
+                                {tc("exportCSV")}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleExport("excel", [sub], `submission-${sub.id}`)}>
+                                <FileSpreadsheet className="me-2 h-4 w-4" />
+                                {tc("exportExcel")}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleExport("pdf", [sub], `submission-${sub.id}`)}>
+                                <File className="me-2 h-4 w-4" />
+                                {tc("exportPDF")}
+                              </DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                          </DropdownMenuPortal>
+                        </DropdownMenuSub>
                         <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteClick(sub.id)}>
                           <Trash2 className="me-2 h-4 w-4" />
                           {t("deleteSubmission")}

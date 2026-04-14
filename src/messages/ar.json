@@ -55,7 +55,14 @@
     "inactiveForm": "Inactive Form",
     "setActive": "Set Active",
     "deleteConfirm": "Are you sure you want to delete this form?",
-    "deleteWarning": "This action cannot be undone."
+    "deleteWarning": "This action cannot be undone.",
+    "export": "تصدير",
+    "exportSelected": "تصدير المحدد",
+    "exportAll": "تصدير الكل",
+    "exportCSV": "CSV",
+    "exportExcel": "Excel",
+    "exportPDF": "PDF",
+    "exportedSuccess": "تم التصدير بنجاح"
   },
   "auth": {
     "login": "تسجيل الدخول",
