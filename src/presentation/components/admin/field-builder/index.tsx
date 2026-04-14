@@ -18,12 +18,33 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { FieldCard } from "./field-card";
 import { FieldFormDialog } from "./field-form-dialog";
 import type { FieldDefinition } from "@/domain/entities/field-definition";
+
+interface ContactRecordDraft {
+  id: string;
+  name: string;
+  contact: string;
+  role: string;
+  notes: string;
+}
+
+function createContactRecord(): ContactRecordDraft {
+  return {
+    id: `cf_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    name: "",
+    contact: "",
+    role: "",
+    notes: "",
+  };
+}
 
 interface FieldBuilderProps {
   formTemplateId: string;
@@ -36,6 +57,18 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
     useFieldBuilder(formTemplateId);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingField, setEditingField] = useState<FieldDefinition | null>(null);
+  const [contactRecords, setContactRecords] = useState<ContactRecordDraft[]>([createContactRecord()]);
+  const [isSavingContacts, setIsSavingContacts] = useState(false);
+
+  const fetchFormContacts = async () => {
+    const res = await fetch(`/api/admin/forms/${formTemplateId}`, { cache: "no-store" });
+    const data = await res.json();
+    if (!data.success) {
+      throw new Error(data.error || "Failed to fetch form");
+    }
+    const records = Array.isArray(data.data?.contactRecords) ? data.data.contactRecords : [];
+    setContactRecords(records.length > 0 ? records : [createContactRecord()]);
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -107,6 +140,70 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
     );
   }
 
+  async function handleSaveContacts() {
+    const normalized = contactRecords
+      .map((record) => ({
+        id: String(record.id ?? "").trim(),
+        name: String(record.name ?? "").trim(),
+        contact: String(record.contact ?? "").trim(),
+        role: String(record.role ?? "").trim(),
+        notes: String(record.notes ?? "").trim(),
+      }))
+      .filter((record) => record.id.length > 0 && record.name.length > 0);
+
+    if (normalized.length < 1) {
+      toast.error(t("contactRecordMinOne"));
+      return;
+    }
+
+    setIsSavingContacts(true);
+    try {
+      const res = await fetch(`/api/admin/forms/${formTemplateId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contactRecords: normalized }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || "Failed to save contacts");
+      }
+      setContactRecords(normalized);
+      toast.success(tc("success"));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : tc("error"));
+    } finally {
+      setIsSavingContacts(false);
+    }
+  }
+
+  function handleAddContact() {
+    setContactRecords((prev) => [...prev, createContactRecord()]);
+  }
+
+  function handleUpdateContact(id: string, patch: Partial<Omit<ContactRecordDraft, "id">>) {
+    setContactRecords((prev) =>
+      prev.map((record) =>
+        record.id === id
+          ? {
+              ...record,
+              name: patch.name ?? record.name,
+              contact: patch.contact ?? record.contact,
+              role: patch.role ?? record.role,
+              notes: patch.notes ?? record.notes,
+            }
+          : record,
+      ),
+    );
+  }
+
+  function handleRemoveContact(id: string) {
+    setContactRecords((prev) => (prev.length <= 1 ? prev : prev.filter((record) => record.id !== id)));
+  }
+
+  useState(() => {
+    void fetchFormContacts();
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -152,6 +249,63 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
           </SortableContext>
         </DndContext>
       )}
+
+      <div className="space-y-4 rounded-xl border border-border/60 bg-muted/20 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="text-lg font-semibold">{t("contactRecordsTitle")}</h3>
+          <Button type="button" variant="outline" size="sm" onClick={handleAddContact}>
+            <Plus className="mr-2 h-4 w-4" />
+            {t("addContactRecord")}
+          </Button>
+        </div>
+
+        <div className="space-y-3">
+          {contactRecords.map((record, index) => (
+            <div key={record.id} className="rounded-md border bg-background p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>{t("contactRecordLabel", { index: index + 1 })}</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleRemoveContact(record.id)}
+                  disabled={contactRecords.length <= 1}
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+
+              <Input
+                value={record.name}
+                onChange={(e) => handleUpdateContact(record.id, { name: e.target.value })}
+                placeholder={t("contactRecordName")}
+              />
+              <Input
+                value={record.contact}
+                onChange={(e) => handleUpdateContact(record.id, { contact: e.target.value })}
+                placeholder={t("contactRecordContact")}
+              />
+              <Input
+                value={record.role}
+                onChange={(e) => handleUpdateContact(record.id, { role: e.target.value })}
+                placeholder={t("contactRecordRole")}
+              />
+              <Textarea
+                value={record.notes}
+                onChange={(e) => handleUpdateContact(record.id, { notes: e.target.value })}
+                placeholder={t("contactRecordNotes")}
+                className="min-h-16"
+              />
+            </div>
+          ))}
+        </div>
+
+        <div>
+          <Button type="button" onClick={handleSaveContacts} disabled={isSavingContacts}>
+            {isSavingContacts ? tc("loading") : tc("save")}
+          </Button>
+        </div>
+      </div>
 
       <FieldFormDialog
         open={isDialogOpen}

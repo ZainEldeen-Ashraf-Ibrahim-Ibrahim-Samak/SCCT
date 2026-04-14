@@ -107,6 +107,14 @@ export const reorderFieldsSchema = z.object({
   ),
 });
 
+export const contactRecordSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1).max(200),
+  contact: z.string().max(200).optional().default(""),
+  role: z.string().max(100).optional().default(""),
+  notes: z.string().max(1000).optional().default(""),
+});
+
 // ── Form Template Schemas ──────────────────────────────────────────
 
 export const createFormTemplateSchema = z.object({
@@ -121,6 +129,7 @@ export const updateFormTemplateSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   description: z.string().optional(),
   isActive: z.boolean().optional(),
+  contactRecords: z.array(contactRecordSchema).min(1).optional(),
 });
 
 // ── Submission Schemas ─────────────────────────────────────────────
@@ -136,14 +145,6 @@ export const fieldValueInputSchema = z.object({
     url: z.string(),
     publicId: z.string()
   })).optional(),
-});
-
-export const contactRecordSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().min(1).max(200),
-  contact: z.string().max(200).optional().default(""),
-  role: z.string().max(100).optional().default(""),
-  notes: z.string().max(1000).optional().default(""),
 });
 
 export const createSubmissionSchema = z.object({

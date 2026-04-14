@@ -23,5 +23,5 @@ export type CreateFormTemplateInput = Pick<FormTemplate, "name"> & {
 };
 
 export type UpdateFormTemplateInput = Partial<
-  Pick<FormTemplate, "name" | "description" | "isActive">
+  Pick<FormTemplate, "name" | "description" | "isActive" | "contactRecords">
 >;
