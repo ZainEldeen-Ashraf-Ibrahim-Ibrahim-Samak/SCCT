@@ -354,15 +354,7 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
           <h2 className="text-2xl font-bold tracking-tight">{t("title")}</h2>
           <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
-        <Button
-          onClick={() => {
-            setEditingField(null);
-            setIsDialogOpen(true);
-          }}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          {t("addField")}
-        </Button>
+        {/* ADD FIELD BUTTON REMOVED AS REQUESTED */}
       </div>
 
       {fields.length === 0 ? (
@@ -385,7 +377,7 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
                   key={field.id}
                   field={field}
                   onEdit={() => handleEdit(field)}
-                  onDelete={() => handleDeleteField(field.id)}
+                  // DELETE FIELD PROP REMOVED AS REQUESTED
                 />
               ))}
             </div>
