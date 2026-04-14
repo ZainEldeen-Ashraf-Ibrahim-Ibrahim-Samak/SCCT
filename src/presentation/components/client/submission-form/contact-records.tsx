@@ -183,7 +183,7 @@ export function ContactRecords({
             size="sm"
             onClick={onAdd}
             disabled={disabled}
-            className="shrink-0"
+            className="flex-shrink-0"
           >
             <Plus className="mr-2 h-4 w-4" />
             {t("addContactRecord")}

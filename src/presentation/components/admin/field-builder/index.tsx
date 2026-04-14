@@ -9,11 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2 } from "lucide-react";
+import {  Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { FieldCard } from "./field-card";
 import { FieldFormDialog } from "./field-form-dialog";
 import type { FieldDefinition } from "@/domain/entities/field-definition";
+import { useSensors, useSensor, PointerSensor, KeyboardSensor, DragEndEvent, DndContext, closestCenter } from "@dnd-kit/core";
+import { sortableKeyboardCoordinates, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
 interface ContactRecordDraft {
   id: string;
@@ -205,6 +207,37 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
     }
   }, [formTemplateId, tc]);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = fields.findIndex((f) => f.id === active.id);
+    const newIndex = fields.findIndex((f) => f.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = [...fields];
+    const [moved] = reordered.splice(oldIndex, 1);
+    reordered.splice(newIndex, 0, moved);
+
+    const fieldOrder = reordered.map((f, i) => ({
+      fieldId: f.id,
+      sortOrder: i,
+    }));
+
+    try {
+      await reorderFields(fieldOrder);
+    } catch {
+      toast.error(tc("error"));
+    }
+  }
+
   async function handleSaveField(data: Record<string, unknown>) {
     try {
       if (editingField) {
@@ -321,9 +354,14 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
           <h2 className="text-2xl font-bold tracking-tight">{t("title")}</h2>
           <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
-        <Button onClick={() => setIsDialogOpen(true)}>
+        <Button
+          onClick={() => {
+            setEditingField(null);
+            setIsDialogOpen(true);
+          }}
+        >
           <Plus className="mr-2 h-4 w-4" />
-          {tc("create")}
+          {t("addField")}
         </Button>
       </div>
 
@@ -332,16 +370,27 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
           <p className="text-muted-foreground">{t("noFields")}</p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {fields.map((field) => (
-            <FieldCard
-              key={field.id}
-              field={field}
-              onEdit={() => handleEdit(field)}
-              onDelete={() => handleDeleteField(field.id)}
-            />
-          ))}
-        </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={fields.map((f) => f.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-2">
+              {fields.map((field) => (
+                <FieldCard
+                  key={field.id}
+                  field={field}
+                  onEdit={() => handleEdit(field)}
+                  onDelete={() => handleDeleteField(field.id)}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
 
       <div className="space-y-4 rounded-xl border border-border/60 bg-muted/20 p-4">
@@ -350,28 +399,38 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
             <h3 className="text-lg font-semibold">{t("contactRecordsTitle")}</h3>
             <p className="text-xs text-muted-foreground">{t("contactRecordMinOne")}</p>
           </div>
-        </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAddContact}
+              disabled={isLoadingContacts || isSavingContacts}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {t("addContactRecord")}
+            </Button>
+          </div>
 
-        <div className="space-y-3">
-          {isLoadingContacts
-            ? [1].map((item) => <Skeleton key={item} className="h-52 w-full rounded-md" />)
-            : (
-                <div className="space-y-3">
-                  {contactRecords.map((record, index) => (
-                    <ContactRecord
-                      key={record.id}
-                      record={record}
-                      index={index}
-                      disabled={isSavingContacts}
-                      canRemove={false}
-                      t={t}
-                      onUpdate={handleUpdateContact}
-                      onRemove={handleRemoveContact}
-                    />
-                  ))}
-                </div>
-            )}
-        </div>
+          <div className="space-y-3">
+            {isLoadingContacts
+              ? [1, 2].map((item) => <Skeleton key={item} className="h-52 w-full rounded-md" />)
+              : (
+                  <div className="space-y-3">
+                    {contactRecords.map((record, index) => (
+                      <ContactRecord
+                        key={record.id}
+                        record={record}
+                        index={index}
+                        disabled={isSavingContacts}
+                        canRemove={contactRecords.length > 1}
+                        t={t}
+                        onUpdate={handleUpdateContact}
+                        onRemove={handleRemoveContact}
+                      />
+                    ))}
+                  </div>
+              )}
+          </div>
 
           <div className="flex items-center justify-between gap-3">
             {!isLoadingContacts && (
