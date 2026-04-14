@@ -34,7 +34,27 @@
     "theme": "Theme",
     "darkMode": "Dark",
     "lightMode": "Light",
-    "systemMode": "System"
+    "systemMode": "System",
+    "fileTooLarge": "File is too large",
+    "invalidFileType": "Invalid file type",
+    "uploadError": "Error uploading file",
+    "uploadSuccess": "Upload successful",
+    "addMore": "Add more",
+    "noFilesUploaded": "No files uploaded",
+    "dropToUpload": "Drop files here to upload",
+    "uploadImage": "Upload Image",
+    "uploadFile": "Upload File",
+    "title": "Title",
+    "subtitle": "Subtitle",
+    "createForm": "Create Form",
+    "formName": "Form Name",
+    "formDescription": "Form Description",
+    "noForms": "No forms found",
+    "activeForm": "Active Form",
+    "inactiveForm": "Inactive Form",
+    "setActive": "Set Active",
+    "deleteConfirm": "Are you sure you want to delete this form?",
+    "deleteWarning": "This action cannot be undone."
   },
   "auth": {
     "login": "Login",
@@ -191,7 +211,9 @@
       "delivered": "Delivered",
       "seen": "Seen",
       "expired": "Expired"
-    }
+    },
+    "submissionsDeleted": "Submissions deleted successfully",
+    "selected": "selected"
   },
   "client": {
     "formTitle": "Data Submission Form",
@@ -246,7 +268,13 @@
     "contactRecordMinOne": "At least one contact record is required.",
     "contactRecordRequired": "Add at least one contact with a name.",
     "droppedValuesTitle": "Form Updated",
-    "droppedValuesDescription": "{count} unsaved field values were removed because the form changed."
+    "droppedValuesDescription": "{count} unsaved field values were removed because the form changed.",
+    "resubmissionRequested": "Resubmission Requested",
+    "requestedResubmissionMessage": "We requested a resubmission for your records.",
+    "markAsSeen": "Mark as seen",
+    "error": "An error occurred",
+    "dragToReorder": "Drag to reorder",
+    "contactRecordAttachment": "Contact Record Attachment"
   },
   "notifications": {
     "viewDetails": "View Details →"
@@ -383,5 +411,9 @@
     "backupSuccess": "Backup securely exported!",
     "backupError": "Backup failed",
     "loadSettingsError": "Failed to load settings"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your settings"
   }
 }

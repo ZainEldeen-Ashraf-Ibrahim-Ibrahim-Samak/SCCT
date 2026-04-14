@@ -150,7 +150,8 @@ pm run build) to ensure all structural changes are stable.
 
 ### Implementation for User Story 5
 
-- [ ] T028 [US5] Update \src/lib/validations.ts\ to ensure inner fields (name, email, phone, role, notes) of \contactRecordSchema\ are optional \.optional().nullable()\ or \""\ while ensuring the parent array still has a minimum of 1 item \.min(1)\.
-- [ ] T029 [US5] Update \src/presentation/components/client/submission-form/contact-records.tsx\ UI to remove required asterisks (\*\) and HTML \equired\ attributes from contact fields. Check and gracefully render empty states in the contact manager view.
-- [ ] T030 [US5] Update \src/presentation/components/admin/submission-review/index.tsx\ and \src/app/[locale]/admin/submissions/columns.tsx\ (or the specific admin table/view handling contact info) to gracefully display optional/missing contact data (e.g., fallback \-\ or \N/A\ or purely omitted).
-- [ ] T031 [US5] Update \src/presentation/view-models/use-submission.ts\ to not flag missing contact details as validation errors, providing validation strictly verifies \contactRecords.length >= 1\.
+- [x] T028 [US5] Update \`src/lib/validations.ts\` to ensure inner fields (name, email, phone, role, notes) of \`contactRecordSchema\` are optional \`.optional().nullable()\` or \`""\` while ensuring the parent array still has a minimum of 1 item \`.min(1)\`.
+- [x] T029 [US5] Update \src/presentation/components/client/submission-form/contact-records.tsx\ UI to remove required asterisks (\*\) and HTML \
+equired\ attributes from contact fields. Check and gracefully render empty states in the contact manager view.
+- [x] T030 [US5] Update \src/presentation/components/admin/submission-review/index.tsx\ and \src/app/[locale]/admin/submissions/columns.tsx\ (or the specific admin table/view handling contact info) to gracefully display optional/missing contact data (e.g., fallback \-\ or \N/A\ or purely omitted).
+- [x] T031 [US5] Update \src/presentation/view-models/use-submission.ts\ to not flag missing contact details as validation errors, providing validation strictly verifies \contactRecords.length >= 1\.
