@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import {  Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { FieldCard } from "./field-card";
 import { FieldFormDialog } from "./field-form-dialog";
@@ -74,35 +74,19 @@ function ContactRecord({
   record,
   index,
   disabled,
-  canRemove,
   t,
   onUpdate,
-  onRemove,
 }: {
   record: ContactRecordDraft;
   index: number;
   disabled: boolean;
-  canRemove: boolean;
   t: (key: string, values?: Record<string, string | number>) => string;
   onUpdate: (id: string, patch: Partial<Omit<ContactRecordDraft, "id">>) => void;
-  onRemove: (id: string) => void;
 }) {
   return (
     <div className="rounded-md border bg-background p-4 space-y-4 shadow-sm group transition-all">
       <div className="flex items-center justify-between mb-2">
         <Label className="text-sm font-semibold">{t("contactRecordLabel", { index: index + 1 })}</Label>
-        {canRemove && !disabled && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => onRemove(record.id)}
-            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
-            title={t("removeContactRecord")}
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -320,14 +304,6 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
     }
   }
 
-  function handleAddContact() {
-    setContactRecords((prev) => [...prev, createContactRecord()]);
-  }
-
-  function handleRemoveContact(id: string) {
-    setContactRecords((prev) => (prev.length <= 1 ? prev : prev.filter((record) => record.id !== id)));
-  }
-
   function handleUpdateContact(id: string, patch: Partial<Omit<ContactRecordDraft, "id">>) {
     setContactRecords((prev) =>
       prev.map((record) =>
@@ -344,8 +320,6 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
       ),
     );
   }
-
-
 
   return (
     <div className="space-y-6">
@@ -399,54 +373,42 @@ export function FieldBuilder({ formTemplateId }: FieldBuilderProps) {
             <h3 className="text-lg font-semibold">{t("contactRecordsTitle")}</h3>
             <p className="text-xs text-muted-foreground">{t("contactRecordMinOne")}</p>
           </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleAddContact}
-              disabled={isLoadingContacts || isSavingContacts}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              {t("addContactRecord")}
-            </Button>
-          </div>
-
-          <div className="space-y-3">
-            {isLoadingContacts
-              ? [1, 2].map((item) => <Skeleton key={item} className="h-52 w-full rounded-md" />)
-              : (
-                  <div className="space-y-3">
-                    {contactRecords.map((record, index) => (
-                      <ContactRecord
-                        key={record.id}
-                        record={record}
-                        index={index}
-                        disabled={isSavingContacts}
-                        canRemove={contactRecords.length > 1}
-                        t={t}
-                        onUpdate={handleUpdateContact}
-                        onRemove={handleRemoveContact}
-                      />
-                    ))}
-                  </div>
-              )}
-          </div>
-
-          <div className="flex items-center justify-between gap-3">
-            {!isLoadingContacts && (
-              <Badge variant={hasContactChanges ? "secondary" : "outline"}>
-                {hasContactChanges ? t("contactChangesPending") : t("contactChangesSaved")}
-              </Badge>
-            )}
-            <Button
-              type="button"
-              onClick={handleSaveContacts}
-              disabled={isLoadingContacts || isSavingContacts || !hasContactChanges}
-            >
-              {isSavingContacts ? tc("loading") : tc("save")}
-            </Button>
-          </div>
         </div>
+
+        <div className="space-y-3">
+          {isLoadingContacts
+            ? [1, 2].map((item) => <Skeleton key={item} className="h-52 w-full rounded-md" />)
+            : (
+                <div className="space-y-3">
+                  {contactRecords.map((record, index) => (
+                    <ContactRecord
+                      key={record.id}
+                      record={record}
+                      index={index}
+                      disabled={isSavingContacts}
+                      t={t}
+                      onUpdate={handleUpdateContact}
+                    />
+                  ))}
+                </div>
+            )}
+        </div>
+
+        <div className="flex items-center justify-between gap-3">
+          {!isLoadingContacts && (
+            <Badge variant={hasContactChanges ? "secondary" : "outline"}>
+              {hasContactChanges ? t("contactChangesPending") : t("contactChangesSaved")}
+            </Badge>
+          )}
+          <Button
+            type="button"
+            onClick={handleSaveContacts}
+            disabled={isLoadingContacts || isSavingContacts || !hasContactChanges}
+          >
+            {isSavingContacts ? tc("loading") : tc("save")}
+          </Button>
+        </div>
+      </div>
 
       <FieldFormDialog
         open={isDialogOpen}
