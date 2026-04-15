@@ -40,7 +40,7 @@ class _WebviewScreenState extends State<WebviewScreen> {
   String _t(String key) {
     final locale = _localeCode();
     final catalog =
-        I18nCatalog.getCached(locale) ?? I18nCatalog.getCached("en");
+        I18nCatalog.getCached(locale) ?? I18nCatalog.getCached("ar");
     return catalog?.t(key) ?? key;
   }
 

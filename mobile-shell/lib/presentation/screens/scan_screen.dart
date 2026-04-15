@@ -6,6 +6,7 @@ import "package:flutter/material.dart";
 import "package:image_picker/image_picker.dart";
 import "package:mobile_scanner/mobile_scanner.dart";
 
+import "../../i18n/index.dart";
 import "../../config/brand_config.dart";
 import "../components/app_logo.dart";
 import "scan_error_sheet.dart";
@@ -44,69 +45,6 @@ class _ScanScreenState extends State<ScanScreen> {
   Uint8List? _selectedPhotoBytes;
   bool _isDraggingPhoto = false;
   bool _isDecodingPhoto = false;
-
-  static const Map<String, Map<String, String>> _messages = {
-    "en": {
-      "mobile.home.title": "Smart QR Scanner",
-      "mobile.home.subtitle":
-          "Validate SCCT links quickly and open them safely.",
-      "mobile.scan.secure": "Secure validation enabled",
-      "mobile.scan.manual": "Manual link input",
-      "mobile.scan.quickActions": "Quick actions",
-      "mobile.scan.dragHint": "Tip: drag an image file into the drop area.",
-      "mobile.scan.photoPreview": "Photo preview",
-      "mobile.scan.invalid": "The scanned QR code is invalid.",
-      "mobile.scan.disallowed": "This destination is not allowed.",
-      "mobile.scan.blocked": "This destination path is blocked.",
-      "mobile.scan.camera_denied": "Camera permission is required.",
-      "mobile.scan.offline": "You are offline. Check your connection.",
-      "mobile.scan.prompt": "Scan SCCT QR code",
-      "mobile.scan.open": "Validate and open",
-      "mobile.scan.choosePhoto": "Choose from photo library",
-      "mobile.scan.clearPhoto": "Clear selected photo",
-      "mobile.scan.openCamera": "Open camera scanner",
-      "mobile.scan.alignCode": "Place the QR code inside the frame",
-      "mobile.scan.cameraHint": "Point the camera at a QR code",
-      "mobile.scan.themeToggle": "Toggle theme",
-      "mobile.scan.language": "Language",
-      "mobile.scan.dropPhoto": "Drag and drop a photo here",
-      "mobile.scan.selectedPhoto": "Selected photo",
-      "mobile.scan.noPhoto": "No photo selected",
-      "mobile.scan.decoding": "Decoding QR from image...",
-      "mobile.scan.noQrInPhoto": "No QR code found in this photo.",
-      "mobile.scan.errorTitle": "Scan issue",
-    },
-    "ar": {
-      "mobile.home.title": "ماسح QR الذكي",
-      "mobile.home.subtitle": "تحقق من روابط SCCT بسرعة وافتحها بأمان.",
-      "mobile.scan.secure": "التحقق الآمن مفعل",
-      "mobile.scan.manual": "إدخال الرابط يدويًا",
-      "mobile.scan.quickActions": "إجراءات سريعة",
-      "mobile.scan.dragHint":
-          "معلومة: يمكنك سحب ملف صورة وإفلاته في منطقة الإسقاط.",
-      "mobile.scan.photoPreview": "معاينة الصورة",
-      "mobile.scan.invalid": "رمز QR غير صالح.",
-      "mobile.scan.disallowed": "هذا الرابط غير مسموح.",
-      "mobile.scan.blocked": "مسار الرابط محظور.",
-      "mobile.scan.camera_denied": "إذن الكاميرا مطلوب.",
-      "mobile.scan.offline": "لا يوجد اتصال بالإنترنت.",
-      "mobile.scan.prompt": "امسح رمز SCCT",
-      "mobile.scan.open": "تحقق وافتح",
-      "mobile.scan.choosePhoto": "اختر من معرض الصور",
-      "mobile.scan.clearPhoto": "إزالة الصورة المختارة",
-      "mobile.scan.openCamera": "فتح ماسح الكاميرا",
-      "mobile.scan.alignCode": "ضع رمز QR داخل الإطار",
-      "mobile.scan.cameraHint": "وجّه الكاميرا نحو رمز QR",
-      "mobile.scan.themeToggle": "تبديل المظهر",
-      "mobile.scan.language": "اللغة",
-      "mobile.scan.dropPhoto": "اسحب وأفلت صورة هنا",
-      "mobile.scan.selectedPhoto": "الصورة المختارة",
-      "mobile.scan.noPhoto": "لا توجد صورة مختارة",
-      "mobile.scan.decoding": "يتم قراءة رمز QR من الصورة...",
-      "mobile.scan.noQrInPhoto": "لا يوجد رمز QR في هذه الصورة.",
-      "mobile.scan.errorTitle": "مشكلة في المسح",
-    },
-  };
 
   @override
   void dispose() {
@@ -573,7 +511,9 @@ class _ScanScreenState extends State<ScanScreen> {
 
   String _t(String key) {
     final locale = _localeCode();
-    return _messages[locale]?[key] ?? _messages["en"]?[key] ?? key;
+    final catalog =
+        I18nCatalog.getCached(locale) ?? I18nCatalog.getCached("ar");
+    return catalog?.t(key) ?? key;
   }
 
   @override
@@ -864,8 +804,7 @@ class _ScanScreenState extends State<ScanScreen> {
                     style: TextStyle(color: textPrimary),
                     decoration: InputDecoration(
                       labelText: _t("mobile.scan.prompt"),
-                      hintText:
-                          "https://your-domain.com/ar/submit/abc123",
+                      hintText: "https://your-domain.com/ar/submit/abc123",
                       hintStyle: TextStyle(color: textSecondary),
                       labelStyle: TextStyle(color: textSecondary),
                       filled: true,

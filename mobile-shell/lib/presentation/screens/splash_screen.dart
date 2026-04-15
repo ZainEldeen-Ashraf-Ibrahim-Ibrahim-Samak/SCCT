@@ -21,7 +21,7 @@ class SplashScreen extends StatelessWidget {
   String _t(BuildContext context, String key) {
     final locale = _localeCode(context);
     final catalog =
-        I18nCatalog.getCached(locale) ?? I18nCatalog.getCached("en");
+        I18nCatalog.getCached(locale) ?? I18nCatalog.getCached("ar");
     return catalog?.t(key) ?? key;
   }
 
