@@ -68,3 +68,17 @@ When validation fails:
 5. `config_invalid_numeric_range`
 
 Each error code must map to Arabic and English user-facing startup guidance.
+
+## Environment Profiles
+
+Companion Flutter shell now carries deployment profiles at:
+
+1. `mobile-shell/.env.development`
+2. `mobile-shell/.env.staging`
+3. `mobile-shell/.env.production`
+
+Profile loading contract:
+
+1. The startup coordinator reads runtime values through `mobile-shell/lib/config/load_runtime_env.dart`.
+2. Validation is enforced in `mobile-shell/lib/config/runtime_config.dart` before interactive scan state.
+3. Any invalid profile value must lead to startup safe-fail screen with localized guidance.

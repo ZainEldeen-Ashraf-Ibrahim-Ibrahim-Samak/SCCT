@@ -1,0 +1,14 @@
+{
+  "mobile.scan.invalid": "The scanned QR code is invalid.",
+  "mobile.scan.disallowed": "This destination is not allowed.",
+  "mobile.scan.blocked": "This destination path is blocked.",
+  "mobile.startup.config_missing": "Some required configuration values are missing.",
+  "mobile.startup.config_invalid": "Configuration values are invalid.",
+  "mobile.startup.recovery": "Please check the app configuration and restart.",
+  "mobile.scan.prompt": "Scan SCCT QR code",
+  "mobile.scan.open": "Open in app",
+  "mobile.scan.choosePhoto": "Choose from photo library",
+  "mobile.scan.dropPhoto": "Drag and drop a photo here",
+  "mobile.scan.selectedPhoto": "Selected photo",
+  "mobile.scan.noPhoto": "No photo selected"
+}

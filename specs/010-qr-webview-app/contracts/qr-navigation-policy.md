@@ -93,3 +93,13 @@ Output:
   "userMessageKey": "mobile.scan.disallowed"
 }
 ```
+
+## Implementation Consistency Check
+
+Validated against current implementation in `mobile-shell/lib/domain/use_cases/evaluate_qr_destination.dart`:
+
+1. Invalid/non-URL payloads map to `invalidFormat` and rejection status.
+2. Non-HTTPS payloads map to `nonHttps` when HTTPS enforcement is enabled.
+3. Host allowlist and subdomain checks map to `disallowedHost` rejections.
+4. Blocked path prefix checks map to `blockedPath` rejections.
+5. Accepted payloads preserve normalized URL and set accepted status.

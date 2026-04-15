@@ -106,3 +106,19 @@ Follow fast-feedback verification first (unit/integration and focused manual flo
 
 ### Alternatives considered
 - **Run full heavy checks after each change**: rejected due to slow feedback and lower development velocity.
+
+## 9) Implementation Alignment Update (2026-04-15)
+
+### Delivered stack alignment
+
+1. Companion app scaffold was implemented as Flutter project under `mobile-shell/`.
+2. Domain entities, validation policy, runtime config validation, startup coordinator, and scan/webview screens were created in Dart.
+3. AR/EN mobile message catalogs were added under `mobile-shell/assets/i18n/`.
+4. Android and iOS platform metadata baselines were generated with Flutter tooling.
+
+### Verification outcomes
+
+1. Web checks: lint completed with one warning and no errors; production build succeeded.
+2. Flutter checks: `flutter analyze` and `flutter test` passed.
+3. Android build smoke check is currently blocked by local NDK corruption.
+4. iOS smoke build/launch is blocked on this Windows host and requires macOS + Xcode.

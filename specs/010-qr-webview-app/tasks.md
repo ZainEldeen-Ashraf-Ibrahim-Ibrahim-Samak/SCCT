@@ -17,10 +17,10 @@
 
 **Purpose**: Initialize companion mobile workspace and base runtime wiring.
 
-- [ ] T001 Create companion mobile workspace manifest in mobile-shell/package.json
-- [ ] T002 Create TypeScript and environment templates in mobile-shell/tsconfig.json and mobile-shell/.env.example
-- [ ] T003 [P] Configure Capacitor runtime shell in mobile-shell/capacitor.config.ts
-- [ ] T004 [P] Create mobile app entry point in mobile-shell/src/main.ts
+- [x] T001 Create companion mobile workspace manifest in mobile-shell/pubspec.yaml
+- [x] T002 Create Flutter lint and environment templates in mobile-shell/analysis_options.yaml and mobile-shell/.env.example
+- [x] T003 [P] Configure Flutter app metadata and platform settings in mobile-shell/pubspec.yaml and mobile-shell/android/ or mobile-shell/ios/
+- [x] T004 [P] Create mobile app entry point in mobile-shell/lib/main.dart
 
 ---
 
@@ -30,13 +30,13 @@
 
 **CRITICAL**: No user story work should start before this phase is complete.
 
-- [ ] T005 Create domain entities for scan payload, webview session, and runtime config in mobile-shell/src/domain/entities/qr-scan-payload.ts, mobile-shell/src/domain/entities/webview-session.ts, and mobile-shell/src/domain/entities/mobile-runtime-config.ts
-- [ ] T006 [P] Implement QR destination policy evaluator from contract in mobile-shell/src/domain/use-cases/evaluate-qr-destination.ts
-- [ ] T007 [P] Implement runtime config schema validator from contract in mobile-shell/src/config/runtime-config.ts
-- [ ] T008 Create scanner and webview adapter interfaces in mobile-shell/src/data/adapters/scanner-adapter.ts and mobile-shell/src/data/adapters/webview-adapter.ts
-- [ ] T009 [P] Create mobile message key registry for scan and startup errors in mobile-shell/src/domain/constants/message-keys.ts
-- [ ] T010 Create app bootstrap pipeline for config validation and splash preconditions in mobile-shell/src/app/bootstrap.ts
-- [ ] T011 Configure locale resource loading with fallback behavior in mobile-shell/src/i18n/index.ts
+- [x] T005 Create domain entities for scan payload, webview session, and runtime config in mobile-shell/lib/domain/entities/qr_scan_payload.dart, mobile-shell/lib/domain/entities/webview_session.dart, and mobile-shell/lib/domain/entities/mobile_runtime_config.dart
+- [x] T006 [P] Implement QR destination policy evaluator from contract in mobile-shell/lib/domain/use_cases/evaluate_qr_destination.dart
+- [x] T007 [P] Implement runtime config schema validator from contract in mobile-shell/lib/config/runtime_config.dart
+- [x] T008 Create scanner and webview adapter interfaces in mobile-shell/lib/data/adapters/scanner_adapter.dart and mobile-shell/lib/data/adapters/webview_adapter.dart
+- [x] T009 [P] Create mobile message key registry for scan and startup errors in mobile-shell/lib/domain/constants/message_keys.dart
+- [x] T010 Create app bootstrap pipeline for config validation and splash preconditions in mobile-shell/lib/app/bootstrap.dart
+- [x] T011 Configure locale resource loading with fallback behavior in mobile-shell/lib/i18n/index.dart
 
 **Checkpoint**: Foundation complete. User stories can proceed.
 
@@ -50,14 +50,14 @@
 
 ### Implementation for User Story 1
 
-- [ ] T012 [P] [US1] Implement native QR scanner adapter in mobile-shell/src/data/adapters/native-qr-scanner.ts
-- [ ] T013 [P] [US1] Implement native in-app webview adapter in mobile-shell/src/data/adapters/native-webview.ts
-- [ ] T014 [US1] Implement scan flow view-model for decode, normalize, and policy validation in mobile-shell/src/presentation/view-models/scan-view-model.ts
-- [ ] T015 [US1] Implement scanner screen states and primary scan action in mobile-shell/src/presentation/screens/scan-screen.tsx
-- [ ] T016 [US1] Wire accepted destination navigation to in-app webview session in mobile-shell/src/app/router.ts
-- [ ] T017 [US1] Implement invalid QR and disallowed URL error UI in mobile-shell/src/presentation/screens/scan-error-sheet.tsx
-- [ ] T018 [US1] Implement same-session rescan destination replacement behavior in mobile-shell/src/presentation/view-models/webview-session-view-model.ts
-- [ ] T019 [US1] Implement camera-permission and offline failure handling in mobile-shell/src/presentation/view-models/scan-view-model.ts
+- [x] T012 [P] [US1] Implement native QR scanner adapter in mobile-shell/lib/data/adapters/native_qr_scanner.dart
+- [x] T013 [P] [US1] Implement native in-app webview adapter in mobile-shell/lib/data/adapters/native_webview.dart
+- [x] T014 [US1] Implement scan flow view-model for decode, normalize, and policy validation in mobile-shell/lib/presentation/view_models/scan_view_model.dart
+- [x] T015 [US1] Implement scanner screen states and primary scan action in mobile-shell/lib/presentation/screens/scan_screen.dart
+- [x] T016 [US1] Wire accepted destination navigation to in-app webview session in mobile-shell/lib/app/router.dart and mobile-shell/lib/main.dart
+- [x] T017 [US1] Implement invalid QR and disallowed URL error UI in mobile-shell/lib/presentation/screens/scan_error_sheet.dart
+- [x] T018 [US1] Implement same-session rescan destination replacement behavior in mobile-shell/lib/presentation/view_models/webview_session_view_model.dart
+- [x] T019 [US1] Implement camera-permission and offline failure handling in mobile-shell/lib/presentation/view_models/scan_view_model.dart
 
 **Checkpoint**: US1 is independently functional and valid QR flows are testable.
 
@@ -71,13 +71,13 @@
 
 ### Implementation for User Story 2
 
-- [ ] T020 [P] [US2] Add scanner and startup message keys to English catalog in mobile-shell/src/i18n/en.json
-- [ ] T021 [P] [US2] Add scanner and startup message keys to Arabic catalog in mobile-shell/src/i18n/ar.json
-- [ ] T022 [US2] Implement locale selection and runtime locale resolution in mobile-shell/src/presentation/view-models/locale-view-model.ts
-- [ ] T023 [P] [US2] Create mobile brand config sourced from canonical site naming and icon references in mobile-shell/src/config/brand-config.ts and src/components/shared/site-name.tsx
-- [ ] T024 [US2] Apply launcher name and icon branding on Android in mobile-shell/android/app/src/main/AndroidManifest.xml and mobile-shell/android/app/src/main/res
-- [ ] T025 [US2] Apply app name and icon branding on iOS in mobile-shell/ios/App/App/Info.plist and mobile-shell/ios/App/App/Assets.xcassets
-- [ ] T026 [US2] Update scan and startup error screens to render localized branded labels in mobile-shell/src/presentation/screens/scan-screen.tsx and mobile-shell/src/presentation/screens/startup-error-screen.tsx
+- [x] T020 [P] [US2] Add scanner and startup message keys to English catalog in mobile-shell/assets/i18n/en.json
+- [x] T021 [P] [US2] Add scanner and startup message keys to Arabic catalog in mobile-shell/assets/i18n/ar.json
+- [x] T022 [US2] Implement locale selection and runtime locale resolution in mobile-shell/lib/presentation/view_models/locale_view_model.dart
+- [x] T023 [P] [US2] Create mobile brand config sourced from canonical site naming and icon references in mobile-shell/lib/config/brand_config.dart and src/components/shared/site-name.tsx
+- [x] T024 [US2] Apply launcher name and icon branding on Android in mobile-shell/android/app/src/main/AndroidManifest.xml and mobile-shell/android/app/src/main/res
+- [x] T025 [US2] Apply app name and icon branding on iOS in mobile-shell/ios/App/App/Info.plist and mobile-shell/ios/App/App/Assets.xcassets
+- [x] T026 [US2] Update scan and startup error screens to render localized branded labels in mobile-shell/lib/presentation/screens/scan_screen.dart and mobile-shell/lib/presentation/screens/startup_error_screen.dart
 
 **Checkpoint**: US2 is independently functional with AR/EN parity and consistent SCCT branding.
 
@@ -91,12 +91,12 @@
 
 ### Implementation for User Story 3
 
-- [ ] T027 [P] [US3] Implement runtime environment loader for required and optional variables in mobile-shell/src/config/load-runtime-env.ts
-- [ ] T028 [US3] Implement startup validation error mapping and recovery guidance screen in mobile-shell/src/presentation/screens/startup-error-screen.tsx
-- [ ] T029 [US3] Implement branded splash screen with minimum-duration gate in mobile-shell/src/presentation/screens/splash-screen.tsx and mobile-shell/src/app/bootstrap.ts
-- [ ] T030 [US3] Add deployment environment profiles in mobile-shell/.env.development, mobile-shell/.env.staging, and mobile-shell/.env.production
-- [ ] T031 [US3] Wire startup coordinator flow from splash to scan-ready state using validated config in mobile-shell/src/app/startup-coordinator.ts
-- [ ] T032 [US3] Document environment matrix and startup fail-safe behavior in specs/010-qr-webview-app/contracts/mobile-runtime-config.md and specs/010-qr-webview-app/quickstart.md
+- [x] T027 [P] [US3] Implement runtime environment loader for required and optional variables in mobile-shell/lib/config/load_runtime_env.dart
+- [x] T028 [US3] Implement startup validation error mapping and recovery guidance screen in mobile-shell/lib/presentation/screens/startup_error_screen.dart
+- [x] T029 [US3] Implement branded splash screen with minimum-duration gate in mobile-shell/lib/presentation/screens/splash_screen.dart and mobile-shell/lib/app/bootstrap.dart
+- [x] T030 [US3] Add deployment environment profiles in mobile-shell/.env.development, mobile-shell/.env.staging, and mobile-shell/.env.production
+- [x] T031 [US3] Wire startup coordinator flow from splash to scan-ready state using validated config in mobile-shell/lib/app/startup_coordinator.dart
+- [x] T032 [US3] Document environment matrix and startup fail-safe behavior in specs/010-qr-webview-app/contracts/mobile-runtime-config.md and specs/010-qr-webview-app/quickstart.md
 
 **Checkpoint**: US3 is independently functional with validated configuration and safe startup behavior.
 
@@ -106,12 +106,12 @@
 
 **Purpose**: Final verification, consistency updates, and heavy-process gate execution.
 
-- [ ] T033 [P] Run repository lint checks and capture results in specs/010-qr-webview-app/quickstart.md
-- [ ] T034 [P] Execute final production web build and capture outcome in specs/010-qr-webview-app/quickstart.md
-- [ ] T035 Execute Android smoke launch verification and record results in specs/010-qr-webview-app/quickstart.md
-- [ ] T036 Execute iOS smoke launch verification and record results in specs/010-qr-webview-app/quickstart.md
-- [ ] T037 [P] Validate QR policy contract example cases against implementation and update notes in specs/010-qr-webview-app/contracts/qr-navigation-policy.md
-- [ ] T038 Align final research and quickstart documentation with delivered behavior in specs/010-qr-webview-app/research.md and specs/010-qr-webview-app/quickstart.md
+- [x] T033 [P] Run repository lint checks and capture results in specs/010-qr-webview-app/quickstart.md
+- [x] T034 [P] Execute final production web build and capture outcome in specs/010-qr-webview-app/quickstart.md
+- [x] T035 Execute Android smoke launch verification and record results in specs/010-qr-webview-app/quickstart.md
+- [x] T036 Execute iOS smoke launch verification and record results in specs/010-qr-webview-app/quickstart.md
+- [x] T037 [P] Validate QR policy contract example cases against implementation and update notes in specs/010-qr-webview-app/contracts/qr-navigation-policy.md
+- [x] T038 Align final research and quickstart documentation with delivered behavior in specs/010-qr-webview-app/research.md and specs/010-qr-webview-app/quickstart.md
 
 ---
 

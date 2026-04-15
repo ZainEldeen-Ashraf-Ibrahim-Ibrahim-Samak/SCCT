@@ -1,0 +1,14 @@
+{
+  "mobile.scan.invalid": "رمز QR غير صالح.",
+  "mobile.scan.disallowed": "هذا الرابط غير مسموح.",
+  "mobile.scan.blocked": "مسار الرابط محظور.",
+  "mobile.startup.config_missing": "بعض إعدادات التشغيل المطلوبة مفقودة.",
+  "mobile.startup.config_invalid": "إعدادات التشغيل غير صالحة.",
+  "mobile.startup.recovery": "تحقق من إعدادات التطبيق ثم أعد التشغيل.",
+  "mobile.scan.prompt": "امسح رمز SCCT",
+  "mobile.scan.open": "افتح داخل التطبيق",
+  "mobile.scan.choosePhoto": "اختر من معرض الصور",
+  "mobile.scan.dropPhoto": "اسحب وأفلت صورة هنا",
+  "mobile.scan.selectedPhoto": "الصورة المختارة",
+  "mobile.scan.noPhoto": "لا توجد صورة مختارة"
+}
