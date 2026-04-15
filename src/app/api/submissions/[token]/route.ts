@@ -36,10 +36,10 @@ async function getSubmitDependencies(): Promise<SubmitRouteDependencies> {
         { NotificationPublisher },
         { parseSecureJson },
       ] = await Promise.all([
-        import("@/lib/validations"),
-        import("@/domain/use-cases/client/submit-form"),
-        import("@/lib/events/publisher"),
-        import("@/lib/api-security"),
+        import("../../../../lib/validations"),
+        import("../../../../domain/use-cases/client/submit-form"),
+        import("../../../../lib/events/publisher"),
+        import("../../../../lib/api-security"),
       ]);
 
       const submitUseCase = new SubmitFormUseCase(

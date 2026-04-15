@@ -1,16 +1,13 @@
-import DOMPurify from 'isomorphic-dompurify';
-
 /**
- * Sanitizes an input string to block potential XSS vectors and strip dangerous HTML/script tags.
- * This should be used for free-text inputs from end-users before persisting to the database.
- * 
- * @param input - The string to sanitize
- * @returns The sanitized string with dangerous tags removed
+ * Sanitizes free-text input in a server-safe way without DOM/browser dependencies.
+ * It strips tags, removes control characters, and normalizes whitespace.
  */
 export function sanitizeInput(input: string | null | undefined): string {
-  if (!input) return '';
-  return DOMPurify.sanitize(input, {
-    ALLOWED_TAGS: [], // Strip all HTML tags by default for simple text inputs
-    ALLOWED_ATTR: [], // Strip all attributes
-  }).trim();
+  if (!input) return "";
+
+  return input
+    .replace(/[\u0000-\u001F\u007F]/g, "")
+    .replace(/<[^>]*>/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
