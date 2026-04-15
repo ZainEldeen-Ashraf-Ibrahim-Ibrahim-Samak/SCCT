@@ -1,8 +1,9 @@
-import "package:flutter/material.dart";
+import "dart:typed_data";
+
 import "package:desktop_drop/desktop_drop.dart";
+import "package:flutter/material.dart";
 import "package:image_picker/image_picker.dart";
 import "package:mobile_scanner/mobile_scanner.dart";
-import "dart:typed_data";
 
 import "../../config/brand_config.dart";
 import "../view_models/scan_view_model.dart";
@@ -33,6 +34,7 @@ class _ScanScreenState extends State<ScanScreen> {
   final TextEditingController _controller = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
   final MobileScannerController _scannerController = MobileScannerController(autoStart: false);
+
   String? _error;
   XFile? _selectedPhoto;
   Uint8List? _selectedPhotoBytes;
@@ -41,6 +43,13 @@ class _ScanScreenState extends State<ScanScreen> {
 
   static const Map<String, Map<String, String>> _messages = {
     "en": {
+      "mobile.home.title": "Smart QR Scanner",
+      "mobile.home.subtitle": "Validate SCCT links quickly and open them safely.",
+      "mobile.scan.secure": "Secure validation enabled",
+      "mobile.scan.manual": "Manual link input",
+      "mobile.scan.quickActions": "Quick actions",
+      "mobile.scan.dragHint": "Tip: drag an image file into the drop area.",
+      "mobile.scan.photoPreview": "Photo preview",
       "mobile.scan.invalid": "The scanned QR code is invalid.",
       "mobile.scan.disallowed": "This destination is not allowed.",
       "mobile.scan.blocked": "This destination path is blocked.",
@@ -61,6 +70,13 @@ class _ScanScreenState extends State<ScanScreen> {
       "mobile.scan.noQrInPhoto": "No QR code found in this photo.",
     },
     "ar": {
+      "mobile.home.title": "ماسح QR الذكي",
+      "mobile.home.subtitle": "تحقق من روابط SCCT بسرعة وافتحها بأمان.",
+      "mobile.scan.secure": "التحقق الآمن مفعل",
+      "mobile.scan.manual": "إدخال الرابط يدويًا",
+      "mobile.scan.quickActions": "إجراءات سريعة",
+      "mobile.scan.dragHint": "معلومة: يمكنك سحب ملف صورة وإفلاته في منطقة الإسقاط.",
+      "mobile.scan.photoPreview": "معاينة الصورة",
       "mobile.scan.invalid": "رمز QR غير صالح.",
       "mobile.scan.disallowed": "هذا الرابط غير مسموح.",
       "mobile.scan.blocked": "مسار الرابط محظور.",
@@ -172,8 +188,8 @@ class _ScanScreenState extends State<ScanScreen> {
                   }
 
                   final decodedValue = capture.barcodes
-                          .map((barcode) => barcode.rawValue?.trim() ?? "")
-                          .firstWhere((value) => value.isNotEmpty, orElse: () => "")
+                      .map((barcode) => barcode.rawValue?.trim() ?? "")
+                      .firstWhere((value) => value.isNotEmpty, orElse: () => "")
                       .trim();
 
                   if (decodedValue.isEmpty) {
@@ -286,22 +302,93 @@ class _ScanScreenState extends State<ScanScreen> {
     return segments.isEmpty ? selected.path : segments.last;
   }
 
-  Widget _buildPhotoPreview() {
+  Widget _buildPhotoPreviewCard({
+    required Color cardColor,
+    required Color borderColor,
+    required Color textPrimary,
+    required Color textSecondary,
+  }) {
     final bytes = _selectedPhotoBytes;
     if (bytes == null) {
       return const SizedBox.shrink();
     }
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Image.memory(
-          bytes,
-          height: 140,
-          width: double.infinity,
-          fit: BoxFit.cover,
-        ),
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _t("mobile.scan.photoPreview"),
+            style: TextStyle(
+              color: textPrimary,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _selectedPhotoLabel(),
+            style: TextStyle(
+              color: textSecondary,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.memory(
+              bytes,
+              height: 170,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTag({required IconData icon, required String label}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: Colors.white),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  ButtonStyle _filledButtonStyle({required Color background, required Color foreground}) {
+    return ButtonStyle(
+      backgroundColor: WidgetStatePropertyAll<Color>(background),
+      foregroundColor: WidgetStatePropertyAll<Color>(foreground),
+      padding: const WidgetStatePropertyAll<EdgeInsets>(
+        EdgeInsets.symmetric(vertical: 13, horizontal: 14),
+      ),
+      shape: WidgetStatePropertyAll<RoundedRectangleBorder>(
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
   }
@@ -321,14 +408,63 @@ class _ScanScreenState extends State<ScanScreen> {
     final isDark = widget.themeMode == ThemeMode.dark;
     final localeCode = _localeCode();
 
+    const brandBlue = Color(0xFF0B5F91);
+    const brandBlueDeep = Color(0xFF083C63);
+    const brandRed = Color(0xFFE33B43);
+
+    final appBarColor = isDark ? const Color(0xFF081E33) : const Color(0xFFE9F2FA);
+    final bgTop = isDark ? const Color(0xFF061221) : const Color(0xFFF3F8FD);
+    final bgBottom = isDark ? const Color(0xFF0D2942) : const Color(0xFFE6EFF8);
+    final cardColor = isDark ? const Color(0xFF0F263D) : const Color(0xFFFFFFFF);
+    final cardBorder = isDark ? const Color(0xFF285375) : const Color(0xFFD6E4F1);
+    final textPrimary = isDark ? const Color(0xFFE8F1FA) : const Color(0xFF11283D);
+    final textSecondary = isDark ? const Color(0xFFB9CCDD) : const Color(0xFF4F6479);
+    final inputFill = isDark ? const Color(0xFF142E49) : const Color(0xFFF7FBFF);
+    final dropBase = isDark ? const Color(0xFF11283E) : const Color(0xFFF6FAFE);
+    final dropDrag = isDark ? const Color(0xFF164166) : const Color(0xFFD9ECFD);
+    final infoBg = isDark ? const Color(0xFF183A57) : const Color(0xFFEAF5FF);
+    final infoText = isDark ? const Color(0xFFB9DFFF) : const Color(0xFF1F5C8E);
+    final errorBg = isDark ? const Color(0xFF4A1F23) : const Color(0xFFFDECEF);
+    final errorText = isDark ? const Color(0xFFFFC2C5) : const Color(0xFFA33139);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text(BrandConfig.siteName),
+        backgroundColor: appBarColor,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        titleSpacing: 16,
+        title: Row(
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [brandBlue, brandRed],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: const Icon(Icons.qr_code_2_rounded, size: 18, color: Colors.white),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              BrandConfig.siteName,
+              style: TextStyle(
+                color: textPrimary,
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
             tooltip: _t("mobile.scan.themeToggle"),
             onPressed: widget.onToggleTheme,
-            icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+            icon: Icon(isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded),
+            color: textPrimary,
           ),
           PopupMenuButton<String>(
             tooltip: _t("mobile.scan.language"),
@@ -341,100 +477,320 @@ class _ScanScreenState extends State<ScanScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Center(
-                child: Text(
-                  localeCode.toUpperCase(),
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF14334F) : const Color(0xFFDDEAF7),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    localeCode.toUpperCase(),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                      color: textPrimary,
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [bgTop, bgBottom],
+          ),
+        ),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
           children: [
-            Text(_t("mobile.scan.prompt")),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _controller,
-              decoration: InputDecoration(
-                labelText: _t("mobile.scan.prompt"),
-                hintText: "https://scct-damages.vercel.app/ar/submit/abc123",
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                gradient: const LinearGradient(
+                  colors: [brandBlue, brandBlueDeep],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: brandBlue.withValues(alpha: 0.30),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(onPressed: _submit, child: Text(_t("mobile.scan.open"))),
-            const SizedBox(height: 8),
-            ElevatedButton.icon(
-              onPressed: _openCameraScanner,
-              icon: const Icon(Icons.qr_code_scanner),
-              label: Text(_t("mobile.scan.openCamera")),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _t("mobile.home.title"),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _t("mobile.home.subtitle"),
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.92),
+                      fontSize: 14,
+                      height: 1.35,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildTag(icon: Icons.verified_user_outlined, label: _t("mobile.scan.secure")),
+                      _buildTag(icon: Icons.language_rounded, label: localeCode.toUpperCase()),
+                    ],
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: _chooseFromLibrary,
-              icon: const Icon(Icons.photo_library_outlined),
-              label: Text(_t("mobile.scan.choosePhoto")),
-            ),
-            if (_selectedPhoto != null) ...[
-              const SizedBox(height: 8),
-              TextButton.icon(
-                onPressed: _clearSelectedPhoto,
-                icon: const Icon(Icons.clear),
-                label: Text(_t("mobile.scan.clearPhoto")),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: cardBorder),
               ),
-            ],
-            const SizedBox(height: 10),
-            DropTarget(
-              onDragDone: (details) => _handleDroppedPhotos(details.files),
-              onDragEntered: (_) => setState(() => _isDraggingPhoto = true),
-              onDragExited: (_) => setState(() => _isDraggingPhoto = false),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: _isDraggingPhoto ? const Color(0xFFE6F2FF) : const Color(0xFFF7F9FC),
-                  border: Border.all(
-                    color: _isDraggingPhoto ? const Color(0xFF2563EB) : const Color(0xFFCBD5E1),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _t("mobile.scan.manual"),
+                    style: TextStyle(
+                      color: textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _controller,
+                    style: TextStyle(color: textPrimary),
+                    decoration: InputDecoration(
+                      labelText: _t("mobile.scan.prompt"),
+                      hintText: "https://scct-damages.vercel.app/ar/submit/abc123",
+                      hintStyle: TextStyle(color: textSecondary),
+                      labelStyle: TextStyle(color: textSecondary),
+                      filled: true,
+                      fillColor: inputFill,
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide(color: cardBorder),
+                      ),
+                      focusedBorder: const OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(14)),
+                        borderSide: BorderSide(color: brandBlue, width: 1.4),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: _openCameraScanner,
+                          icon: const Icon(Icons.qr_code_scanner_rounded),
+                          label: Text(_t("mobile.scan.openCamera")),
+                          style: _filledButtonStyle(
+                            background: brandRed,
+                            foreground: Colors.white,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: _submit,
+                          icon: const Icon(Icons.open_in_new_rounded),
+                          label: Text(_t("mobile.scan.open")),
+                          style: _filledButtonStyle(
+                            background: brandBlue,
+                            foreground: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: cardBorder),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _t("mobile.scan.quickActions"),
+                    style: TextStyle(
+                      color: textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      FilledButton.icon(
+                        onPressed: _chooseFromLibrary,
+                        icon: const Icon(Icons.photo_library_outlined),
+                        label: Text(_t("mobile.scan.choosePhoto")),
+                        style: _filledButtonStyle(
+                          background: isDark ? const Color(0xFF1A4568) : const Color(0xFFE3F1FF),
+                          foreground: isDark ? const Color(0xFFE3F1FF) : const Color(0xFF174B78),
+                        ),
+                      ),
+                      if (_selectedPhoto != null)
+                        FilledButton.icon(
+                          onPressed: _clearSelectedPhoto,
+                          icon: const Icon(Icons.clear_rounded),
+                          label: Text(_t("mobile.scan.clearPhoto")),
+                          style: _filledButtonStyle(
+                            background: isDark ? const Color(0xFF563136) : const Color(0xFFFBE5E8),
+                            foreground: isDark ? const Color(0xFFFFCDD2) : const Color(0xFF942F35),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    _t("mobile.scan.dragHint"),
+                    style: TextStyle(
+                      color: textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  DropTarget(
+                    onDragDone: (details) => _handleDroppedPhotos(details.files),
+                    onDragEntered: (_) => setState(() => _isDraggingPhoto = true),
+                    onDragExited: (_) => setState(() => _isDraggingPhoto = false),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: _isDraggingPhoto ? dropDrag : dropBase,
+                        border: Border.all(
+                          color: _isDraggingPhoto ? brandBlue : cardBorder,
+                          width: _isDraggingPhoto ? 1.5 : 1,
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.upload_file_rounded, color: textSecondary),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  _t("mobile.scan.dropPhoto"),
+                                  style: TextStyle(
+                                    color: textPrimary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            "${_t("mobile.scan.selectedPhoto")}: ${_selectedPhotoLabel()}",
+                            style: TextStyle(color: textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  _buildPhotoPreviewCard(
+                    cardColor: isDark ? const Color(0xFF0D2135) : const Color(0xFFF8FBFF),
+                    borderColor: cardBorder,
+                    textPrimary: textPrimary,
+                    textSecondary: textSecondary,
+                  ),
+                ],
+              ),
+            ),
+            if (_isDecodingPhoto) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: infoBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Text(
-                      _t("mobile.scan.dropPhoto"),
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    SizedBox(
+                      height: 16,
+                      width: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: infoText,
+                      ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      "${_t("mobile.scan.selectedPhoto")}: ${_selectedPhotoLabel()}",
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _t("mobile.scan.decoding"),
+                        style: TextStyle(
+                          color: infoText,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-            ),
-            _buildPhotoPreview(),
-            if (_isDecodingPhoto) ...[
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  const SizedBox(
-                    height: 16,
-                    width: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(_t("mobile.scan.decoding")),
-                ],
-              ),
             ],
             if (_error != null) ...[
               const SizedBox(height: 12),
-              Text(_t(_error!), style: const TextStyle(color: Colors.red)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: errorBg,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.error_outline_rounded, color: errorText, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _t(_error!),
+                        style: TextStyle(
+                          color: errorText,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ],
         ),

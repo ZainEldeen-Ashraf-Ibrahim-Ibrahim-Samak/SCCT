@@ -31,6 +31,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
 interface LocaleLayoutProps {
@@ -48,7 +49,10 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} dir={dir} suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning>
+      <body
+        className="min-h-screen bg-background font-sans antialiased overflow-x-hidden [padding-top:env(safe-area-inset-top)] [padding-bottom:env(safe-area-inset-bottom)]"
+        suppressHydrationWarning
+      >
           <ThemeProvider
             attribute="class"
             defaultTheme="system"

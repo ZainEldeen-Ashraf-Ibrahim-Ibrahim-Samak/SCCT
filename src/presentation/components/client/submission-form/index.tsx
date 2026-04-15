@@ -47,7 +47,7 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
   // Render logic...
   if (isLoading) {
     return (
-      <div className="max-w-3xl mx-auto space-y-6">
+      <div className="mx-auto w-full max-w-3xl space-y-4 sm:space-y-6">
         <Skeleton className="h-32 w-full rounded-xl" />
         <Skeleton className="h-64 w-full rounded-xl" />
       </div>
@@ -225,7 +225,7 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-8 px-4">
+    <div className="mx-auto w-full max-w-3xl px-1 py-4 sm:px-2 sm:py-6 md:py-8">
       {statusAlert}
 
       {isViewOnly && !hasAnyValue && fields.length > 0 && (
@@ -252,7 +252,7 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
       <Card className={`shadow-lg border-t-4 ${isViewOnly ? "border-t-muted opacity-80" : "border-t-primary"}`}>
         <CardHeader className="space-y-4 pb-8">
           <div>
-            <CardTitle className="text-3xl font-extrabold">{displayTitle}</CardTitle>
+            <CardTitle className="text-2xl font-extrabold sm:text-3xl">{displayTitle}</CardTitle>
             {formDescription && (
               <CardDescription className="text-base mt-2 whitespace-pre-wrap">
                 {formDescription}

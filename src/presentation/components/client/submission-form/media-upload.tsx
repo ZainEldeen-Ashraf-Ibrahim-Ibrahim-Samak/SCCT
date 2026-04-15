@@ -347,6 +347,7 @@ export function MediaUpload({
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                     disabled={isUploading}
                     accept={type === "image" ? "image/*" : undefined}
+                    capture={type === "image" ? "environment" : undefined}
                   />
                   <div className={`
                     border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-1 
@@ -396,7 +397,7 @@ export function MediaUpload({
             <File className="h-8 w-8 text-primary" />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium truncate">{currentUrl.split("/").pop()}</p>
-              <a href={currentUrl} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">
+              <a href={currentUrl} className="text-xs text-primary hover:underline">
                 {tc("download")}
               </a>
             </div>
@@ -413,6 +414,7 @@ export function MediaUpload({
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                 disabled={isUploading}
                 accept={type === "image" ? "image/*" : undefined}
+                capture={type === "image" ? "environment" : undefined}
               />
               <Button type="button" size="sm" variant="secondary" className="gap-2 shadow-xl whitespace-nowrap">
                 <UploadCloud className="h-4 w-4" />
@@ -457,6 +459,7 @@ export function MediaUpload({
         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
         disabled={disabled || isUploading}
         accept={type === "image" ? "image/*" : undefined}
+        capture={type === "image" ? "environment" : undefined}
       />
       <div
         className={`

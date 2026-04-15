@@ -27,6 +27,24 @@ class _ScctMobileAppState extends State<ScctMobileApp> {
   ThemeMode _themeMode = ThemeMode.light;
   Locale _locale = const Locale("ar");
   bool _appliedStartupLocale = false;
+  late final Future<StartupCoordinatorResult> _startupFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _startupFuture = _loadStartup();
+  }
+
+  Future<StartupCoordinatorResult> _loadStartup() async {
+    const minSplashDuration = Duration(milliseconds: 1200);
+    final startedAt = DateTime.now();
+    final result = await startupCoordinator();
+    final elapsed = DateTime.now().difference(startedAt);
+    if (elapsed < minSplashDuration) {
+      await Future<void>.delayed(minSplashDuration - elapsed);
+    }
+    return result;
+  }
 
   void _toggleTheme() {
     setState(() {
@@ -63,7 +81,7 @@ class _ScctMobileAppState extends State<ScctMobileApp> {
         brightness: Brightness.dark,
       ),
       home: FutureBuilder(
-        future: startupCoordinator(),
+        future: _startupFuture,
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const SplashScreen();
