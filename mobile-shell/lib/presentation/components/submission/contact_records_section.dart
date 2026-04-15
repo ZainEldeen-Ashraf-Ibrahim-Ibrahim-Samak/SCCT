@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 
+import "../../../domain/constants/message_keys.dart";
 import "../../../domain/entities/contact_record.dart";
 
 typedef ContactFieldChanged = void Function(String contactId, String fieldKey, String value);
@@ -40,7 +41,7 @@ class ContactRecordsSection extends StatelessWidget {
             FilledButton.tonalIcon(
               onPressed: enabled ? onAddContact : null,
               icon: const Icon(Icons.add_rounded),
-              label: Text(t("mobile.submission.saveDraft")),
+              label: Text(t(MessageKeys.submissionContactAdd)),
             ),
           ],
         ),
@@ -68,7 +69,9 @@ class ContactRecordsSection extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          contact.name.trim().isEmpty ? "Contact" : contact.name,
+                          contact.name.trim().isEmpty
+                              ? t(MessageKeys.submissionContactDefaultTitle)
+                              : contact.name,
                           style: Theme.of(context).textTheme.titleSmall,
                         ),
                       ),
@@ -84,7 +87,9 @@ class ContactRecordsSection extends StatelessWidget {
                     key: ValueKey("name_${contact.id}"),
                     enabled: enabled,
                     initialValue: contact.name,
-                    decoration: const InputDecoration(labelText: "Name"),
+                    decoration: InputDecoration(
+                      labelText: t(MessageKeys.submissionContactName),
+                    ),
                     onChanged: (value) => onContactChanged(contact.id, "name", value),
                   ),
                   const SizedBox(height: 8),
@@ -93,7 +98,9 @@ class ContactRecordsSection extends StatelessWidget {
                     enabled: enabled,
                     initialValue: contact.email ?? "",
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(labelText: "Email"),
+                    decoration: InputDecoration(
+                      labelText: t(MessageKeys.submissionContactEmail),
+                    ),
                     onChanged: (value) => onContactChanged(contact.id, "email", value),
                   ),
                   const SizedBox(height: 8),
@@ -102,7 +109,9 @@ class ContactRecordsSection extends StatelessWidget {
                     enabled: enabled,
                     keyboardType: TextInputType.phone,
                     initialValue: contact.phone ?? "",
-                    decoration: const InputDecoration(labelText: "Phone"),
+                    decoration: InputDecoration(
+                      labelText: t(MessageKeys.submissionContactPhone),
+                    ),
                     onChanged: (value) => onContactChanged(contact.id, "phone", value),
                   ),
                   const SizedBox(height: 8),
@@ -110,7 +119,9 @@ class ContactRecordsSection extends StatelessWidget {
                     key: ValueKey("address_${contact.id}"),
                     enabled: enabled,
                     initialValue: contact.contact ?? "",
-                    decoration: const InputDecoration(labelText: "Address / Contact"),
+                    decoration: InputDecoration(
+                      labelText: t(MessageKeys.submissionContactAddress),
+                    ),
                     onChanged: (value) => onContactChanged(contact.id, "contact", value),
                   ),
                 ],

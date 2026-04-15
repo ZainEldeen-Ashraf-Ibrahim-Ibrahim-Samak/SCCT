@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:image_picker/image_picker.dart";
 
+import "../../../domain/constants/message_keys.dart";
 import "../../../domain/entities/field_response.dart";
 
 class MediaUploadSection extends StatefulWidget {
@@ -13,6 +14,7 @@ class MediaUploadSection extends StatefulWidget {
     required this.isUploading,
     required this.onUpload,
     required this.onClear,
+    required this.t,
     this.errorText,
   });
 
@@ -23,6 +25,7 @@ class MediaUploadSection extends StatefulWidget {
   final bool isUploading;
   final Future<void> Function(String fieldId, String filePath) onUpload;
   final ValueChanged<String> onClear;
+  final String Function(String key) t;
   final String? errorText;
 
   @override
@@ -53,13 +56,17 @@ class _MediaUploadSectionState extends State<MediaUploadSection> {
             FilledButton.tonalIcon(
               onPressed: widget.enabled && !widget.isUploading ? _pickAndUpload : null,
               icon: const Icon(Icons.upload_file_rounded),
-              label: Text(widget.requiredMedia ? "Upload required file" : "Upload file"),
+              label: Text(
+                widget.requiredMedia
+                    ? widget.t(MessageKeys.submissionMediaUploadRequired)
+                    : widget.t(MessageKeys.submissionMediaUpload),
+              ),
             ),
             const SizedBox(width: 8),
             OutlinedButton.icon(
               onPressed: widget.enabled ? () => widget.onClear(widget.fieldId) : null,
               icon: const Icon(Icons.clear_rounded),
-              label: const Text("Clear"),
+              label: Text(widget.t(MessageKeys.submissionMediaClear)),
             ),
           ],
         ),

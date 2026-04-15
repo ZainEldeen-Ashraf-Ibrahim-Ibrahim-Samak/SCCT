@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 
 import "../../config/brand_config.dart";
+import "../../domain/constants/message_keys.dart";
 import "../../i18n/index.dart";
 import "../components/app_logo.dart";
 
@@ -91,9 +92,15 @@ class StartupErrorScreen extends StatelessWidget {
             tooltip: _t(context, "mobile.scan.language"),
             initialValue: localeCode,
             onSelected: onLocaleSelected,
-            itemBuilder: (context) => const <PopupMenuEntry<String>>[
-              PopupMenuItem<String>(value: "en", child: Text("EN")),
-              PopupMenuItem<String>(value: "ar", child: Text("AR")),
+            itemBuilder: (context) => <PopupMenuEntry<String>>[
+              PopupMenuItem<String>(
+                value: "en",
+                child: Text(_t(context, MessageKeys.commonLanguageEnglish)),
+              ),
+              PopupMenuItem<String>(
+                value: "ar",
+                child: Text(_t(context, MessageKeys.commonLanguageArabic)),
+              ),
             ],
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),

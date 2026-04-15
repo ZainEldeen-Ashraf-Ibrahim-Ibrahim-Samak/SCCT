@@ -6,6 +6,7 @@ import "package:flutter/material.dart";
 import "package:image_picker/image_picker.dart";
 import "package:mobile_scanner/mobile_scanner.dart";
 
+import "../../domain/constants/message_keys.dart";
 import "../../i18n/index.dart";
 import "../../config/brand_config.dart";
 import "../components/app_logo.dart";
@@ -652,7 +653,7 @@ class _ScanScreenState extends State<ScanScreen> {
                                 : Colors.transparent,
                           ),
                           const SizedBox(width: 8),
-                          const Text("EN"),
+                          Text(_t(MessageKeys.commonLanguageEnglish)),
                         ],
                       ),
                     ),
@@ -668,7 +669,7 @@ class _ScanScreenState extends State<ScanScreen> {
                                 : Colors.transparent,
                           ),
                           const SizedBox(width: 8),
-                          const Text("AR"),
+                          Text(_t(MessageKeys.commonLanguageArabic)),
                         ],
                       ),
                     ),
@@ -804,7 +805,7 @@ class _ScanScreenState extends State<ScanScreen> {
                     style: TextStyle(color: textPrimary),
                     decoration: InputDecoration(
                       labelText: _t("mobile.scan.prompt"),
-                      hintText: "https://your-domain.com/ar/submit/abc123",
+                      hintText: _t(MessageKeys.scanLinkHint),
                       hintStyle: TextStyle(color: textSecondary),
                       labelStyle: TextStyle(color: textSecondary),
                       filled: true,

@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 
+import "../../domain/constants/message_keys.dart";
 import "../../i18n/index.dart";
 import "../components/app_logo.dart";
 
@@ -88,12 +89,19 @@ class SplashScreen extends StatelessWidget {
                           tooltip: _t(context, "mobile.scan.language"),
                           initialValue: localeCode,
                           onSelected: onLocaleSelected,
-                          itemBuilder: (context) =>
-                              const <PopupMenuEntry<String>>[
+                          itemBuilder: (context) => <PopupMenuEntry<String>>[
                             PopupMenuItem<String>(
-                                value: "en", child: Text("EN")),
+                              value: "en",
+                              child: Text(
+                                _t(context, MessageKeys.commonLanguageEnglish),
+                              ),
+                            ),
                             PopupMenuItem<String>(
-                                value: "ar", child: Text("AR")),
+                              value: "ar",
+                              child: Text(
+                                _t(context, MessageKeys.commonLanguageArabic),
+                              ),
+                            ),
                           ],
                           child: Container(
                             height: 38,

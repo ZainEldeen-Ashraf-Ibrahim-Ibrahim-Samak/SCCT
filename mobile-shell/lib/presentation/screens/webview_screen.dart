@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:webview_flutter/webview_flutter.dart";
 
+import "../../domain/constants/message_keys.dart";
 import "../../i18n/index.dart";
 import "../components/app_logo.dart";
 
@@ -174,9 +175,15 @@ class _WebviewScreenState extends State<WebviewScreen> {
             tooltip: _t("mobile.scan.language"),
             initialValue: localeCode,
             onSelected: widget.onLocaleSelected,
-            itemBuilder: (context) => const <PopupMenuEntry<String>>[
-              PopupMenuItem<String>(value: "en", child: Text("EN")),
-              PopupMenuItem<String>(value: "ar", child: Text("AR")),
+            itemBuilder: (context) => <PopupMenuEntry<String>>[
+              PopupMenuItem<String>(
+                value: "en",
+                child: Text(_t(MessageKeys.commonLanguageEnglish)),
+              ),
+              PopupMenuItem<String>(
+                value: "ar",
+                child: Text(_t(MessageKeys.commonLanguageArabic)),
+              ),
             ],
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),

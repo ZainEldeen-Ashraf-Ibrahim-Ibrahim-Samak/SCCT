@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 
+import "../../../domain/constants/message_keys.dart";
 import "../../../domain/entities/field_response.dart";
 import "../../../domain/entities/submission_session.dart";
 import "media_upload_section.dart";
@@ -16,6 +17,7 @@ class FieldResponseSection extends StatelessWidget {
     required this.onUploadMedia,
     required this.onClearMedia,
     required this.isFieldUploading,
+    required this.t,
   });
 
   final List<SubmissionFieldDefinition> fields;
@@ -27,6 +29,7 @@ class FieldResponseSection extends StatelessWidget {
   final Future<void> Function(String fieldId, String filePath) onUploadMedia;
   final ValueChanged<String> onClearMedia;
   final bool Function(String fieldId) isFieldUploading;
+  final String Function(String key) t;
 
   @override
   Widget build(BuildContext context) {
@@ -101,7 +104,9 @@ class FieldResponseSection extends StatelessWidget {
             );
           },
           decoration: InputDecoration(
-            hintText: field.validation.required ? "Required" : "Optional",
+            hintText: field.validation.required
+                ? t(MessageKeys.commonRequired)
+                : t(MessageKeys.commonOptional),
           ),
         );
       case SubmissionFieldType.dropdown:
@@ -118,6 +123,7 @@ class FieldResponseSection extends StatelessWidget {
           isUploading: isFieldUploading(field.id),
           onUpload: onUploadMedia,
           onClear: onClearMedia,
+          t: t,
         );
     }
   }
@@ -143,7 +149,9 @@ class FieldResponseSection extends StatelessWidget {
           .toList(growable: false),
       onChanged: enabled ? (value) => onValueChanged(field.id, value) : null,
       decoration: InputDecoration(
-        hintText: field.validation.required ? "Required" : "Optional",
+        hintText: field.validation.required
+            ? t(MessageKeys.commonRequired)
+            : t(MessageKeys.commonOptional),
       ),
     );
   }

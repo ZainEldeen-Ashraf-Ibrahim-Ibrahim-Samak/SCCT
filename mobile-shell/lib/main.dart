@@ -5,6 +5,7 @@ import "package:flutter_dotenv/flutter_dotenv.dart";
 import "app/router.dart";
 import "app/startup_coordinator.dart";
 import "config/brand_config.dart";
+import "domain/constants/message_keys.dart";
 import "domain/entities/mobile_runtime_config.dart";
 import "domain/use_cases/evaluate_qr_destination.dart";
 import "presentation/screens/scan_screen.dart";
@@ -85,6 +86,12 @@ class _ScctMobileAppState extends State<ScctMobileApp> {
       _appliedStartupLocale = false;
       _startupFuture = _loadStartup();
     });
+  }
+
+  String _t(String key) {
+    final locale = _locale.languageCode.toLowerCase() == "ar" ? "ar" : "en";
+    final catalog = I18nCatalog.getCached(locale) ?? I18nCatalog.getCached("ar");
+    return catalog?.t(key) ?? key;
   }
 
   String? _extractSubmissionTokenFromUri(
@@ -251,9 +258,10 @@ class _ScctMobileAppState extends State<ScctMobileApp> {
                 }
 
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content:
-                        Text("Submission token not found in scanned link."),
+                  SnackBar(
+                    content: Text(
+                      _t(MessageKeys.mainSubmissionTokenNotFound),
+                    ),
                   ),
                 );
               },

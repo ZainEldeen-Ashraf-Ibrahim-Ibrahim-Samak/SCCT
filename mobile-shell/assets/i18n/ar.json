@@ -73,5 +73,22 @@
   "mobile.startupError.config_invalid_hosts": "قائمة النطاقات المسموح بها غير صالحة.",
   "mobile.startupError.config_invalid_locale": "إعدادات اللغة غير صالحة.",
   "mobile.startupError.config_invalid_numeric_range": "قيم إعدادات التشغيل خارج النطاق المسموح.",
-  "mobile.startupError.unknown": "حدث خطأ في إعدادات التشغيل."
+  "mobile.startupError.unknown": "حدث خطأ في إعدادات التشغيل.",
+  "mobile.submission.clientName": "اسم العميل",
+  "mobile.submission.clientContact": "وسيلة تواصل العميل",
+  "mobile.submission.contact.add": "إضافة جهة اتصال",
+  "mobile.submission.contact.defaultTitle": "جهة اتصال",
+  "mobile.submission.contact.name": "الاسم",
+  "mobile.submission.contact.email": "البريد الإلكتروني",
+  "mobile.submission.contact.phone": "الهاتف",
+  "mobile.submission.contact.address": "العنوان / وسيلة التواصل",
+  "mobile.submission.media.uploadRequired": "ارفع الملف المطلوب",
+  "mobile.submission.media.upload": "رفع ملف",
+  "mobile.submission.media.clear": "مسح",
+  "mobile.common.required": "مطلوب",
+  "mobile.common.optional": "اختياري",
+  "mobile.common.language.english": "الإنجليزية",
+  "mobile.common.language.arabic": "العربية",
+  "mobile.scan.linkHint": "https://your-domain.com/ar/submit/abc123",
+  "mobile.main.submissionTokenNotFound": "لم يتم العثور على رمز الإرسال في الرابط الممسوح."
 }

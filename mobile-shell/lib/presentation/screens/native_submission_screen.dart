@@ -138,19 +138,25 @@ class _NativeSubmissionScreenState extends State<NativeSubmissionScreen> {
         title: Text(_t(MessageKeys.submissionTitle)),
         actions: [
           IconButton(
-            tooltip: "Toggle theme",
+            tooltip: _t("mobile.scan.themeToggle"),
             onPressed: widget.onToggleTheme,
             icon: Icon(widget.themeMode == ThemeMode.dark
                 ? Icons.light_mode_rounded
                 : Icons.dark_mode_rounded),
           ),
           PopupMenuButton<String>(
-            tooltip: "Language",
+            tooltip: _t("mobile.scan.language"),
             initialValue: localeCode,
             onSelected: widget.onLocaleSelected,
-            itemBuilder: (context) => const <PopupMenuEntry<String>>[
-              PopupMenuItem<String>(value: "en", child: Text("EN")),
-              PopupMenuItem<String>(value: "ar", child: Text("AR")),
+            itemBuilder: (context) => <PopupMenuEntry<String>>[
+              PopupMenuItem<String>(
+                value: "en",
+                child: Text(_t(MessageKeys.commonLanguageEnglish)),
+              ),
+              PopupMenuItem<String>(
+                value: "ar",
+                child: Text(_t(MessageKeys.commonLanguageArabic)),
+              ),
             ],
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -302,7 +308,9 @@ class _NativeSubmissionScreenState extends State<NativeSubmissionScreen> {
                   key: ValueKey("client_name_${viewModel.clientName}"),
                   initialValue: viewModel.clientName,
                   enabled: viewModel.isEditable,
-                  decoration: const InputDecoration(labelText: "Client Name"),
+                  decoration: InputDecoration(
+                    labelText: _t(MessageKeys.submissionClientName),
+                  ),
                   onChanged: viewModel.updateClientName,
                 ),
                 const SizedBox(height: 10),
@@ -310,7 +318,9 @@ class _NativeSubmissionScreenState extends State<NativeSubmissionScreen> {
                   key: ValueKey("client_contact_${viewModel.clientContact}"),
                   initialValue: viewModel.clientContact,
                   enabled: viewModel.isEditable,
-                  decoration: const InputDecoration(labelText: "Client Contact"),
+                  decoration: InputDecoration(
+                    labelText: _t(MessageKeys.submissionClientContact),
+                  ),
                   onChanged: viewModel.updateClientContact,
                 ),
                 const SizedBox(height: 12),
@@ -359,6 +369,7 @@ class _NativeSubmissionScreenState extends State<NativeSubmissionScreen> {
                   },
                   onClearMedia: viewModel.clearFieldMedia,
                   isFieldUploading: viewModel.isFieldUploading,
+                  t: _t,
                 ),
                 const SizedBox(height: 12),
                 Row(

@@ -73,5 +73,22 @@
   "mobile.startupError.config_invalid_hosts": "Allowed hosts configuration is invalid.",
   "mobile.startupError.config_invalid_locale": "Locale configuration is invalid.",
   "mobile.startupError.config_invalid_numeric_range": "Startup numeric configuration is out of range.",
-  "mobile.startupError.unknown": "Startup configuration error occurred."
+  "mobile.startupError.unknown": "Startup configuration error occurred.",
+  "mobile.submission.clientName": "Client Name",
+  "mobile.submission.clientContact": "Client Contact",
+  "mobile.submission.contact.add": "Add contact",
+  "mobile.submission.contact.defaultTitle": "Contact",
+  "mobile.submission.contact.name": "Name",
+  "mobile.submission.contact.email": "Email",
+  "mobile.submission.contact.phone": "Phone",
+  "mobile.submission.contact.address": "Address / Contact",
+  "mobile.submission.media.uploadRequired": "Upload required file",
+  "mobile.submission.media.upload": "Upload file",
+  "mobile.submission.media.clear": "Clear",
+  "mobile.common.required": "Required",
+  "mobile.common.optional": "Optional",
+  "mobile.common.language.english": "English",
+  "mobile.common.language.arabic": "Arabic",
+  "mobile.scan.linkHint": "https://your-domain.com/ar/submit/abc123",
+  "mobile.main.submissionTokenNotFound": "Submission token not found in scanned link."
 }
