@@ -20,6 +20,9 @@ class RuntimeConfig {
     final supportedRaw = input.mobileSupportedLocales?.trim();
     final splashRaw = input.mobileSplashMinDurationMs?.trim();
     final timeoutRaw = input.mobileScanTimeoutMs?.trim();
+    final submissionPathRaw = input.mobileSubmissionPathSegment?.trim();
+    final apiTimeoutRaw = input.mobileApiTimeoutMs?.trim();
+    final draftDebounceRaw = input.mobileDraftAutosaveDebounceMs?.trim();
 
     if ([baseUrlRaw, hostsRaw, defaultLocaleRaw, supportedRaw, splashRaw]
         .any((v) => v == null || v.isEmpty)) {
@@ -67,6 +70,25 @@ class RuntimeConfig {
       throw RuntimeConfigValidationException("config_invalid_numeric_range", "MOBILE_SCAN_TIMEOUT_MS must be between 1000 and 30000.");
     }
 
+    final submissionPathSegment = (submissionPathRaw == null || submissionPathRaw.isEmpty)
+        ? "submit"
+        : submissionPathRaw.replaceAll("/", "").toLowerCase();
+    if (submissionPathSegment.isEmpty) {
+      throw RuntimeConfigValidationException("config_invalid_submission_path", "MOBILE_SUBMISSION_PATH_SEGMENT must not be empty.");
+    }
+
+    final apiTimeoutMs = apiTimeoutRaw == null || apiTimeoutRaw.isEmpty ? 15000 : int.tryParse(apiTimeoutRaw);
+    if (apiTimeoutMs == null || apiTimeoutMs < 2000 || apiTimeoutMs > 60000) {
+      throw RuntimeConfigValidationException("config_invalid_numeric_range", "MOBILE_API_TIMEOUT_MS must be between 2000 and 60000.");
+    }
+
+    final draftAutosaveDebounceMs = draftDebounceRaw == null || draftDebounceRaw.isEmpty
+        ? 450
+        : int.tryParse(draftDebounceRaw);
+    if (draftAutosaveDebounceMs == null || draftAutosaveDebounceMs < 100 || draftAutosaveDebounceMs > 5000) {
+      throw RuntimeConfigValidationException("config_invalid_numeric_range", "MOBILE_DRAFT_AUTOSAVE_DEBOUNCE_MS must be between 100 and 5000.");
+    }
+
     return MobileRuntimeConfig(
       appBaseUrl: appBaseUrl,
       allowedHosts: allowedHosts,
@@ -74,6 +96,9 @@ class RuntimeConfig {
       supportedLocales: supportedLocales,
       splashMinDurationMs: splashMinDurationMs,
       scanTimeoutMs: scanTimeoutMs,
+      submissionPathSegment: submissionPathSegment,
+      apiTimeoutMs: apiTimeoutMs,
+      draftAutosaveDebounceMs: draftAutosaveDebounceMs,
     );
   }
 

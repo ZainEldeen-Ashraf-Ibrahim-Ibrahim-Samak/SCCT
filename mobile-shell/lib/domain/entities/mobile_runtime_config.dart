@@ -8,6 +8,9 @@ class MobileRuntimeConfig {
     required this.supportedLocales,
     required this.splashMinDurationMs,
     required this.scanTimeoutMs,
+    required this.submissionPathSegment,
+    required this.apiTimeoutMs,
+    required this.draftAutosaveDebounceMs,
   });
 
   final Uri appBaseUrl;
@@ -16,6 +19,9 @@ class MobileRuntimeConfig {
   final List<AppLocale> supportedLocales;
   final int splashMinDurationMs;
   final int scanTimeoutMs;
+  final String submissionPathSegment;
+  final int apiTimeoutMs;
+  final int draftAutosaveDebounceMs;
 }
 
 class RuntimeConfigInput {
@@ -26,6 +32,9 @@ class RuntimeConfigInput {
     this.mobileSupportedLocales,
     this.mobileSplashMinDurationMs,
     this.mobileScanTimeoutMs,
+    this.mobileSubmissionPathSegment,
+    this.mobileApiTimeoutMs,
+    this.mobileDraftAutosaveDebounceMs,
   });
 
   final String? mobileAppBaseUrl;
@@ -34,4 +43,7 @@ class RuntimeConfigInput {
   final String? mobileSupportedLocales;
   final String? mobileSplashMinDurationMs;
   final String? mobileScanTimeoutMs;
+  final String? mobileSubmissionPathSegment;
+  final String? mobileApiTimeoutMs;
+  final String? mobileDraftAutosaveDebounceMs;
 }

@@ -6,11 +6,13 @@ class ScanResult {
   const ScanResult({
     required this.payload,
     this.acceptedUri,
+    this.submissionToken,
     this.messageKey,
   });
 
   final QrScanPayload payload;
   final Uri? acceptedUri;
+  final String? submissionToken;
   final String? messageKey;
 }
 
@@ -59,7 +61,11 @@ class ScanViewModel {
     final payload = _evaluator.evaluate(rawValue: rawValue, policy: policy);
 
     if (payload.validationStatus == ValidationStatus.accepted && payload.normalizedUrl != null) {
-      return ScanResult(payload: payload, acceptedUri: Uri.parse(payload.normalizedUrl!));
+      return ScanResult(
+        payload: payload,
+        acceptedUri: Uri.parse(payload.normalizedUrl!),
+        submissionToken: payload.submissionToken,
+      );
     }
 
     return ScanResult(

@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 
+import "../presentation/screens/native_submission_screen.dart";
 import "../presentation/screens/webview_screen.dart";
 
 class AppRouter {
@@ -15,6 +16,32 @@ class AppRouter {
     return MaterialPageRoute<void>(
       builder: (_) => WebviewScreen(
         initialUrl: url,
+        themeMode: themeMode,
+        currentLocale: currentLocale,
+        onToggleTheme: onToggleTheme,
+        onLocaleSelected: onLocaleSelected,
+      ),
+    );
+  }
+
+  static Route<dynamic> toNativeSubmission({
+    required String token,
+    required Uri appBaseUrl,
+    required String localeCode,
+    required int apiTimeoutMs,
+    required int draftAutosaveDebounceMs,
+    required ThemeMode themeMode,
+    required Locale currentLocale,
+    VoidCallback? onToggleTheme,
+    ValueChanged<String>? onLocaleSelected,
+  }) {
+    return MaterialPageRoute<void>(
+      builder: (_) => NativeSubmissionScreen(
+        token: token,
+        appBaseUrl: appBaseUrl,
+        localeCode: localeCode,
+        apiTimeoutMs: apiTimeoutMs,
+        draftAutosaveDebounceMs: draftAutosaveDebounceMs,
         themeMode: themeMode,
         currentLocale: currentLocale,
         onToggleTheme: onToggleTheme,

@@ -23,7 +23,7 @@ class ScanScreen extends StatefulWidget {
   });
 
   final ScanViewModel viewModel;
-  final ValueChanged<Uri> onAccepted;
+  final ValueChanged<ScanResult> onAccepted;
   final ThemeMode themeMode;
   final Locale currentLocale;
   final VoidCallback? onToggleTheme;
@@ -116,7 +116,7 @@ class _ScanScreenState extends State<ScanScreen> {
     final result = widget.viewModel.processScan(_controller.text);
     if (result.acceptedUri != null) {
       setState(() => _error = null);
-      widget.onAccepted(result.acceptedUri!);
+      widget.onAccepted(result);
       return;
     }
 

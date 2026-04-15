@@ -11,6 +11,9 @@ RuntimeConfigInput loadRuntimeEnv() {
   const supportedLocalesFromDefine = String.fromEnvironment("MOBILE_SUPPORTED_LOCALES");
   const splashMsFromDefine = String.fromEnvironment("MOBILE_SPLASH_MIN_DURATION_MS");
   const scanTimeoutFromDefine = String.fromEnvironment("MOBILE_SCAN_TIMEOUT_MS");
+  const submissionPathFromDefine = String.fromEnvironment("MOBILE_SUBMISSION_PATH_SEGMENT");
+  const apiTimeoutFromDefine = String.fromEnvironment("MOBILE_API_TIMEOUT_MS");
+  const draftDebounceFromDefine = String.fromEnvironment("MOBILE_DRAFT_AUTOSAVE_DEBOUNCE_MS");
 
   return RuntimeConfigInput(
     mobileAppBaseUrl: _resolveRequiredValue(
@@ -42,6 +45,21 @@ RuntimeConfigInput loadRuntimeEnv() {
       defineValue: scanTimeoutFromDefine,
       envKey: "MOBILE_SCAN_TIMEOUT_MS",
       debugFallback: "10000",
+    ),
+    mobileSubmissionPathSegment: _resolveOptionalValue(
+      defineValue: submissionPathFromDefine,
+      envKey: "MOBILE_SUBMISSION_PATH_SEGMENT",
+      debugFallback: "submit",
+    ),
+    mobileApiTimeoutMs: _resolveOptionalValue(
+      defineValue: apiTimeoutFromDefine,
+      envKey: "MOBILE_API_TIMEOUT_MS",
+      debugFallback: "15000",
+    ),
+    mobileDraftAutosaveDebounceMs: _resolveOptionalValue(
+      defineValue: draftDebounceFromDefine,
+      envKey: "MOBILE_DRAFT_AUTOSAVE_DEBOUNCE_MS",
+      debugFallback: "450",
     ),
   );
 }

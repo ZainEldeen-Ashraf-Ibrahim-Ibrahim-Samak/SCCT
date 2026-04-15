@@ -6,12 +6,14 @@ class NavigationPolicy {
     this.enforceHttps = true,
     this.allowSubdomains = true,
     this.blockedPathPrefixes = const <String>[],
+    this.submissionPathSegment = "submit",
   });
 
   final List<String> allowedHosts;
   final bool enforceHttps;
   final bool allowSubdomains;
   final List<String> blockedPathPrefixes;
+  final String submissionPathSegment;
 }
 
 class EvaluateQrDestinationUseCase {
@@ -76,13 +78,41 @@ class EvaluateQrDestinationUseCase {
       );
     }
 
+    final submissionToken = _extractSubmissionToken(
+      parsed,
+      policy.submissionPathSegment,
+    );
+
     return QrScanPayload(
       rawValue: rawValue,
       normalizedUrl: parsed.toString(),
       scheme: parsed.scheme,
       host: parsed.host,
       validationStatus: ValidationStatus.accepted,
+      destinationType: submissionToken == null
+          ? QrDestinationType.webview
+          : QrDestinationType.submission,
+      submissionToken: submissionToken,
       scannedAt: scannedAt,
     );
+  }
+
+  String? _extractSubmissionToken(Uri uri, String submissionPathSegment) {
+    final segment = submissionPathSegment.trim().toLowerCase();
+    if (segment.isEmpty) {
+      return null;
+    }
+
+    final segments = uri.pathSegments;
+    final index = segments.indexWhere(
+      (item) => item.toLowerCase() == segment,
+    );
+
+    if (index < 0 || index + 1 >= segments.length) {
+      return null;
+    }
+
+    final token = segments[index + 1].trim();
+    return token.isEmpty ? null : token;
   }
 }

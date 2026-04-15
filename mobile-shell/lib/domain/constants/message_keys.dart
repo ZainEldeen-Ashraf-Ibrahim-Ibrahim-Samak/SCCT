@@ -9,4 +9,28 @@ class MessageKeys {
   static const startupConfigMissing = "mobile.startup.config_missing";
   static const startupConfigInvalid = "mobile.startup.config_invalid";
   static const startupRecoveryHint = "mobile.startup.recovery";
+
+  static const submissionTitle = "mobile.submission.title";
+  static const submissionLoading = "mobile.submission.loading";
+  static const submissionSectionContact = "mobile.submission.section.contact";
+  static const submissionSectionForm = "mobile.submission.section.form";
+  static const submissionSaveDraft = "mobile.submission.saveDraft";
+  static const submissionSubmit = "mobile.submission.submit";
+  static const submissionResubmit = "mobile.submission.resubmit";
+  static const submissionSuccess = "mobile.submission.success";
+  static const submissionValidationFailed = "mobile.submission.validationFailed";
+  static const submissionRequiredMedia = "mobile.submission.requiredMedia";
+  static const submissionOfflineBlocked = "mobile.submission.offlineBlocked";
+  static const submissionInvalidToken = "mobile.submission.invalidToken";
+  static const submissionUnauthorized = "mobile.submission.unauthorized";
+  static const submissionServerFailure = "mobile.submission.serverFailure";
+  static const submissionStaleConflict = "mobile.submission.staleConflict";
+  static const submissionRetry = "mobile.submission.retry";
+
+  static const submissionValidationContactRequired = "mobile.submission.validation.contactRequired";
+  static const submissionValidationName = "mobile.submission.validation.name";
+  static const submissionValidationEmail = "mobile.submission.validation.email";
+  static const submissionValidationPhone = "mobile.submission.validation.phone";
+  static const submissionValidationText = "mobile.submission.validation.text";
+  static const submissionValidationRequiredField = "mobile.submission.validation.requiredField";
 }

@@ -135,6 +135,7 @@ class _ScctMobileAppState extends State<ScctMobileApp> {
               enforceHttps: true,
               allowSubdomains: true,
               blockedPathPrefixes: const <String>["/admin/internal"],
+              submissionPathSegment: result.config!.submissionPathSegment,
             ),
           );
 
@@ -144,7 +145,30 @@ class _ScctMobileAppState extends State<ScctMobileApp> {
             currentLocale: _locale,
             onToggleTheme: _toggleTheme,
             onLocaleSelected: _setLocaleFromCode,
-            onAccepted: (uri) {
+            onAccepted: (scanResult) {
+              final submissionToken = scanResult.submissionToken;
+              if (submissionToken != null && submissionToken.trim().isNotEmpty) {
+                Navigator.of(context).push(
+                  AppRouter.toNativeSubmission(
+                    token: submissionToken,
+                    appBaseUrl: result.config!.appBaseUrl,
+                    localeCode: _locale.languageCode,
+                    apiTimeoutMs: result.config!.apiTimeoutMs,
+                    draftAutosaveDebounceMs: result.config!.draftAutosaveDebounceMs,
+                    themeMode: _themeMode,
+                    currentLocale: _locale,
+                    onToggleTheme: _toggleTheme,
+                    onLocaleSelected: _setLocaleFromCode,
+                  ),
+                );
+                return;
+              }
+
+              final uri = scanResult.acceptedUri;
+              if (uri == null) {
+                return;
+              }
+
               Navigator.of(context).push(
                 AppRouter.toWebview(
                   uri,
