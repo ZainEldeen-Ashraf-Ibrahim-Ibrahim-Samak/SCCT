@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 
 import "../../../domain/constants/message_keys.dart";
+import "../../../domain/constants/submission_regex.dart";
 import "../../../domain/entities/field_response.dart";
 import "../../../domain/entities/submission_session.dart";
 import "media_upload_section.dart";
@@ -140,23 +141,46 @@ class FieldResponseSection extends StatelessWidget {
 
         final useMultiLine = field.validation.maxLength == null ||
             (field.validation.maxLength ?? 0) > 100;
+        final regexType = field.validation.regexType;
+        final regexHint = enabled
+            ? _buildRegexHint(
+                context: context,
+                regexType: regexType,
+                rawValue: rawValue,
+              )
+            : null;
 
-        return TextFormField(
-          key: ValueKey("field_${field.id}_$rawValue"),
-          enabled: enabled,
-          initialValue: rawValue,
-          keyboardType: TextInputType.text,
-          minLines: useMultiLine ? 3 : 1,
-          maxLines: useMultiLine ? 5 : 1,
-          maxLength: field.validation.maxLength,
-          onChanged: (value) {
-            onValueChanged(field.id, value);
-          },
-          decoration: _inputDecoration(
-            hintText: field.validation.required
-                ? t(MessageKeys.commonRequired)
-                : t(MessageKeys.commonOptional),
-          ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextFormField(
+              key: ValueKey("field_${field.id}_$rawValue"),
+              enabled: enabled,
+              initialValue: rawValue,
+              keyboardType: TextInputType.text,
+              minLines: useMultiLine ? 3 : 1,
+              maxLines: useMultiLine ? 5 : 1,
+              maxLength: field.validation.maxLength,
+              inputFormatters: _inputFormatters(regexType),
+              onChanged: (value) {
+                if (regexType == SubmissionRegexType.phone) {
+                  onValueChanged(field.id, normalizePhoneNumber(value));
+                  return;
+                }
+
+                onValueChanged(field.id, value);
+              },
+              decoration: _inputDecoration(
+                hintText: field.validation.required
+                    ? t(MessageKeys.commonRequired)
+                    : t(MessageKeys.commonOptional),
+              ),
+            ),
+            if (regexHint != null) ...[
+              const SizedBox(height: 6),
+              regexHint,
+            ],
+          ],
         );
       case SubmissionFieldType.dropdown:
         return field.isMultiple
@@ -166,6 +190,8 @@ class FieldResponseSection extends StatelessWidget {
       case SubmissionFieldType.file:
         return MediaUploadSection(
           fieldId: field.id,
+          fieldType: field.inputType,
+          isMultiple: field.isMultiple,
           response: response,
           requiredMedia: field.validation.required,
           enabled: enabled,
@@ -263,6 +289,94 @@ class FieldResponseSection extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
+      ],
+    );
+  }
+
+  List<TextInputFormatter> _inputFormatters(SubmissionRegexType? regexType) {
+    if (regexType != SubmissionRegexType.phone) {
+      return const <TextInputFormatter>[];
+    }
+
+    return <TextInputFormatter>[
+      TextInputFormatter.withFunction((oldValue, newValue) {
+        final normalized = normalizePhoneNumber(newValue.text);
+        return TextEditingValue(
+          text: normalized,
+          selection: TextSelection.collapsed(offset: normalized.length),
+        );
+      }),
+    ];
+  }
+
+  Widget? _buildRegexHint({
+    required BuildContext context,
+    required SubmissionRegexType? regexType,
+    required String rawValue,
+  }) {
+    if (regexType == null) {
+      return null;
+    }
+
+    final value = rawValue.trim();
+    if (value.isEmpty) {
+      return null;
+    }
+
+    switch (regexType) {
+      case SubmissionRegexType.email:
+        return _validationHint(
+          context: context,
+          isValid: emailRegex.hasMatch(value),
+          validKey: MessageKeys.submissionValidationValidEmail,
+          invalidKey: MessageKeys.submissionValidationEmail,
+        );
+      case SubmissionRegexType.phone:
+        final normalized = normalizePhoneNumber(value);
+        return _validationHint(
+          context: context,
+          isValid: phoneRegex.hasMatch(normalized),
+          validKey: MessageKeys.submissionValidationValidPhone,
+          invalidKey: MessageKeys.submissionValidationPhone,
+        );
+      case SubmissionRegexType.name:
+        return _validationHint(
+          context: context,
+          isValid: nameRegex.hasMatch(value),
+          validKey: MessageKeys.submissionValidationValidName,
+          invalidKey: MessageKeys.submissionValidationName,
+        );
+    }
+  }
+
+  Widget _validationHint({
+    required BuildContext context,
+    required bool isValid,
+    required String validKey,
+    required String invalidKey,
+  }) {
+    final color = isValid
+        ? Theme.of(context).colorScheme.primary
+        : Theme.of(context).colorScheme.error;
+
+    return Row(
+      children: [
+        Icon(
+          isValid ? Icons.check_circle_rounded : Icons.error_outline_rounded,
+          size: 16,
+          color: color,
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            t(isValid ? validKey : invalidKey),
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
       ],
     );
   }

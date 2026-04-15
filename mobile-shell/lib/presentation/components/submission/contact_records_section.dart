@@ -1,6 +1,8 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 
 import "../../../domain/constants/message_keys.dart";
+import "../../../domain/constants/submission_regex.dart";
 import "../../../domain/entities/contact_record.dart";
 import "../../../domain/entities/submission_session.dart";
 
@@ -81,34 +83,149 @@ class ContactRecordsSection extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                primaryContact.name.trim().isEmpty
-                    ? t(MessageKeys.submissionContactDefaultTitle)
-                    : primaryContact.name,
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              const SizedBox(height: 8),
               ...fields.map((field) {
                 final fieldKey = _fieldKeyToString(field.key);
+                final value = _fieldValue(primaryContact, field.key);
+                final regexHint = enabled
+                    ? _buildRegexHint(
+                        context: context,
+                        fieldKey: field.key,
+                        rawValue: value,
+                      )
+                    : null;
+
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 10),
-                  child: TextFormField(
-                    key: ValueKey("${fieldKey}_${primaryContact.id}"),
-                    enabled: enabled,
-                    initialValue: _fieldValue(primaryContact, field.key),
-                    keyboardType: _keyboardType(field.key),
-                    decoration: InputDecoration(
-                      labelText: field.labelForLocale(localeCode),
-                      hintText: field.placeholderForLocale(localeCode),
-                      suffixText:
-                          field.required ? t(MessageKeys.commonRequired) : null,
-                    ),
-                    onChanged: (value) =>
-                        onContactChanged(primaryContact.id, fieldKey, value),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFormField(
+                        key: ValueKey("${fieldKey}_${primaryContact.id}"),
+                        enabled: enabled,
+                        initialValue: value,
+                        keyboardType: _keyboardType(field.key),
+                        inputFormatters: _inputFormatters(field.key),
+                        decoration: InputDecoration(
+                          labelText: field.labelForLocale(localeCode),
+                          hintText: field.placeholderForLocale(localeCode),
+                          suffixText: field.required
+                              ? t(MessageKeys.commonRequired)
+                              : null,
+                        ),
+                        onChanged: (nextValue) => onContactChanged(
+                          primaryContact.id,
+                          fieldKey,
+                          _normalizeValue(field.key, nextValue),
+                        ),
+                      ),
+                      if (regexHint != null) ...[
+                        const SizedBox(height: 6),
+                        regexHint,
+                      ],
+                    ],
                   ),
                 );
               }),
             ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<TextInputFormatter> _inputFormatters(SubmissionContactFieldKey key) {
+    if (key != SubmissionContactFieldKey.phone) {
+      return const <TextInputFormatter>[];
+    }
+
+    return <TextInputFormatter>[
+      TextInputFormatter.withFunction((oldValue, newValue) {
+        final normalized = normalizePhoneNumber(newValue.text);
+        return TextEditingValue(
+          text: normalized,
+          selection: TextSelection.collapsed(offset: normalized.length),
+        );
+      }),
+    ];
+  }
+
+  String _normalizeValue(SubmissionContactFieldKey key, String value) {
+    if (key == SubmissionContactFieldKey.phone) {
+      return normalizePhoneNumber(value);
+    }
+
+    return value;
+  }
+
+  Widget? _buildRegexHint({
+    required BuildContext context,
+    required SubmissionContactFieldKey fieldKey,
+    required String rawValue,
+  }) {
+    final value = rawValue.trim();
+    if (value.isEmpty) {
+      return null;
+    }
+
+    switch (fieldKey) {
+      case SubmissionContactFieldKey.name:
+        return _validationHint(
+          context: context,
+          isValid: nameRegex.hasMatch(value),
+          validKey: MessageKeys.submissionValidationValidName,
+          invalidKey: MessageKeys.submissionValidationName,
+        );
+      case SubmissionContactFieldKey.email:
+        return _validationHint(
+          context: context,
+          isValid: emailRegex.hasMatch(value),
+          validKey: MessageKeys.submissionValidationValidEmail,
+          invalidKey: MessageKeys.submissionValidationEmail,
+        );
+      case SubmissionContactFieldKey.phone:
+        final normalized = normalizePhoneNumber(value);
+        return _validationHint(
+          context: context,
+          isValid: phoneRegex.hasMatch(normalized),
+          validKey: MessageKeys.submissionValidationValidPhone,
+          invalidKey: MessageKeys.submissionValidationPhone,
+        );
+      case SubmissionContactFieldKey.address:
+        return _validationHint(
+          context: context,
+          isValid: textRegex.hasMatch(value),
+          validKey: MessageKeys.submissionValidationValidText,
+          invalidKey: MessageKeys.submissionValidationText,
+        );
+    }
+  }
+
+  Widget _validationHint({
+    required BuildContext context,
+    required bool isValid,
+    required String validKey,
+    required String invalidKey,
+  }) {
+    final color = isValid
+        ? Theme.of(context).colorScheme.primary
+        : Theme.of(context).colorScheme.error;
+
+    return Row(
+      children: [
+        Icon(
+          isValid ? Icons.check_circle_rounded : Icons.error_outline_rounded,
+          size: 16,
+          color: color,
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            t(isValid ? validKey : invalidKey),
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],

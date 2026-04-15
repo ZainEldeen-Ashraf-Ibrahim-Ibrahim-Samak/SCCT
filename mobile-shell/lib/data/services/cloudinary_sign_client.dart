@@ -43,7 +43,8 @@ class CloudinarySignClient {
       "timestamp": DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000,
       if (folder != null && folder.trim().isNotEmpty) "folder": folder.trim(),
       if (eager != null && eager.trim().isNotEmpty) "eager": eager.trim(),
-      if (publicId != null && publicId.trim().isNotEmpty) "public_id": publicId.trim(),
+      if (publicId != null && publicId.trim().isNotEmpty)
+        "public_id": publicId.trim(),
     };
 
     final response = await _httpClient
@@ -58,22 +59,56 @@ class CloudinarySignClient {
         .timeout(Duration(milliseconds: _timeoutMs));
 
     final body = _decodeBody(response.body);
-    if (response.statusCode < 200 || response.statusCode >= 300 || body["success"] != true) {
+    if (response.statusCode < 200 ||
+        response.statusCode >= 300 ||
+        body["success"] != true) {
       throw SubmissionApiException(
-        message: (body["error"] ?? "Cloudinary signature request failed").toString(),
+        message:
+            (body["error"] ?? "Cloudinary signature request failed").toString(),
         statusCode: response.statusCode,
         code: body["code"]?.toString(),
       );
     }
 
-    final data = body["data"] as Map<String, dynamic>? ?? const <String, dynamic>{};
+    final data =
+        body["data"] as Map<String, dynamic>? ?? const <String, dynamic>{};
+
+    final cloudName = _firstNonEmptyString(<Object?>[
+      data["cloudName"],
+      data["cloud_name"],
+      data["cloudname"],
+    ]);
+
+    final apiKey = _firstNonEmptyString(<Object?>[
+      data["apiKey"],
+      data["api_key"],
+      data["apikey"],
+    ]);
+
+    final signatureValue = _firstNonEmptyString(<Object?>[
+      data["signature"],
+    ]);
+
+    final timestampValue = (data["timestamp"] is int)
+        ? data["timestamp"] as int
+        : int.tryParse((data["timestamp"] ?? "0").toString()) ?? 0;
+
+    if (signatureValue.isEmpty ||
+        cloudName.isEmpty ||
+        apiKey.isEmpty ||
+        timestampValue <= 0) {
+      throw const SubmissionApiException(
+        message: "Cloudinary signature response is missing required fields",
+        statusCode: 500,
+        code: "SIGNATURE_RESPONSE_INVALID",
+      );
+    }
+
     return CloudinarySignResponse(
-      signature: (data["signature"] ?? "").toString(),
-      timestamp: (data["timestamp"] is int)
-          ? data["timestamp"] as int
-          : int.tryParse((data["timestamp"] ?? "0").toString()) ?? 0,
-      apiKey: (data["apiKey"] ?? "").toString(),
-      cloudName: (data["cloudName"] ?? "").toString(),
+      signature: signatureValue,
+      timestamp: timestampValue,
+      apiKey: apiKey,
+      cloudName: cloudName,
     );
   }
 
@@ -83,7 +118,8 @@ class CloudinarySignClient {
     String? folder,
     String? publicId,
   }) async {
-    final uploadUri = Uri.parse("https://api.cloudinary.com/v1_1/${signature.cloudName}/auto/upload");
+    final uploadUri = Uri.parse(
+        "https://api.cloudinary.com/v1_1/${signature.cloudName}/auto/upload");
 
     final request = http.MultipartRequest("POST", uploadUri)
       ..fields["api_key"] = signature.apiKey
@@ -100,7 +136,9 @@ class CloudinarySignClient {
 
     request.files.add(await http.MultipartFile.fromPath("file", filePath));
 
-    final streamResponse = await _httpClient.send(request).timeout(Duration(milliseconds: _timeoutMs));
+    final streamResponse = await _httpClient
+        .send(request)
+        .timeout(Duration(milliseconds: _timeoutMs));
     final response = await http.Response.fromStream(streamResponse);
     final body = _decodeBody(response.body);
 
@@ -143,5 +181,16 @@ class CloudinarySignClient {
     } catch (_) {
       return const <String, dynamic>{};
     }
+  }
+
+  String _firstNonEmptyString(List<Object?> values) {
+    for (final value in values) {
+      final text = (value ?? "").toString().trim();
+      if (text.isNotEmpty) {
+        return text;
+      }
+    }
+
+    return "";
   }
 }

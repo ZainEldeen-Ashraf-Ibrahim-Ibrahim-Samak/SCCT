@@ -6,6 +6,7 @@ import "../../data/repositories/secure_draft_repository.dart";
 import "../../data/services/cloudinary_sign_client.dart";
 import "../../data/services/submission_api_client.dart";
 import "../../domain/constants/message_keys.dart";
+import "../../domain/constants/submission_regex.dart";
 import "../../domain/entities/contact_record.dart";
 import "../../domain/entities/field_response.dart";
 import "../../domain/entities/local_draft.dart";
@@ -195,7 +196,7 @@ class NativeSubmissionViewModel extends ChangeNotifier {
               ? current.copyWith(
                   name: name,
                   email: email,
-                  phone: phone,
+                  phone: phone == null ? null : normalizePhoneNumber(phone),
                   contact: contact,
                   role: role,
                   notes: notes,
@@ -211,7 +212,28 @@ class NativeSubmissionViewModel extends ChangeNotifier {
     final existing = _responsesByFieldId[fieldDefinitionId] ??
         FieldResponse(fieldDefinitionId: fieldDefinitionId);
 
-    _responsesByFieldId[fieldDefinitionId] = existing.copyWith(value: value);
+    final definition = _session?.fields.firstWhere(
+      (field) => field.id == fieldDefinitionId,
+      orElse: () => const SubmissionFieldDefinition(
+        id: "",
+        nameEn: "",
+        nameAr: "",
+        inputType: SubmissionFieldType.text,
+        isMultiple: false,
+        validation: SubmissionFieldValidation(),
+        dropdownOptionsEn: <String>[],
+        dropdownOptionsAr: <String>[],
+      ),
+    );
+
+    final normalizedValue =
+        definition?.validation.regexType == SubmissionRegexType.phone &&
+                value is String
+            ? normalizePhoneNumber(value)
+            : value;
+
+    _responsesByFieldId[fieldDefinitionId] =
+        existing.copyWith(value: normalizedValue);
     _scheduleAutosave();
     notifyListeners();
   }
@@ -260,10 +282,18 @@ class NativeSubmissionViewModel extends ChangeNotifier {
       final existing = _responsesByFieldId[fieldDefinitionId] ??
           FieldResponse(fieldDefinitionId: fieldDefinitionId);
 
+      final isMultipleMedia = _isFieldMultipleMedia(fieldDefinitionId);
+      final nextMediaItems = isMultipleMedia
+          ? <MediaReference>[
+              ...existing.mediaItems,
+              uploaded,
+            ]
+          : <MediaReference>[uploaded];
+
       _responsesByFieldId[fieldDefinitionId] = existing.copyWith(
         mediaUrl: uploaded.url,
         mediaPublicId: uploaded.publicId,
-        mediaItems: <MediaReference>[uploaded],
+        mediaItems: nextMediaItems,
       );
 
       _mediaQueueByFieldId[fieldDefinitionId] = MediaUploadItem(
@@ -504,6 +534,31 @@ class NativeSubmissionViewModel extends ChangeNotifier {
     return (field.inputType == SubmissionFieldType.image ||
             field.inputType == SubmissionFieldType.file) &&
         field.validation.required;
+  }
+
+  bool _isFieldMultipleMedia(String fieldDefinitionId) {
+    final field = _session?.fields.firstWhere(
+      (item) => item.id == fieldDefinitionId,
+      orElse: () => const SubmissionFieldDefinition(
+        id: "",
+        nameEn: "",
+        nameAr: "",
+        inputType: SubmissionFieldType.text,
+        isMultiple: false,
+        validation: SubmissionFieldValidation(),
+        dropdownOptionsEn: <String>[],
+        dropdownOptionsAr: <String>[],
+      ),
+    );
+
+    if (field == null || field.id.isEmpty) {
+      return false;
+    }
+
+    final isMedia = field.inputType == SubmissionFieldType.image ||
+        field.inputType == SubmissionFieldType.file;
+
+    return isMedia && field.isMultiple;
   }
 
   String _newContactId() {

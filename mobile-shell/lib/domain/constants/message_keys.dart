@@ -30,6 +30,14 @@ class MessageKeys {
 
   static const submissionValidationContactRequired =
       "mobile.submission.validation.contactRequired";
+  static const submissionValidationValidName =
+      "mobile.submission.validation.validName";
+  static const submissionValidationValidEmail =
+      "mobile.submission.validation.validEmail";
+  static const submissionValidationValidPhone =
+      "mobile.submission.validation.validPhone";
+  static const submissionValidationValidText =
+      "mobile.submission.validation.validText";
   static const submissionValidationName = "mobile.submission.validation.name";
   static const submissionValidationEmail = "mobile.submission.validation.email";
   static const submissionValidationPhone = "mobile.submission.validation.phone";
