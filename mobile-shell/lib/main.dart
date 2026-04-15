@@ -12,6 +12,7 @@ import "presentation/screens/splash_screen.dart";
 import "presentation/screens/startup_error_screen.dart";
 import "presentation/view_models/scan_view_model.dart";
 import "widgets/secure_widget.dart";
+import "i18n/index.dart";
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +21,15 @@ Future<void> main() async {
   } catch (e) {
     debugPrint("Could not load .env file: $e");
   }
+
+  // Pre-load common languages to ensure synchronous usage isn't hardcoded in UI.
+  try {
+    await I18nCatalog.load("en");
+    await I18nCatalog.load("ar");
+  } catch (e) {
+    debugPrint("Could not load i18n JSON catalogs: $e");
+  }
+
   runApp(const ScctMobileApp());
 }
 
@@ -211,12 +221,12 @@ class _ScctMobileAppState extends State<ScctMobileApp> {
               onAccepted: (scanResult) {
                 final submissionToken =
                     scanResult.submissionToken?.trim().isNotEmpty == true
-                    ? scanResult.submissionToken!.trim()
-                    : _extractSubmissionTokenFromUri(
-                        scanResult.acceptedUri,
-                        submissionPathSegment:
-                            result.config!.submissionPathSegment,
-                      );
+                        ? scanResult.submissionToken!.trim()
+                        : _extractSubmissionTokenFromUri(
+                            scanResult.acceptedUri,
+                            submissionPathSegment:
+                                result.config!.submissionPathSegment,
+                          );
                 if (submissionToken != null &&
                     submissionToken.trim().isNotEmpty) {
                   Navigator.of(context).push(
@@ -242,7 +252,8 @@ class _ScctMobileAppState extends State<ScctMobileApp> {
 
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text("Submission token not found in scanned link."),
+                    content:
+                        Text("Submission token not found in scanned link."),
                   ),
                 );
               },

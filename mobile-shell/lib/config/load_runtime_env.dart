@@ -22,16 +22,19 @@ RuntimeConfigInput loadRuntimeEnv() {
   const draftDebounceFromDefine =
       String.fromEnvironment("MOBILE_DRAFT_AUTOSAVE_DEBOUNCE_MS");
 
+  final resolvedBaseUrl = _resolveRequiredValue(
+    defineValue: appBaseFromDefine,
+    envKey: "MOBILE_APP_BASE_URL",
+  );
+
+  final derivedAllowedHost = _extractHostFromHttpsUrl(resolvedBaseUrl);
+
   return RuntimeConfigInput(
-    mobileAppBaseUrl: _resolveRequiredValue(
-      defineValue: appBaseFromDefine,
-      envKey: "MOBILE_APP_BASE_URL",
-      debugFallback: "https://scct-damages.vercel.app",
-    ),
+    mobileAppBaseUrl: resolvedBaseUrl,
     mobileAllowedHosts: _resolveRequiredValue(
       defineValue: allowedHostsFromDefine,
       envKey: "MOBILE_ALLOWED_HOSTS",
-      debugFallback: "scct-damages.vercel.app",
+      debugFallback: derivedAllowedHost,
     ),
     mobileDefaultLocale: _resolveRequiredValue(
       defineValue: defaultLocaleFromDefine,
@@ -74,7 +77,7 @@ RuntimeConfigInput loadRuntimeEnv() {
 String? _resolveRequiredValue({
   required String defineValue,
   required String envKey,
-  required String debugFallback,
+  String? debugFallback,
 }) {
   final fromDefine = defineValue.trim();
   if (fromDefine.isNotEmpty) {
@@ -93,11 +96,24 @@ String? _resolveRequiredValue({
     return fromEnv;
   }
 
-  if (!kReleaseMode) {
+  if (!kReleaseMode && debugFallback != null && debugFallback.trim().isNotEmpty) {
     return debugFallback;
   }
 
   return null;
+}
+
+String? _extractHostFromHttpsUrl(String? rawUrl) {
+  if (rawUrl == null || rawUrl.trim().isEmpty) {
+    return null;
+  }
+
+  final uri = Uri.tryParse(rawUrl.trim());
+  if (uri == null || uri.host.isEmpty) {
+    return null;
+  }
+
+  return uri.host;
 }
 
 String? _resolveOptionalValue({
