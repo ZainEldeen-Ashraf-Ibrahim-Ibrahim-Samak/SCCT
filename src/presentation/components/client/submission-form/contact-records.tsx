@@ -129,73 +129,70 @@ export function ContactRecords({
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {orderedFields.map((field) => (
-          <div
-            key={field.id}
-            className={field.key === "address" ? "space-y-1 sm:col-span-2" : "space-y-1"}
-          >
-            <Label htmlFor={`contact-${field.key}-${field.id}`} className="flex items-center gap-1">
-              <span>{getLocalizedLabel(field)}</span>
-              {field.required && <span className="text-destructive">*</span>}
-            </Label>
-            {(() => {
-              const fieldValue = getFieldValue(field);
-              const isValidText = fieldValue.length === 0 || TEXT_REGEX.test(fieldValue);
+        {orderedFields.map((field) => {
+          const fieldValue = getFieldValue(field);
+          const isValidText = fieldValue.length === 0 || TEXT_REGEX.test(fieldValue);
 
-              return (
-                <>
-            <Input
-              id={`contact-${field.key}-${field.id}`}
-              type={getInputType(field)}
-              value={fieldValue}
-              onChange={(e) => updateFieldValue(field, e.target.value)}
-              placeholder={getLocalizedPlaceholder(field)}
-              disabled={disabled}
-              required={field.required}
-            />
+          return (
+            <div
+              key={field.id}
+              className={field.key === "address" ? "space-y-1 sm:col-span-2" : "space-y-1"}
+            >
+              <Label htmlFor={`contact-${field.key}-${field.id}`} className="flex items-center gap-1">
+                <span>{getLocalizedLabel(field)}</span>
+                {field.required && <span className="text-destructive">*</span>}
+              </Label>
 
-                  {field.key === "email" && (
-                    <EmailRegix email={fieldValue} showTypoSuggestions={true} />
+              <Input
+                id={`contact-${field.key}-${field.id}`}
+                type={getInputType(field)}
+                value={fieldValue}
+                onChange={(e) => updateFieldValue(field, e.target.value)}
+                placeholder={getLocalizedPlaceholder(field)}
+                disabled={disabled}
+                required={field.required}
+              />
+
+              {!disabled && field.key === "email" && (
+                <EmailRegix email={fieldValue} showTypoSuggestions={true} />
+              )}
+
+              {!disabled && field.key === "phone" && (
+                <PhoneRegix
+                  number={fieldValue}
+                  setNumber={(value) => updateFieldValue(field, value)}
+                />
+              )}
+
+              {!disabled && field.key === "name" && (
+                <NameRegix name={fieldValue} />
+              )}
+
+              {!disabled && field.key === "address" && fieldValue.length > 0 && (
+                <div
+                  className={`text-sm mt-2 p-2 pb-3 rounded-md flex items-start ${
+                    isValidText
+                      ? "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400"
+                      : "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400"
+                  }`}
+                  dir={locale === "ar" ? "rtl" : "ltr"}
+                >
+                  {isValidText ? (
+                    <>
+                      <Check size={16} className={`${locale === "ar" ? "ml-2" : "mr-2"} mt-0.5 shrink-0`} />
+                      <span>{tv("VALID_TEXT")}</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle size={16} className={`${locale === "ar" ? "ml-2" : "mr-2"} mt-0.5 shrink-0`} />
+                      <span>{tv("INVALID_TEXT_DETAILS")}</span>
+                    </>
                   )}
-
-                  {field.key === "phone" && (
-                    <PhoneRegix
-                      number={fieldValue}
-                      setNumber={(value) => updateFieldValue(field, value)}
-                    />
-                  )}
-
-                  {field.key === "name" && (
-                    <NameRegix name={fieldValue} />
-                  )}
-
-                  {field.key === "address" && fieldValue.length > 0 && (
-                    <div
-                      className={`text-sm mt-2 p-2 pb-3 rounded-md flex items-start ${
-                        isValidText
-                          ? "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400"
-                          : "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400"
-                      }`}
-                      dir={locale === "ar" ? "rtl" : "ltr"}
-                    >
-                      {isValidText ? (
-                        <>
-                          <Check size={16} className={`${locale === "ar" ? "ml-2" : "mr-2"} mt-0.5 shrink-0`} />
-                          <span>{tv("VALID_TEXT")}</span>
-                        </>
-                      ) : (
-                        <>
-                          <AlertCircle size={16} className={`${locale === "ar" ? "ml-2" : "mr-2"} mt-0.5 shrink-0`} />
-                          <span>{tv("INVALID_TEXT_DETAILS")}</span>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </>
-              );
-            })()}
-          </div>
-        ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

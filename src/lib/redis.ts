@@ -21,6 +21,38 @@ function createRedisClient(): Redis | null {
 /** Upstash Redis client singleton. May be null if not configured. */
 export const redis = createRedisClient();
 
+function decodeCachedValue<T>(cached: unknown): T {
+  if (typeof cached !== "string") {
+    return cached as T;
+  }
+
+  const normalized = cached.trim();
+  if (normalized.length === 0) {
+    return cached as T;
+  }
+
+  const firstChar = normalized[0];
+  const isLikelyJson =
+    firstChar === "{" ||
+    firstChar === "[" ||
+    firstChar === "\"" ||
+    firstChar === "n" ||
+    firstChar === "t" ||
+    firstChar === "f" ||
+    firstChar === "-" ||
+    (firstChar >= "0" && firstChar <= "9");
+
+  if (!isLikelyJson) {
+    return cached as T;
+  }
+
+  try {
+    return JSON.parse(normalized) as T;
+  } catch {
+    return cached as T;
+  }
+}
+
 /**
  * Cache helper: get a value from Redis, or compute and store it.
  * Falls back to direct computation if Redis is unavailable.
@@ -37,7 +69,7 @@ export async function cacheGet<T>(
   try {
     const cached = await redis.get<T>(key);
     if (cached !== null && cached !== undefined) {
-      return cached;
+      return decodeCachedValue<T>(cached);
     }
   } catch {
     // Redis unavailable, fall through to compute
@@ -46,7 +78,7 @@ export async function cacheGet<T>(
   const value = await compute();
 
   try {
-    await redis.set(key, JSON.stringify(value), { ex: ttlSeconds });
+    await redis.set(key, value as unknown, { ex: ttlSeconds });
   } catch {
     // Redis unavailable, silently continue
   }
