@@ -13,21 +13,32 @@ export class CloudinaryStorageRepository implements StorageRepository {
       
       // Cloudinary API structure for usage
       // result.storage = { usage: 12345, limit: 1048576, used_percent: 0.01 }
-      // result.bandwidth = { usage: ..., limit: ..., used_percent: ... }
-      // result.requests = { usage: ... }
-      
+      // Or in newer credit-based plans:
+      // result.credits = { usage: 0.16, limit: 25, used_percent: 0.64 }
+      // Where 1 credit = 1GB of storage or bandwidth.
+
+      const storageUsage = result.storage?.usage || 0;
+      const bandwidthUsage = result.bandwidth?.usage || 0;
+
+      // 25 credits = 25GB limit as fallback for free tier
+      const creditLimit = result.credits?.limit || 25; 
+      const fallbackLimitBytes = creditLimit * 1024 * 1024 * 1024;
+
+      const storageLimit = result.storage?.limit || fallbackLimitBytes;
+      const bandwidthLimit = result.bandwidth?.limit || fallbackLimitBytes;
+
       return {
         storage: {
-          usage: result.storage?.usage || 0,
-          limit: result.storage?.limit || 1,
-          used_percent: result.storage?.used_percent || 0,
+          usage: storageUsage,
+          limit: storageLimit,
+          used_percent: result.storage?.used_percent || (storageUsage / storageLimit),
         },
         bandwidth: {
-          usage: result.bandwidth?.usage || 0,
-          limit: result.bandwidth?.limit || 1,
-          used_percent: result.bandwidth?.used_percent || 0,
+          usage: bandwidthUsage,
+          limit: bandwidthLimit,
+          used_percent: result.bandwidth?.used_percent || (bandwidthUsage / bandwidthLimit),
         },
-        requests: result.requests?.usage || 0,
+        requests: result.requests || 0,
       };
     } catch (error) {
       logger.error("Failed to fetch Cloudinary usage metrics", error);
