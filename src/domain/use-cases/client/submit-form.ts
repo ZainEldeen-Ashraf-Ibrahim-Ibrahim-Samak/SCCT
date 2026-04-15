@@ -8,7 +8,7 @@ import { generateAccessToken } from "@/lib/utils";
 import { NotificationPublisher } from "@/lib/events/publisher";
 import { logger } from "@/lib/dev-logger";
 import { redis } from "@/lib/redis";
-import { EMAIL_REGEX, PHONE_REGEX, NAME_REGEX } from "@/constants/constants";
+import { EMAIL_REGEX, PHONE_REGEX, NAME_REGEX, TEXT_REGEX } from "@/constants/constants";
 import { sanitizeInput } from "@/lib/utils/sanitize";
 
 interface SubmitFormData {
@@ -116,6 +116,9 @@ export class SubmitFormUseCase {
       }
       if (contact.name && !NAME_REGEX.test(contact.name)) {
         return { success: false, error: "Invalid contact name format" };
+      }
+      if (contact.contact && !TEXT_REGEX.test(contact.contact)) {
+        return { success: false, error: "Invalid contact address format" };
       }
     }
 
@@ -262,6 +265,9 @@ export class SubmitFormUseCase {
       }
       if (contact.name && !NAME_REGEX.test(contact.name)) {
         return { success: false, error: "Invalid contact name format" };
+      }
+      if (contact.contact && !TEXT_REGEX.test(contact.contact)) {
+        return { success: false, error: "Invalid contact address format" };
       }
     }
 

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle, CheckCircle2, Loader2, Send } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { EMAIL_REGEX, PHONE_REGEX, NAME_REGEX } from "@/constants/constants";
+import { EMAIL_REGEX, PHONE_REGEX, NAME_REGEX, TEXT_REGEX } from "@/constants/constants";
 
 interface SubmissionFormProps {
   tokenOrId: string;
@@ -124,6 +124,10 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
           isValid = false;
         }
         if (primaryContact.name && !NAME_REGEX.test(primaryContact.name)) {
+          errors.contactRecords = true;
+          isValid = false;
+        }
+        if (primaryContact.address && !TEXT_REGEX.test(primaryContact.address)) {
           errors.contactRecords = true;
           isValid = false;
         }

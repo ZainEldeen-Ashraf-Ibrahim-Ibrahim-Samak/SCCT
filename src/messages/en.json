@@ -504,7 +504,9 @@
     "INVALID_EMAIL": "Please enter a valid email address",
     "VALID_NAME": "Valid Name",
     "INVALID_NAME": "Invalid Name",
-    "INVALID_NAME_DETAILS": "Please use ONLY recognized alphanumeric characters or spaces."
+    "INVALID_NAME_DETAILS": "Please use ONLY recognized alphanumeric characters or spaces.",
+    "VALID_TEXT": "Valid Text",
+    "INVALID_TEXT_DETAILS": "Please use only letters, numbers, spaces, and common punctuation."
   },
   "CHANGE_EMAIL": {
     "ERRORS": {

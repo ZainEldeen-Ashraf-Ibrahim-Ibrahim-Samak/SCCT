@@ -4,6 +4,11 @@ import { useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Check, AlertCircle } from "lucide-react";
+import EmailRegix from "@/components/validation/EmailRegix";
+import PhoneRegix from "@/components/validation/PhoneRegix";
+import NameRegix from "@/components/validation/NameRegix";
+import { TEXT_REGEX } from "@/constants/constants";
 import type { ContactRecordDraft } from "@/presentation/view-models/use-submission";
 import type { ContactFormField } from "@/domain/entities/form-template";
 
@@ -23,6 +28,7 @@ export function ContactRecords({
   onUpdate,
 }: ContactRecordsProps) {
   const t = useTranslations("client");
+  const tv = useTranslations("VALIDATION");
   const locale = useLocale();
 
   const contactRecord = useMemo<ContactRecordDraft>(() => {
@@ -132,15 +138,62 @@ export function ContactRecords({
               <span>{getLocalizedLabel(field)}</span>
               {field.required && <span className="text-destructive">*</span>}
             </Label>
+            {(() => {
+              const fieldValue = getFieldValue(field);
+              const isValidText = fieldValue.length === 0 || TEXT_REGEX.test(fieldValue);
+
+              return (
+                <>
             <Input
               id={`contact-${field.key}-${field.id}`}
               type={getInputType(field)}
-              value={getFieldValue(field)}
+              value={fieldValue}
               onChange={(e) => updateFieldValue(field, e.target.value)}
               placeholder={getLocalizedPlaceholder(field)}
               disabled={disabled}
               required={field.required}
             />
+
+                  {field.key === "email" && (
+                    <EmailRegix email={fieldValue} showTypoSuggestions={true} />
+                  )}
+
+                  {field.key === "phone" && (
+                    <PhoneRegix
+                      number={fieldValue}
+                      setNumber={(value) => updateFieldValue(field, value)}
+                    />
+                  )}
+
+                  {field.key === "name" && (
+                    <NameRegix name={fieldValue} />
+                  )}
+
+                  {field.key === "address" && fieldValue.length > 0 && (
+                    <div
+                      className={`text-sm mt-2 p-2 pb-3 rounded-md flex items-start ${
+                        isValidText
+                          ? "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400"
+                          : "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400"
+                      }`}
+                      dir={locale === "ar" ? "rtl" : "ltr"}
+                    >
+                      {isValidText ? (
+                        <>
+                          <Check size={16} className={`${locale === "ar" ? "ml-2" : "mr-2"} mt-0.5 shrink-0`} />
+                          <span>{tv("VALID_TEXT")}</span>
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle size={16} className={`${locale === "ar" ? "ml-2" : "mr-2"} mt-0.5 shrink-0`} />
+                          <span>{tv("INVALID_TEXT_DETAILS")}</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         ))}
       </div>
