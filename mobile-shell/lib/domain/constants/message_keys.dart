@@ -33,4 +33,24 @@ class MessageKeys {
   static const submissionValidationPhone = "mobile.submission.validation.phone";
   static const submissionValidationText = "mobile.submission.validation.text";
   static const submissionValidationRequiredField = "mobile.submission.validation.requiredField";
+
+  static const submissionClientName = "mobile.submission.clientName";
+  static const submissionClientContact = "mobile.submission.clientContact";
+  static const submissionContactAdd = "mobile.submission.contact.add";
+  static const submissionContactDefaultTitle = "mobile.submission.contact.defaultTitle";
+  static const submissionContactName = "mobile.submission.contact.name";
+  static const submissionContactEmail = "mobile.submission.contact.email";
+  static const submissionContactPhone = "mobile.submission.contact.phone";
+  static const submissionContactAddress = "mobile.submission.contact.address";
+  static const submissionMediaUploadRequired = "mobile.submission.media.uploadRequired";
+  static const submissionMediaUpload = "mobile.submission.media.upload";
+  static const submissionMediaClear = "mobile.submission.media.clear";
+
+  static const commonRequired = "mobile.common.required";
+  static const commonOptional = "mobile.common.optional";
+  static const commonLanguageEnglish = "mobile.common.language.english";
+  static const commonLanguageArabic = "mobile.common.language.arabic";
+
+  static const scanLinkHint = "mobile.scan.linkHint";
+  static const mainSubmissionTokenNotFound = "mobile.main.submissionTokenNotFound";
 }
