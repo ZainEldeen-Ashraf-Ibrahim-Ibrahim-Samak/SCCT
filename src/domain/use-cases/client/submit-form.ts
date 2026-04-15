@@ -4,6 +4,7 @@ import { FormTemplateRepository } from "@/domain/repositories/form-template-repo
 import { FieldDefinitionRepository } from "@/domain/repositories/field-definition-repository";
 import { Submission } from "@/domain/entities/submission";
 import { CreateFieldValueInput } from "@/domain/entities/field-value";
+import type { InputType } from "@/domain/entities/field-definition";
 import { generateAccessToken } from "@/lib/utils";
 import { NotificationPublisher } from "@/lib/events/publisher";
 import { logger } from "@/lib/dev-logger";
@@ -36,6 +37,64 @@ interface SubmitFormData {
 
 const OBJECT_ID_PATTERN = /^[a-f0-9]{24}$/i;
 const DEFAULT_CONTACT_NAME = "Primary Contact";
+
+function isObjectId(value: unknown): boolean {
+  return typeof value === "string" && OBJECT_ID_PATTERN.test(value);
+}
+
+function normalizeInputType(value: unknown): InputType {
+  if (value === "text" || value === "number" || value === "image" || value === "file" || value === "date" || value === "dropdown") {
+    return value;
+  }
+
+  return "text";
+}
+
+function normalizeSnapshotFields(snapshot: unknown): Array<{
+  id: string;
+  nameEn: string;
+  inputType: InputType;
+  isMultiple?: boolean;
+  dropdownOptionsEn?: string[];
+  dropdownOptionsAr?: string[];
+  validationRules?: {
+    required?: boolean;
+    regexType?: "email" | "phone" | "name";
+  };
+}> {
+  if (!Array.isArray(snapshot)) return [];
+
+  return snapshot
+    .map((field) => {
+      if (!field || typeof field !== "object") return null;
+      const candidate = field as Record<string, unknown>;
+      const id = String(candidate.id ?? "").trim();
+      if (!id || !isObjectId(id)) return null;
+
+      const validationRules =
+        candidate.validationRules && typeof candidate.validationRules === "object"
+          ? candidate.validationRules as {
+              required?: boolean;
+              regexType?: "email" | "phone" | "name";
+            }
+          : {};
+
+      return {
+        id,
+        nameEn: String(candidate.nameEn ?? "Unnamed Field"),
+        inputType: normalizeInputType(candidate.inputType),
+        isMultiple: Boolean(candidate.isMultiple),
+        dropdownOptionsEn: Array.isArray(candidate.dropdownOptionsEn)
+          ? candidate.dropdownOptionsEn.map((v) => String(v))
+          : [],
+        dropdownOptionsAr: Array.isArray(candidate.dropdownOptionsAr)
+          ? candidate.dropdownOptionsAr.map((v) => String(v))
+          : [],
+        validationRules,
+      };
+    })
+    .filter((field): field is NonNullable<typeof field> => !!field);
+}
 
 function hasValueContent(value: string | number | string[] | null | undefined): boolean {
   if (Array.isArray(value)) return value.length > 0;
@@ -275,8 +334,25 @@ export class SubmitFormUseCase {
       return { success: false, error: "Submission must contain field values" };
     }
 
+    const snapshotFields = normalizeSnapshotFields(submission.formSnapshot);
+    if (snapshotFields.length === 0) {
+      logger.warn("Resubmission blocked due to invalid form snapshot", {
+        accessToken,
+        submissionId: submission.id,
+      });
+      return { success: false, error: "Submission form snapshot is invalid" };
+    }
+
+    if (!isObjectId(submission.id)) {
+      logger.warn("Resubmission blocked due to invalid submission id", {
+        accessToken,
+        submissionId: submission.id,
+      });
+      return { success: false, error: "Submission id is invalid" };
+    }
+
     // 1. Validate against the snapshot
-    for (const field of submission.formSnapshot) {
+    for (const field of snapshotFields) {
       if (field.validationRules?.required) {
         const submittedValue = data.fieldValues.find((v) => v.fieldDefinitionId === field.id);
         const hasMedia = submittedValue?.mediaUrl && submittedValue.mediaUrl.trim().length > 0;
@@ -322,7 +398,7 @@ export class SubmitFormUseCase {
     // 2. Replace Field Values to support draft tokens that do not yet have rows.
     // updateMany alone cannot create missing field-value records for freshly provisioned drafts.
     const fieldValuesToCreate: CreateFieldValueInput[] = data.fieldValues.flatMap((fv) => {
-        const def = submission.formSnapshot.find((f) => f.id === fv.fieldDefinitionId);
+        const def = snapshotFields.find((f) => f.id === fv.fieldDefinitionId);
         if (!def) return [];
 
         const mapped: CreateFieldValueInput = {

@@ -45,6 +45,21 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
 
   const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({});
 
+  const resolveErrorMessage = (value: string) => {
+    const normalized = value.trim();
+    if (!normalized) return value;
+
+    try {
+      return te(normalized);
+    } catch {
+      try {
+        return te(normalized.toLowerCase().replace(/\s+/g, "_"));
+      } catch {
+        return value;
+      }
+    }
+  };
+
   // Render logic...
   if (isLoading) {
     return (
@@ -316,7 +331,7 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
             {error && error !== "not_found" && (
               <div className="px-6 pb-2">
                  <p className="text-sm text-destructive">
-                   {te(error) ? te(error) : error}
+                   {resolveErrorMessage(error)}
                  </p>
               </div>
             )}
