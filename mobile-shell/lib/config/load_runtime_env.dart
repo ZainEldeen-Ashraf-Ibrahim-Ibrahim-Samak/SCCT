@@ -7,6 +7,8 @@ import "../domain/entities/mobile_runtime_config.dart";
 
 RuntimeConfigInput loadRuntimeEnv() {
   const appBaseFromDefine = String.fromEnvironment("MOBILE_APP_BASE_URL");
+  const apiOriginFromDefine = String.fromEnvironment("API_ORIGIN");
+  const nextPublicAppUrlFromDefine = String.fromEnvironment("NEXT_PUBLIC_APP_URL");
   const allowedHostsFromDefine = String.fromEnvironment("MOBILE_ALLOWED_HOSTS");
   const defaultLocaleFromDefine =
       String.fromEnvironment("MOBILE_DEFAULT_LOCALE");
@@ -22,9 +24,17 @@ RuntimeConfigInput loadRuntimeEnv() {
   const draftDebounceFromDefine =
       String.fromEnvironment("MOBILE_DRAFT_AUTOSAVE_DEBOUNCE_MS");
 
-  final resolvedBaseUrl = _resolveRequiredValue(
-    defineValue: appBaseFromDefine,
-    envKey: "MOBILE_APP_BASE_URL",
+  final resolvedBaseUrl = _resolveRequiredFromMany(
+    defineValues: <String>[
+      appBaseFromDefine,
+      apiOriginFromDefine,
+      nextPublicAppUrlFromDefine,
+    ],
+    envKeys: const <String>[
+      "MOBILE_APP_BASE_URL",
+      "API_ORIGIN",
+      "NEXT_PUBLIC_APP_URL",
+    ],
   );
 
   final derivedAllowedHost = _extractHostFromHttpsUrl(resolvedBaseUrl);
@@ -94,6 +104,41 @@ String? _resolveRequiredValue({
   final fromEnv = Platform.environment[envKey]?.trim();
   if (fromEnv != null && fromEnv.isNotEmpty) {
     return fromEnv;
+  }
+
+  if (!kReleaseMode && debugFallback != null && debugFallback.trim().isNotEmpty) {
+    return debugFallback;
+  }
+
+  return null;
+}
+
+String? _resolveRequiredFromMany({
+  required List<String> defineValues,
+  required List<String> envKeys,
+  String? debugFallback,
+}) {
+  for (final value in defineValues) {
+    final trimmed = value.trim();
+    if (trimmed.isNotEmpty) {
+      return trimmed;
+    }
+  }
+
+  if (dotenv.isInitialized) {
+    for (final key in envKeys) {
+      final fromDotEnv = dotenv.env[key]?.trim();
+      if (fromDotEnv != null && fromDotEnv.isNotEmpty) {
+        return fromDotEnv;
+      }
+    }
+  }
+
+  for (final key in envKeys) {
+    final fromEnv = Platform.environment[key]?.trim();
+    if (fromEnv != null && fromEnv.isNotEmpty) {
+      return fromEnv;
+    }
   }
 
   if (!kReleaseMode && debugFallback != null && debugFallback.trim().isNotEmpty) {
