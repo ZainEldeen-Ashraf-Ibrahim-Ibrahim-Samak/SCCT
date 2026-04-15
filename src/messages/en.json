@@ -342,6 +342,18 @@
     "toastSubmissionNeedsRevision": "Your submission needs revision",
     "toastResubmissionRequested": "A resubmission request was sent"
   },
+  "user": {
+    "submission": {
+      "title": "Data Submission Form",
+      "loading": "Loading submission details...",
+      "saveDraft": "Save Draft",
+      "submit": "Submit Form",
+      "resubmit": "Resubmit Form",
+      "success": "Your submission has been received successfully!",
+      "validationFailed": "Please fix validation errors before submitting.",
+      "retry": "Retry"
+    }
+  },
   "notifications": {
     "viewDetails": "View Details →"
   },

@@ -342,6 +342,18 @@
     "toastSubmissionNeedsRevision": "طلبك يحتاج إلى تعديل",
     "toastResubmissionRequested": "تم إرسال طلب إعادة التقديم"
   },
+  "user": {
+    "submission": {
+      "title": "نموذج تقديم البيانات",
+      "loading": "جار تحميل بيانات الإرسال...",
+      "saveDraft": "حفظ كمسودة",
+      "submit": "إرسال النموذج",
+      "resubmit": "إعادة إرسال النموذج",
+      "success": "تم استلام طلبك بنجاح!",
+      "validationFailed": "يرجى تصحيح أخطاء التحقق قبل الإرسال.",
+      "retry": "إعادة المحاولة"
+    }
+  },
   "notifications": {
     "viewDetails": "عرض التفاصيل ←"
   },

@@ -309,26 +309,7 @@ class _NativeSubmissionScreenState extends State<NativeSubmissionScreen> {
                       ],
                     ),
                   ),
-                TextFormField(
-                  key: ValueKey("client_name_${viewModel.clientName}"),
-                  initialValue: viewModel.clientName,
-                  enabled: viewModel.isEditable,
-                  decoration: InputDecoration(
-                    labelText: _t(MessageKeys.submissionClientName),
-                  ),
-                  onChanged: viewModel.updateClientName,
-                ),
-                const SizedBox(height: 10),
-                TextFormField(
-                  key: ValueKey("client_contact_${viewModel.clientContact}"),
-                  initialValue: viewModel.clientContact,
-                  enabled: viewModel.isEditable,
-                  decoration: InputDecoration(
-                    labelText: _t(MessageKeys.submissionClientContact),
-                  ),
-                  onChanged: viewModel.updateClientContact,
-                ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 4),
                 ContactRecordsSection(
                   contacts: viewModel.contacts,
                   contactFields:
