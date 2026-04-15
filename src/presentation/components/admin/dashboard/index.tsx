@@ -3,15 +3,17 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useSubmissionsList } from "@/presentation/view-models/use-submissions-list";
+import { useDashboardAnalytics } from "@/presentation/view-models/use-dashboard-analytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { SubmissionsTable } from "@/presentation/components/admin/submissions-table";
-import { FileText, Clock, Eye, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { FileText, Clock, Eye, AlertCircle, ChevronLeft, ChevronRight, Cloud, HardDrive } from "lucide-react";
 
 export function AdminDashboard() {
   const t = useTranslations("dashboard");
   const { submissions, total, totalPages, counts, isLoading, fetchSubmissions, deleteSubmission } = useSubmissionsList();
+  const { cloudinaryUsage, isLoadingUsage } = useDashboardAnalytics();
   
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
@@ -88,6 +90,68 @@ export function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{counts.needs_rewrite}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Cloudinary Storage</CardTitle>
+            <HardDrive className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            {isLoadingUsage ? (
+              <div className="text-sm text-muted-foreground animate-pulse">Loading metrics...</div>
+            ) : cloudinaryUsage ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span>Used: {(cloudinaryUsage.storage.usage / 1024 / 1024).toFixed(2)} MB</span>
+                  <span className="text-muted-foreground">Limit: {(cloudinaryUsage.storage.limit / 1024 / 1024 / 1024).toFixed(2)} GB</span>
+                </div>
+                <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-blue-500 rounded-full" 
+                    style={{ width: `${Math.min(cloudinaryUsage.storage.used_percent * 100, 100)}%` }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground pt-1">
+                  {(cloudinaryUsage.storage.used_percent * 100).toFixed(1)}% of your quota
+                </p>
+              </div>
+            ) : (
+              <div className="text-sm text-destructive">Failed to load storage metrics</div>
+            )}
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Cloudinary Bandwidth</CardTitle>
+            <Cloud className="h-4 w-4 text-emerald-500" />
+          </CardHeader>
+          <CardContent>
+            {isLoadingUsage ? (
+              <div className="text-sm text-muted-foreground animate-pulse">Loading metrics...</div>
+            ) : cloudinaryUsage ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span>Used: {(cloudinaryUsage.bandwidth.usage / 1024 / 1024).toFixed(2)} MB</span>
+                  <span className="text-muted-foreground">Limit: {(cloudinaryUsage.bandwidth.limit / 1024 / 1024 / 1024).toFixed(2)} GB</span>
+                </div>
+                <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-emerald-500 rounded-full" 
+                    style={{ width: `${Math.min(cloudinaryUsage.bandwidth.used_percent * 100, 100)}%` }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground pt-1">
+                  {(cloudinaryUsage.bandwidth.used_percent * 100).toFixed(1)}% of your quota
+                </p>
+              </div>
+            ) : (
+              <div className="text-sm text-destructive">Failed to load bandwidth metrics</div>
+            )}
           </CardContent>
         </Card>
       </div>

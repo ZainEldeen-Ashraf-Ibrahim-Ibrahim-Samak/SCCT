@@ -20,6 +20,7 @@ const OBJECT_ID_PATTERN = /^[a-f0-9]{24}$/i;
 
 function computeFieldVersion(fields: FieldDefinition[], formUpdatedAt?: Date | string | null): string {
   const latest = fields.reduce((acc, field) => {
+    if (!field.updatedAt) return acc;
     const value = field.updatedAt instanceof Date ? field.updatedAt.getTime() : new Date(field.updatedAt).getTime();
     return Number.isNaN(value) ? acc : Math.max(acc, value);
   }, 0);
@@ -33,7 +34,15 @@ function computeFieldVersion(fields: FieldDefinition[], formUpdatedAt?: Date | s
     Number.isNaN(formUpdatedAtValue) ? 0 : formUpdatedAtValue,
   );
 
-  return versionValue > 0 ? new Date(versionValue).toISOString() : "0";
+  if (versionValue === 0 || Number.isNaN(versionValue)) {
+    return "0";
+  }
+
+  try {
+    return new Date(versionValue).toISOString();
+  } catch {
+    return "0";
+  }
 }
 
 /**

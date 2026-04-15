@@ -7,11 +7,49 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 export function SettingsForm() {
   const t = useTranslations("adminSettings");
   const { settings, isLoading, isSaving, isBackingUp, saveSettings, triggerBackup } = useAdminSettings();
   const [localState, setLocalState] = useState<SettingsState | null>(null);
+
+  const [isRestoring, setIsRestoring] = useState(false);
+
+  const handleRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!confirm("WARNING: This will completely replace the current database with the backup data. This action is destructive and cannot be undone. Are you sure?")) {
+      e.target.value = "";
+      return;
+    }
+
+    setIsRestoring(true);
+    const toastId = toast.loading("Restoring system from backup...");
+
+    try {
+      const formData = new FormData();
+      formData.append("backup", file);
+
+      const res = await fetch("/api/admin/system/backup", {
+        method: "POST",
+        body: formData,
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to restore backup");
+
+      toast.success("System restored successfully! Reloading...", { id: toastId });
+      setTimeout(() => window.location.reload(), 2000);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Failed to restore backup";
+      toast.error(message, { id: toastId });
+    } finally {
+      setIsRestoring(false);
+      e.target.value = "";
+    }
+  };
 
   useEffect(() => {
     if (settings) {
@@ -173,6 +211,23 @@ export function SettingsForm() {
           <Button variant="secondary" disabled={isBackingUp} onClick={triggerBackup}>
             {isBackingUp ? t("backingUp") : t("backupNow")}
           </Button>
+          
+          <Button variant="outline" onClick={() => window.location.href = "/api/admin/system/backup"}>
+            Download Backup
+          </Button>
+
+          <div className="relative">
+            <Button variant="destructive" disabled={isRestoring}>
+              {isRestoring ? "Restoring..." : "Upload & Restore"}
+            </Button>
+            <input 
+              type="file" 
+              accept=".json,application/json"
+              onChange={handleRestore}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              disabled={isRestoring}
+            />
+          </div>
         </div>
         
         {settings?.backup.lastRunAt && (

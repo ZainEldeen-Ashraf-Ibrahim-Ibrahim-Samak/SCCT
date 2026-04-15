@@ -122,16 +122,22 @@ export class MongoSubmissionRepository implements SubmissionRepository {
 
         const now = new Date();
         if (doc.resubmissionRequest) {
-          if (
-            doc.resubmissionRequest.status !== "expired" &&
-            doc.resubmissionRequest.expiresAt.getTime() <= now.getTime()
-          ) {
-            doc.resubmissionRequest.status = "expired";
-            await doc.save();
-          } else if (doc.resubmissionRequest.status === "pending_delivery") {
-            doc.resubmissionRequest.status = "delivered";
-            doc.resubmissionRequest.deliveredAt = now;
-            await doc.save();
+          const req = doc.resubmissionRequest;
+          const expiresAt = req.expiresAt instanceof Date ? req.expiresAt : new Date(req.expiresAt);
+          const expiresAtTime = expiresAt.getTime();
+
+          if (!Number.isNaN(expiresAtTime)) {
+            if (
+              req.status !== "expired" &&
+              expiresAtTime <= now.getTime()
+            ) {
+              req.status = "expired";
+              await doc.save();
+            } else if (req.status === "pending_delivery") {
+              req.status = "delivered";
+              req.deliveredAt = now;
+              await doc.save();
+            }
           }
         }
 
@@ -383,6 +389,29 @@ export class MongoSubmissionRepository implements SubmissionRepository {
       return !!result;
     } catch (error) {
       logger.error("Failed to delete submission", { id, error });
+      throw error;
+    }
+  }
+
+  async deleteDraftsOlderThan(date: Date): Promise<number> {
+    try {
+      await connectToDatabase();
+      const draftsToDelete = await SubmissionModel.find({
+        status: "draft",
+        updatedAt: { $lt: date },
+      }).lean();
+
+      let deletedCount = 0;
+      for (const draft of draftsToDelete) {
+        const id = draft._id?.toString();
+        if (id) {
+          const success = await this.delete(id);
+          if (success) deletedCount++;
+        }
+      }
+      return deletedCount;
+    } catch (error) {
+      logger.error("Failed to delete old drafts", { date, error });
       throw error;
     }
   }

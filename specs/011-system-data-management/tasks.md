@@ -28,9 +28,9 @@ description: "Task list for System Data Management implementation"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T007 Implement Settings repository updates in `src/data/repositories/MongoSettingsRepository.ts` to support the new fields.
-- [ ] T008 Update the Settings ViewModel in `src/domain/viewmodels/SettingsViewModel.ts` to expose the new fields to the UI.
-- [ ] T009 Update `src/app/(admin)/settings/page.tsx` to include UI form fields for Draft Auto-Delete Days, Cloudinary Storage Threshold, and Storage Cleanup Target.
+- [x] T007 Implement Settings repository updates in `src/data/repositories/MongoSettingsRepository.ts` to support the new fields.
+- [x] T008 Update the Settings ViewModel in `src/domain/viewmodels/SettingsViewModel.ts` to expose the new fields to the UI.
+- [x] T009 Update `src/app/(admin)/settings/page.tsx` to include UI form fields for Draft Auto-Delete Days, Cloudinary Storage Threshold, and Storage Cleanup Target.
 
 **Checkpoint**: Foundation ready - Admin can now save the necessary configurations.
 
@@ -44,10 +44,10 @@ description: "Task list for System Data Management implementation"
 
 ### Implementation for User Story 1
 
-- [ ] T010 [US1] Create `src/domain/repositories/DraftRepository.ts` interface with `deleteDraftsOlderThan(date: Date)` method (if not exists).
-- [ ] T011 [US1] Implement `deleteDraftsOlderThan` in `src/data/repositories/MongoDraftRepository.ts`.
-- [ ] T012 [US1] Implement `src/app/api/cron/system-cleanup/route.ts` to securely verify `CRON_SECRET` bearer token.
-- [ ] T013 [US1] Update `src/app/api/cron/system-cleanup/route.ts` to fetch `Settings` and execute draft deletion if `draft_retention_days` > 0.
+- [x] T010 [US1] Create `src/domain/repositories/DraftRepository.ts` interface with `deleteDraftsOlderThan(date: Date)` method (if not exists).
+- [x] T011 [US1] Implement `deleteDraftsOlderThan` in `src/data/repositories/MongoDraftRepository.ts`.
+- [x] T012 [US1] Implement `src/app/api/cron/system-cleanup/route.ts` to securely verify `CRON_SECRET` bearer token.
+- [x] T013 [US1] Update `src/app/api/cron/system-cleanup/route.ts` to fetch `Settings` and execute draft deletion if `draft_retention_days` > 0.
 
 **Checkpoint**: At this point, the cron job can successfully clean up old drafts based on the settings.
 
@@ -61,12 +61,12 @@ description: "Task list for System Data Management implementation"
 
 ### Implementation for User Story 2
 
-- [ ] T014 [US2] Create abstract `SystemRepository` in `src/domain/repositories/SystemRepository.ts` with `generateBackup()` and `restoreBackup(data)` methods.
-- [ ] T015 [US2] Implement `MongoSystemRepository` in `src/data/repositories/MongoSystemRepository.ts` using `mongoose.modelNames()` to dynamically discover and serialize all collections for backup.
-- [ ] T016 [US2] Implement transaction-based `restoreBackup` logic in `MongoSystemRepository.ts` using `deleteMany` and `insertMany`.
-- [ ] T017 [US2] Implement GET handler in `src/app/api/admin/system/backup/route.ts` to trigger and return the backup JSON artifact.
-- [ ] T018 [US2] Implement POST handler in `src/app/api/admin/system/backup/route.ts` (or restore route) to process uploaded multipart JSON artifacts.
-- [ ] T019 [US2] Update `src/app/(admin)/settings/page.tsx` UI to include "Download Backup" button and "Upload & Restore Backup" file input.
+- [x] T014 [US2] Create abstract `SystemRepository` in `src/domain/repositories/system-repository.ts` with `generateBackup()` and `restoreBackup(data)` methods.
+- [x] T015 [US2] Implement `MongoSystemRepository` in `src/data/repositories/mongo-system-repository.ts` using `mongoose.modelNames()` to dynamically discover and serialize all collections for backup.
+- [x] T016 [US2] Implement transaction-based `restoreBackup` logic in `MongoSystemRepository.ts` using `deleteMany` and `insertMany`.
+- [x] T017 [US2] Implement GET handler in `src/app/api/admin/system/backup/route.ts` to trigger and return the backup JSON artifact.
+- [x] T018 [US2] Implement POST handler in `src/app/api/admin/system/backup/route.ts` (or restore route) to process uploaded multipart JSON artifacts.
+- [x] T019 [US2] Update `src/app/(admin)/settings/page.tsx` UI to include "Download Backup" button and "Upload & Restore Backup" file input.
 
 **Checkpoint**: Admins can now download full system state and safely restore it via the UI.
 
@@ -80,9 +80,9 @@ description: "Task list for System Data Management implementation"
 
 ### Implementation for User Story 3
 
-- [ ] T020 [US3] Create utility `src/lib/utils/exportUtils.ts` with a recursive object flattening function `flattenNestedData()`.
-- [ ] T021 [US3] Update `src/app/api/admin/system/export/route.ts` to utilize `flattenNestedData()` before passing data to `xlsx.utils.json_to_sheet`.
-- [ ] T022 [US3] Ensure `exportUtils.ts` handles Map structures and translation JSON objects properly (extracting default locale or stringifying).
+- [x] T020 [US3] Create utility `src/lib/utils/exportUtils.ts` with a recursive object flattening function `flattenNestedData()`.
+- [x] T021 [US3] Update `src/app/api/admin/system/export/route.ts` to utilize `flattenNestedData()` before passing data to `xlsx.utils.json_to_sheet`.
+- [x] T022 [US3] Ensure `exportUtils.ts` handles Map structures and translation JSON objects properly (extracting default locale or stringifying).
 
 **Checkpoint**: Data exports now succeed even with complex i18n keys or Maps.
 
@@ -96,12 +96,12 @@ description: "Task list for System Data Management implementation"
 
 ### Implementation for User Story 4
 
-- [ ] T023 [US4] Create abstract `StorageRepository` in `src/domain/repositories/StorageRepository.ts` with `getUsageMetrics()` and `deleteMediaByTarget(target)`.
-- [ ] T024 [US4] Implement `CloudinaryStorageRepository` in `src/data/repositories/CloudinaryStorageRepository.ts` utilizing `cloudinary.v2.api.usage()` and `cloudinary.v2.api.delete_resources()`.
-- [ ] T025 [US4] Implement GET handler in `src/app/api/admin/analytics/cloudinary-usage/route.ts` wrapping the usage metrics with Upstash Redis caching (e.g. 1 hour TTL).
-- [ ] T026 [US4] Create `DashboardAnalyticsViewModel` in `src/domain/viewmodels/DashboardAnalyticsViewModel.ts` to consume the usage API.
-- [ ] T027 [US4] Update `src/app/(admin)/dashboard/page.tsx` to include the Cloudinary Storage Usage widget.
-- [ ] T028 [US4] Update `src/app/api/cron/system-cleanup/route.ts` to check storage usage against `cloudinary_storage_threshold` and invoke `deleteMediaByTarget` on the configured target if exceeded.
+- [x] T023 [US4] Create abstract `StorageRepository` in `src/domain/repositories/storage-repository.ts` with `getUsageMetrics()` and `deleteMediaByTarget(target)`.
+- [x] T024 [US4] Implement `CloudinaryStorageRepository` in `src/data/repositories/cloudinary-storage-repository.ts` utilizing `cloudinary.v2.api.usage()` and `cloudinary.v2.api.delete_resources()`.
+- [x] T025 [US4] Implement GET handler in `src/app/api/admin/analytics/cloudinary-usage/route.ts` wrapping the usage metrics with Upstash Redis caching (e.g. 1 hour TTL).
+- [x] T026 [US4] Create `DashboardAnalyticsViewModel` in `src/presentation/view-models/use-dashboard-analytics.ts` to consume the usage API.
+- [x] T027 [US4] Update `src/app/(admin)/dashboard/page.tsx` to include the Cloudinary Storage Usage widget.
+- [x] T028 [US4] Update `src/app/api/cron/system-cleanup/route.ts` to check storage usage against `cloudinary_storage_threshold` and invoke `deleteMediaByTarget` on the configured target if exceeded.
 
 **Checkpoint**: Cloudinary limits are now visible on the dashboard and automatically managed by the cron task.
 
@@ -114,7 +114,7 @@ description: "Task list for System Data Management implementation"
 - [ ] T029 Update AR/EN translation files via `npm run i18n:sync` for all new settings labels, buttons, and dashboard widget text.
 - [ ] T030 Validate UI responsiveness and error handling (toast notifications) for backup/restore failures on the Settings page.
 - [ ] T031 Verify `clean-up` cron job handles partial failures gracefully (e.g. if draft deletion fails, it still attempts Cloudinary cleanup).
-- [ ] T032 [Principle VIII] Execute full production build (`npm run build`) to verify all new dependencies and type definitions.
+- [x] T032 [Principle VIII] Execute full production build (`npm run build`) to verify all new dependencies and type definitions.
 - [ ] T033 [Principle VIII] Test the destructive Restore functionality locally with a large generated dataset to verify memory usage and transaction stability before deploying.
 
 ---

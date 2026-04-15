@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { routing } from "@/i18n/routing";
 import { detectMaliciousContent } from "@/lib/api-security";
+import { logger } from "./lib/dev-logger";
 
 type RateBucket = {
   count: number;
@@ -25,13 +26,15 @@ const defaultAllowedApiOrigins = [
   "https://localhost:3000",
 ];
 
-const allowedApiOrigins = new Set(
-  (process.env.APP_ALLOWED_ORIGINS ?? "")
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter((origin) => origin.length > 0)
-    .concat(defaultAllowedApiOrigins),
-);
+const parseOrigins = (raw: string | undefined) => 
+  (raw ?? "").split(",").map(s => s.trim()).filter(Boolean);
+
+const allowedApiOrigins = new Set([
+  ...defaultAllowedApiOrigins,
+  ...parseOrigins(process.env.APP_ALLOWED_ORIGINS),
+  ...parseOrigins(process.env.APP_WEBVIEW_ALLOWED_ORIGINS),
+  ...parseOrigins(process.env.NEXT_PUBLIC_APP_URL),
+]);
 
 const rateLimitStore = globalThis.__scctApiRateLimitStore ?? new Map<string, RateBucket>();
 if (!globalThis.__scctApiRateLimitStore) {
@@ -135,15 +138,27 @@ function withRateLimitHeaders(response: NextResponse, rate: { limit: number; rem
   return response;
 }
 
+function isOriginAllowed(origin: string | null): boolean {
+  if (!origin) return false;
+  if (allowedApiOrigins.has(origin)) return true;
+
+  // Allow localhost with any port
+  if (/^https?:\/\/localhost(:\d+)?$/.test(origin)) return true;
+
+  return false;
+}
+
 function withApiCorsHeaders(response: NextResponse, origin: string | null) {
   response.headers.append("Vary", "Origin");
   response.headers.set("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
-  response.headers.set("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Requested-With,X-CSRF-Token");
+  response.headers.set("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Requested-With,X-CSRF-Token,Accept,Origin");
   response.headers.set("Access-Control-Max-Age", "86400");
 
-  if (origin && allowedApiOrigins.has(origin)) {
-    response.headers.set("Access-Control-Allow-Origin", origin);
+  if (isOriginAllowed(origin)) {
+    response.headers.set("Access-Control-Allow-Origin", origin!);
     response.headers.set("Access-Control-Allow-Credentials", "true");
+  } else if (origin) {
+    logger.debug(`Origin ${origin} not explicitly allowed in CORS check`);
   }
 
   return response;

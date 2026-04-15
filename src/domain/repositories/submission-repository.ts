@@ -25,4 +25,5 @@ export interface SubmissionRepository {
     contactRecords?: CreateSubmissionInput["contactRecords"],
   ): Promise<Submission | null>;
   delete(id: string): Promise<boolean>;
+  deleteDraftsOlderThan(date: Date): Promise<number>;
 }
