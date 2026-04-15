@@ -35,6 +35,11 @@ interface SubmitFormData {
   }>;
 }
 
+interface ResubmitPreconditions {
+  expectedFormVersion?: string | null;
+  expectedSubmissionUpdatedAt?: string | null;
+}
+
 const OBJECT_ID_PATTERN = /^[a-f0-9]{24}$/i;
 const DEFAULT_CONTACT_NAME = "Primary Contact";
 
@@ -55,6 +60,7 @@ function normalizeSnapshotFields(snapshot: unknown): Array<{
   nameEn: string;
   inputType: InputType;
   isMultiple?: boolean;
+  updatedAt?: Date | string | null;
   dropdownOptionsEn?: string[];
   dropdownOptionsAr?: string[];
   validationRules?: {
@@ -84,6 +90,7 @@ function normalizeSnapshotFields(snapshot: unknown): Array<{
         nameEn: String(candidate.nameEn ?? "Unnamed Field"),
         inputType: normalizeInputType(candidate.inputType),
         isMultiple: Boolean(candidate.isMultiple),
+        updatedAt: (candidate.updatedAt as Date | string | null | undefined) ?? null,
         dropdownOptionsEn: Array.isArray(candidate.dropdownOptionsEn)
           ? candidate.dropdownOptionsEn.map((v) => String(v))
           : [],
@@ -94,6 +101,44 @@ function normalizeSnapshotFields(snapshot: unknown): Array<{
       };
     })
     .filter((field): field is NonNullable<typeof field> => !!field);
+}
+
+function computeSnapshotVersion(snapshotFields: Array<{ updatedAt?: Date | string | null }>): string {
+  const latest = snapshotFields.reduce((acc, field) => {
+    if (!field.updatedAt) return acc;
+    const value = field.updatedAt instanceof Date
+      ? field.updatedAt.getTime()
+      : new Date(field.updatedAt).getTime();
+    return Number.isNaN(value) ? acc : Math.max(acc, value);
+  }, 0);
+
+  if (latest === 0 || Number.isNaN(latest)) {
+    return "0";
+  }
+
+  try {
+    return new Date(latest).toISOString();
+  } catch {
+    return "0";
+  }
+}
+
+function normalizeIso(value: Date | string | null | undefined): string | null {
+  if (!value) return null;
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value.toISOString();
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  const date = new Date(trimmed);
+  if (Number.isNaN(date.getTime())) {
+    return trimmed;
+  }
+
+  return date.toISOString();
 }
 
 function hasValueContent(value: string | number | string[] | null | undefined): boolean {
@@ -300,7 +345,11 @@ export class SubmitFormUseCase {
     return { success: true, submission };
   }
 
-  async resubmit(accessToken: string, data: SubmitFormData): Promise<{ success: boolean; submission?: Submission; error?: string }> {
+  async resubmit(
+    accessToken: string,
+    data: SubmitFormData,
+    preconditions?: ResubmitPreconditions,
+  ): Promise<{ success: boolean; submission?: Submission; error?: string }> {
     const submission = await this.submissionRepo.findByToken(accessToken);
     if (!submission) {
       return { success: false, error: "Submission not found" };
@@ -341,6 +390,22 @@ export class SubmitFormUseCase {
         submissionId: submission.id,
       });
       return { success: false, error: "Submission form snapshot is invalid" };
+    }
+
+    const expectedFormVersion = preconditions?.expectedFormVersion?.trim();
+    if (expectedFormVersion) {
+      const currentFormVersion = computeSnapshotVersion(snapshotFields);
+      if (currentFormVersion !== expectedFormVersion) {
+        return { success: false, error: "STALE_FORM_VERSION" };
+      }
+    }
+
+    const expectedSubmissionUpdatedAt = preconditions?.expectedSubmissionUpdatedAt?.trim();
+    if (expectedSubmissionUpdatedAt) {
+      const currentSubmissionUpdatedAt = normalizeIso(submission.updatedAt);
+      if (currentSubmissionUpdatedAt !== normalizeIso(expectedSubmissionUpdatedAt)) {
+        return { success: false, error: "STALE_SUBMISSION_VERSION" };
+      }
     }
 
     if (!isObjectId(submission.id)) {

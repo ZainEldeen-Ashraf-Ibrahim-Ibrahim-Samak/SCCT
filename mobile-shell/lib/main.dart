@@ -10,6 +10,7 @@ import "presentation/screens/scan_screen.dart";
 import "presentation/screens/splash_screen.dart";
 import "presentation/screens/startup_error_screen.dart";
 import "presentation/view_models/scan_view_model.dart";
+import "widgets/secure_widget.dart";
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,7 +49,8 @@ class _ScctMobileAppState extends State<ScctMobileApp> {
 
   void _toggleTheme() {
     setState(() {
-      _themeMode = _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+      _themeMode =
+          _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
     });
   }
 
@@ -71,116 +73,121 @@ class _ScctMobileAppState extends State<ScctMobileApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: BrandConfig.siteName,
-      locale: _locale,
-      supportedLocales: const <Locale>[Locale("en"), Locale("ar")],
-      localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      themeMode: _themeMode,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: const Color(0xFF0F172A),
-        brightness: Brightness.light,
-      ),
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: const Color(0xFF0F172A),
-        brightness: Brightness.dark,
-      ),
-      home: FutureBuilder(
-        future: _startupFuture,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return SplashScreen(
+    return SecureWidget(
+      child: MaterialApp(
+        title: BrandConfig.siteName,
+        locale: _locale,
+        supportedLocales: const <Locale>[Locale("en"), Locale("ar")],
+        localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        themeMode: _themeMode,
+        theme: ThemeData(
+          useMaterial3: true,
+          colorSchemeSeed: const Color(0xFF0F172A),
+          brightness: Brightness.light,
+        ),
+        darkTheme: ThemeData(
+          useMaterial3: true,
+          colorSchemeSeed: const Color(0xFF0F172A),
+          brightness: Brightness.dark,
+        ),
+        home: FutureBuilder(
+          future: _startupFuture,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return SplashScreen(
+                onToggleTheme: _toggleTheme,
+                onLocaleSelected: _setLocaleFromCode,
+              );
+            }
+
+            final result = snapshot.data!;
+            if (!result.ok || result.config == null) {
+              return StartupErrorScreen(
+                errorCode: result.errorCode ?? "unknown",
+                onToggleTheme: _toggleTheme,
+                onLocaleSelected: _setLocaleFromCode,
+                onRetry: _retryStartup,
+              );
+            }
+
+            final configLocale = result.locale;
+            if (!_appliedStartupLocale && configLocale != null) {
+              final configured =
+                  Locale(configLocale == AppLocale.ar ? "ar" : "en");
+              if (_locale != configured) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) {
+                    return;
+                  }
+                  setState(() {
+                    _locale = configured;
+                    _appliedStartupLocale = true;
+                  });
+                });
+              } else {
+                _appliedStartupLocale = true;
+              }
+            }
+
+            final scanViewModel = ScanViewModel(
+              policy: NavigationPolicy(
+                allowedHosts: result.config!.allowedHosts,
+                enforceHttps: true,
+                allowSubdomains: true,
+                blockedPathPrefixes: const <String>["/admin/internal"],
+                submissionPathSegment: result.config!.submissionPathSegment,
+              ),
+            );
+
+            return ScanScreen(
+              viewModel: scanViewModel,
+              themeMode: _themeMode,
+              currentLocale: _locale,
               onToggleTheme: _toggleTheme,
               onLocaleSelected: _setLocaleFromCode,
-            );
-          }
-
-          final result = snapshot.data!;
-          if (!result.ok || result.config == null) {
-            return StartupErrorScreen(
-              errorCode: result.errorCode ?? "unknown",
-              onToggleTheme: _toggleTheme,
-              onLocaleSelected: _setLocaleFromCode,
-              onRetry: _retryStartup,
-            );
-          }
-
-          final configLocale = result.locale;
-          if (!_appliedStartupLocale && configLocale != null) {
-            final configured = Locale(configLocale == AppLocale.ar ? "ar" : "en");
-            if (_locale != configured) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (!mounted) {
+              onAccepted: (scanResult) {
+                final submissionToken = scanResult.submissionToken;
+                if (submissionToken != null &&
+                    submissionToken.trim().isNotEmpty) {
+                  Navigator.of(context).push(
+                    AppRouter.toNativeSubmission(
+                      token: submissionToken,
+                      appBaseUrl: result.config!.appBaseUrl,
+                      localeCode: _locale.languageCode,
+                      apiTimeoutMs: result.config!.apiTimeoutMs,
+                      draftAutosaveDebounceMs:
+                          result.config!.draftAutosaveDebounceMs,
+                      themeMode: _themeMode,
+                      currentLocale: _locale,
+                      onToggleTheme: _toggleTheme,
+                      onLocaleSelected: _setLocaleFromCode,
+                    ),
+                  );
                   return;
                 }
-                setState(() {
-                  _locale = configured;
-                  _appliedStartupLocale = true;
-                });
-              });
-            } else {
-              _appliedStartupLocale = true;
-            }
-          }
 
-          final scanViewModel = ScanViewModel(
-            policy: NavigationPolicy(
-              allowedHosts: result.config!.allowedHosts,
-              enforceHttps: true,
-              allowSubdomains: true,
-              blockedPathPrefixes: const <String>["/admin/internal"],
-              submissionPathSegment: result.config!.submissionPathSegment,
-            ),
-          );
+                final uri = scanResult.acceptedUri;
+                if (uri == null) {
+                  return;
+                }
 
-          return ScanScreen(
-            viewModel: scanViewModel,
-            themeMode: _themeMode,
-            currentLocale: _locale,
-            onToggleTheme: _toggleTheme,
-            onLocaleSelected: _setLocaleFromCode,
-            onAccepted: (scanResult) {
-              final submissionToken = scanResult.submissionToken;
-              if (submissionToken != null && submissionToken.trim().isNotEmpty) {
                 Navigator.of(context).push(
-                  AppRouter.toNativeSubmission(
-                    token: submissionToken,
-                    appBaseUrl: result.config!.appBaseUrl,
-                    localeCode: _locale.languageCode,
-                    apiTimeoutMs: result.config!.apiTimeoutMs,
-                    draftAutosaveDebounceMs: result.config!.draftAutosaveDebounceMs,
+                  AppRouter.toWebview(
+                    uri,
                     themeMode: _themeMode,
                     currentLocale: _locale,
                     onToggleTheme: _toggleTheme,
                     onLocaleSelected: _setLocaleFromCode,
                   ),
                 );
-                return;
-              }
-
-              final uri = scanResult.acceptedUri;
-              if (uri == null) {
-                return;
-              }
-
-              Navigator.of(context).push(
-                AppRouter.toWebview(
-                  uri,
-                  themeMode: _themeMode,
-                  currentLocale: _locale,
-                  onToggleTheme: _toggleTheme,
-                  onLocaleSelected: _setLocaleFromCode,
-                ),
-              );
-            },
-          );
-        },
+              },
+            );
+          },
+        ),
       ),
     );
   }

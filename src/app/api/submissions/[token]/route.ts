@@ -68,6 +68,16 @@ async function getSubmitDependencies(): Promise<SubmitRouteDependencies> {
 
 export const dynamic = "force-dynamic";
 
+function normalizeVersion(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function conflictResponse(code: "STALE_FORM_VERSION" | "STALE_SUBMISSION_VERSION") {
+  return errorResponse("Client state is stale. Refresh and retry.", 409, code);
+}
+
 function summarizeFieldValues(
   fieldValues: Array<{
     fieldDefinitionId: string;
@@ -112,6 +122,16 @@ export async function POST(
 ) {
   try {
     const { token } = await params;
+    const expectedFormVersion = normalizeVersion(request.headers.get("if-match-form-version"));
+
+    if (expectedFormVersion) {
+      const current = await viewUseCase.execute(token);
+      const currentFormVersion = normalizeVersion(current?.formVersion);
+      if (!current || !currentFormVersion || currentFormVersion !== expectedFormVersion) {
+        return conflictResponse("STALE_FORM_VERSION");
+      }
+    }
+
     const {
       createSubmissionSchema,
       submitUseCase,
@@ -182,6 +202,36 @@ export async function POST(
 export async function PATCH(request: Request, { params }: { params: Promise<{ token: string }> }) {
   try {
     const { token } = await params;
+    const expectedFormVersion = normalizeVersion(request.headers.get("if-match-form-version"));
+    const expectedSubmissionUpdatedAt = normalizeVersion(
+      request.headers.get("if-match-submission-updated-at"),
+    );
+
+    if (expectedFormVersion || expectedSubmissionUpdatedAt) {
+      const current = await viewUseCase.execute(token);
+      const currentFormVersion = normalizeVersion(current?.formVersion);
+      const currentSubmissionUpdatedAt = normalizeVersion(
+        current?.submission?.updatedAt
+          ? new Date(current.submission.updatedAt).toISOString()
+          : null,
+      );
+
+      if (!current || current.isNew) {
+        return errorResponse("Not found", 404, "NOT_FOUND");
+      }
+
+      if (expectedFormVersion && currentFormVersion !== expectedFormVersion) {
+        return conflictResponse("STALE_FORM_VERSION");
+      }
+
+      if (
+        expectedSubmissionUpdatedAt &&
+        (!currentSubmissionUpdatedAt || currentSubmissionUpdatedAt !== expectedSubmissionUpdatedAt)
+      ) {
+        return conflictResponse("STALE_SUBMISSION_VERSION");
+      }
+    }
+
     const {
       createSubmissionSchema,
       submitUseCase,
@@ -216,9 +266,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ to
       clientContact: parsed.data.clientContact,
       contactRecords: parsed.data.contactRecords,
       fieldValues: parsed.data.fieldValues,
+    }, {
+      expectedFormVersion,
+      expectedSubmissionUpdatedAt,
     });
 
     if (!result.success || !result.submission) {
+      if (result.error === "STALE_FORM_VERSION" || result.error === "STALE_SUBMISSION_VERSION") {
+        return errorResponse("Client state is stale. Refresh and retry.", 409, result.error);
+      }
+
       logger.warn("Submission PATCH rejected by use-case", {
         token,
         reason: result.error ?? "Unknown",

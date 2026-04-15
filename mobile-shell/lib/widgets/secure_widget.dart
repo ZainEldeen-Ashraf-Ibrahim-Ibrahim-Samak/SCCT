@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -9,10 +8,10 @@ class SecureWidget extends StatefulWidget {
   final Widget child;
 
   /// Creates a [SecureWidget] that displays the given [child].
-  const SecureWidget({Key? key, required this.child}) : super(key: key);
+  const SecureWidget({super.key, required this.child});
 
   @override
-  _SecureWidgetState createState() => _SecureWidgetState();
+  State<SecureWidget> createState() => _SecureWidgetState();
 }
 
 class _SecureWidgetState extends State<SecureWidget>
