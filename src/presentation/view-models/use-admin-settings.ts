@@ -12,6 +12,9 @@ export interface SettingsState {
     activeInterval: "minutely" | "hourly" | "daily" | "monthly" | "none";
     timezone: string;
   };
+  draft_retention_days: number | null;
+  cloudinary_storage_threshold: number | null;
+  storage_cleanup_target: "drafts" | "unused_media" | null;
 }
 
 export function useAdminSettings() {

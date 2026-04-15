@@ -31,7 +31,7 @@ export async function PATCH(request: Request) {
     }
 
     const parsedBody = await parseSecureJson<
-      Partial<Pick<ISettingsConfiguration, "backup" | "cron">>
+      Partial<Pick<ISettingsConfiguration, "backup" | "cron" | "draft_retention_days" | "cloudinary_storage_threshold" | "storage_cleanup_target">>
     >(request);
     if (!parsedBody.success) {
       return errorResponse(parsedBody.error, 400, parsedBody.code);
@@ -42,6 +42,9 @@ export async function PATCH(request: Request) {
     const updated = await useCase.updateSettings(updaterId, {
       backup: body.backup,
       cron: body.cron,
+      draft_retention_days: body.draft_retention_days,
+      cloudinary_storage_threshold: body.cloudinary_storage_threshold,
+      storage_cleanup_target: body.storage_cleanup_target,
     });
 
     return successResponse(updated);

@@ -8,6 +8,7 @@ import "package:mobile_scanner/mobile_scanner.dart";
 
 import "../../config/brand_config.dart";
 import "../components/app_logo.dart";
+import "scan_error_sheet.dart";
 import "../view_models/scan_view_model.dart";
 
 class ScanScreen extends StatefulWidget {
@@ -71,6 +72,7 @@ class _ScanScreenState extends State<ScanScreen> {
       "mobile.scan.noPhoto": "No photo selected",
       "mobile.scan.decoding": "Decoding QR from image...",
       "mobile.scan.noQrInPhoto": "No QR code found in this photo.",
+      "mobile.scan.errorTitle": "Scan issue",
     },
     "ar": {
       "mobile.home.title": "ماسح QR الذكي",
@@ -99,6 +101,7 @@ class _ScanScreenState extends State<ScanScreen> {
       "mobile.scan.noPhoto": "لا توجد صورة مختارة",
       "mobile.scan.decoding": "يتم قراءة رمز QR من الصورة...",
       "mobile.scan.noQrInPhoto": "لا يوجد رمز QR في هذه الصورة.",
+      "mobile.scan.errorTitle": "مشكلة في المسح",
     },
   };
 
@@ -533,8 +536,6 @@ class _ScanScreenState extends State<ScanScreen> {
     final dropDrag = isDark ? const Color(0xFF164166) : const Color(0xFFD9ECFD);
     final infoBg = isDark ? const Color(0xFF183A57) : const Color(0xFFEAF5FF);
     final infoText = isDark ? const Color(0xFFB9DFFF) : const Color(0xFF1F5C8E);
-    final errorBg = isDark ? const Color(0xFF4A1F23) : const Color(0xFFFDECEF);
-    final errorText = isDark ? const Color(0xFFFFC2C5) : const Color(0xFFA33139);
     final actionChipBg = isDark ? const Color(0xFF12314D) : const Color(0xFFE4EFF9);
     final actionChipBorder = isDark ? const Color(0xFF2D5D84) : const Color(0xFFD0E0EF);
     final actionChipFg = isDark ? const Color(0xFFE5F2FF) : const Color(0xFF1B4B75);
@@ -962,27 +963,15 @@ class _ScanScreenState extends State<ScanScreen> {
             ],
             if (_error != null) ...[
               const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: errorBg,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.error_outline_rounded, color: errorText, size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _t(_error!),
-                        style: TextStyle(
-                          color: errorText,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              ScanErrorSheet(
+                title: _t("mobile.scan.errorTitle"),
+                message: _t(_error!),
+                themeMode: widget.themeMode,
+                onDismiss: () {
+                  setState(() {
+                    _error = null;
+                  });
+                },
               ),
             ],
           ],

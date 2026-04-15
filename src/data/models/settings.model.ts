@@ -11,6 +11,9 @@ export interface ISettingsConfiguration extends Document {
     activeInterval: "minutely" | "hourly" | "daily" | "monthly" | "none";
     timezone: string;
   };
+  draft_retention_days?: number | null;
+  cloudinary_storage_threshold?: number | null;
+  storage_cleanup_target?: string | null;
   updatedAt: Date;
   updatedBy: string;
 }
@@ -26,6 +29,9 @@ const SettingsConfigurationSchema = new Schema<ISettingsConfiguration>({
     activeInterval: { type: String, enum: ["minutely", "hourly", "daily", "monthly", "none"], default: "none" },
     timezone: { type: String, default: "UTC" },
   },
+  draft_retention_days: { type: Number, default: null, min: 0 },
+  cloudinary_storage_threshold: { type: Number, default: null, min: 1, max: 100 },
+  storage_cleanup_target: { type: String, enum: ["drafts", "unused_media", null], default: null },
   updatedAt: { type: Date, default: Date.now },
   updatedBy: { type: String, required: true },
 }, {

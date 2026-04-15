@@ -13,12 +13,12 @@ description: "Task list for System Data Management implementation"
 
 **Purpose**: Project initialization and base configuration for new dependencies.
 
-- [ ] T001 Install `xlsx` package and types in `package.json`
-- [ ] T002 [P] Create empty API route file `src/app/api/cron/system-cleanup/route.ts`
-- [ ] T003 [P] Create empty API route file `src/app/api/admin/system/backup/route.ts`
-- [ ] T004 [P] Create empty API route file `src/app/api/admin/system/export/route.ts`
-- [ ] T005 [P] Create empty API route file `src/app/api/admin/analytics/cloudinary-usage/route.ts`
-- [ ] T006 Update `src/data/models/Settings.ts` to include `draft_retention_days`, `cloudinary_storage_threshold`, and `storage_cleanup_target`
+- [x] T001 Install `xlsx` package and types in `package.json`
+- [x] T002 [P] Create empty API route file `src/app/api/cron/system-cleanup/route.ts`
+- [x] T003 [P] Create empty API route file `src/app/api/admin/system/backup/route.ts`
+- [x] T004 [P] Create empty API route file `src/app/api/admin/system/export/route.ts`
+- [x] T005 [P] Create empty API route file `src/app/api/admin/analytics/cloudinary-usage/route.ts`
+- [x] T006 Update `src/data/models/Settings.ts` to include `draft_retention_days`, `cloudinary_storage_threshold`, and `storage_cleanup_target`
 
 ---
 

@@ -27,7 +27,7 @@ class _ScctMobileAppState extends State<ScctMobileApp> {
   ThemeMode _themeMode = ThemeMode.light;
   Locale _locale = const Locale("ar");
   bool _appliedStartupLocale = false;
-  late final Future<StartupCoordinatorResult> _startupFuture;
+  late Future<StartupCoordinatorResult> _startupFuture;
 
   @override
   void initState() {
@@ -62,6 +62,13 @@ class _ScctMobileAppState extends State<ScctMobileApp> {
     _setLocale(localeCode == "ar" ? AppLocale.ar : AppLocale.en);
   }
 
+  void _retryStartup() {
+    setState(() {
+      _appliedStartupLocale = false;
+      _startupFuture = _loadStartup();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -88,12 +95,20 @@ class _ScctMobileAppState extends State<ScctMobileApp> {
         future: _startupFuture,
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
-            return const SplashScreen();
+            return SplashScreen(
+              onToggleTheme: _toggleTheme,
+              onLocaleSelected: _setLocaleFromCode,
+            );
           }
 
           final result = snapshot.data!;
           if (!result.ok || result.config == null) {
-            return StartupErrorScreen(errorCode: result.errorCode ?? "unknown");
+            return StartupErrorScreen(
+              errorCode: result.errorCode ?? "unknown",
+              onToggleTheme: _toggleTheme,
+              onLocaleSelected: _setLocaleFromCode,
+              onRetry: _retryStartup,
+            );
           }
 
           final configLocale = result.locale;
