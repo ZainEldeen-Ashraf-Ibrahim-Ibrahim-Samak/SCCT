@@ -7,7 +7,6 @@ import "package:image_picker/image_picker.dart";
 import "package:mobile_scanner/mobile_scanner.dart";
 
 import "../../config/brand_config.dart";
-import "../../i18n/index.dart";
 import "../components/app_logo.dart";
 import "scan_error_sheet.dart";
 import "../view_models/scan_view_model.dart";

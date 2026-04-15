@@ -31,29 +31,13 @@ class StartupErrorScreen extends StatelessWidget {
   }
 
   String _message(BuildContext context) {
-    final isArabic = _localeCode(context) == "ar";
-    final map = <String, String>{
-      "config_missing": isArabic
-          ? "بعض إعدادات التشغيل المطلوبة مفقودة."
-          : "Some required configuration values are missing.",
-      "config_invalid_url": isArabic
-          ? "رابط التشغيل الأساسي غير صالح."
-          : "The base startup URL is invalid.",
-      "config_invalid_hosts": isArabic
-          ? "قائمة النطاقات المسموح بها غير صالحة."
-          : "Allowed hosts configuration is invalid.",
-      "config_invalid_locale": isArabic
-          ? "إعدادات اللغة غير صالحة."
-          : "Locale configuration is invalid.",
-      "config_invalid_numeric_range": isArabic
-          ? "قيم إعدادات التشغيل خارج النطاق المسموح."
-          : "Startup numeric configuration is out of range.",
-    };
-
-    return map[errorCode] ??
-        (isArabic
-            ? "حدث خطأ في إعدادات التشغيل."
-            : "Startup configuration error occurred.");
+    final mappedKey = "mobile.startupError.$errorCode";
+    final text = _t(context, mappedKey);
+    // If the translation returns the key itself, it means it's not found
+    if (text == mappedKey) {
+      return _t(context, "mobile.startupError.unknown");
+    }
+    return text;
   }
 
   @override
