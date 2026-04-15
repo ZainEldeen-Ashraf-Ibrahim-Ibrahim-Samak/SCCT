@@ -97,17 +97,17 @@ export function AdminDashboard() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cloudinary Storage</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("cloudinaryStorageTitle")}</CardTitle>
             <HardDrive className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             {isLoadingUsage ? (
-              <div className="text-sm text-muted-foreground animate-pulse">Loading metrics...</div>
+              <div className="text-sm text-muted-foreground animate-pulse">{t("loadingMetrics")}</div>
             ) : cloudinaryUsage ? (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span>Used: {(cloudinaryUsage.storage.usage / 1024 / 1024).toFixed(2)} MB</span>
-                  <span className="text-muted-foreground">Limit: {(cloudinaryUsage.storage.limit / 1024 / 1024 / 1024).toFixed(2)} GB</span>
+                  <span>{t("used", { amount: `${(cloudinaryUsage.storage.usage / 1024 / 1024).toFixed(2)} MB` })}</span>
+                  <span className="text-muted-foreground">{t("limit", { amount: `${(cloudinaryUsage.storage.limit / 1024 / 1024 / 1024).toFixed(2)} GB` })}</span>
                 </div>
                 <div className="h-2 bg-secondary rounded-full overflow-hidden">
                   <div 
@@ -116,28 +116,28 @@ export function AdminDashboard() {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground pt-1">
-                  {(cloudinaryUsage.storage.used_percent * 100).toFixed(1)}% of your quota
+                  {t("quotaUsed", { percent: (cloudinaryUsage.storage.used_percent * 100).toFixed(1) })}
                 </p>
               </div>
             ) : (
-              <div className="text-sm text-destructive">Failed to load storage metrics</div>
+              <div className="text-sm text-destructive">{t("failedToLoadStorage")}</div>
             )}
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cloudinary Bandwidth</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("cloudinaryBandwidthTitle")}</CardTitle>
             <Cloud className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
             {isLoadingUsage ? (
-              <div className="text-sm text-muted-foreground animate-pulse">Loading metrics...</div>
+              <div className="text-sm text-muted-foreground animate-pulse">{t("loadingMetrics")}</div>
             ) : cloudinaryUsage ? (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span>Used: {(cloudinaryUsage.bandwidth.usage / 1024 / 1024).toFixed(2)} MB</span>
-                  <span className="text-muted-foreground">Limit: {(cloudinaryUsage.bandwidth.limit / 1024 / 1024 / 1024).toFixed(2)} GB</span>
+                  <span>{t("used", { amount: `${(cloudinaryUsage.bandwidth.usage / 1024 / 1024).toFixed(2)} MB` })}</span>
+                  <span className="text-muted-foreground">{t("limit", { amount: `${(cloudinaryUsage.bandwidth.limit / 1024 / 1024 / 1024).toFixed(2)} GB` })}</span>
                 </div>
                 <div className="h-2 bg-secondary rounded-full overflow-hidden">
                   <div 
@@ -146,11 +146,11 @@ export function AdminDashboard() {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground pt-1">
-                  {(cloudinaryUsage.bandwidth.used_percent * 100).toFixed(1)}% of your quota
+                  {t("quotaUsed", { percent: (cloudinaryUsage.bandwidth.used_percent * 100).toFixed(1) })}
                 </p>
               </div>
             ) : (
-              <div className="text-sm text-destructive">Failed to load bandwidth metrics</div>
+              <div className="text-sm text-destructive">{t("failedToLoadBandwidth")}</div>
             )}
           </CardContent>
         </Card>

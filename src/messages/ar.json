@@ -103,7 +103,15 @@
     "allSubmissions": "جميع الطلبات",
     "noSubmissions": "لا توجد طلبات بعد",
     "filterByStatus": "تصفية حسب الحالة",
-    "allStatuses": "جميع الحالات"
+    "allStatuses": "جميع الحالات",
+    "cloudinaryStorageTitle": "[AR] Cloudinary Storage",
+    "cloudinaryBandwidthTitle": "[AR] Cloudinary Bandwidth",
+    "loadingMetrics": "[AR] Loading metrics...",
+    "failedToLoadStorage": "[AR] Failed to load storage metrics",
+    "failedToLoadBandwidth": "[AR] Failed to load bandwidth metrics",
+    "quotaUsed": "[AR] {percent}% of your quota",
+    "used": "[AR] Used: {amount}",
+    "limit": "[AR] Limit: {amount}"
   },
   "forms": {
     "title": "قوالب النماذج",
@@ -468,7 +476,20 @@
     "backupLoading": "جارٍ تنفيذ النسخ الاحتياطي لقاعدة البيانات...",
     "backupSuccess": "تم تصدير النسخة الاحتياطية بنجاح!",
     "backupError": "فشل النسخ الاحتياطي",
-    "loadSettingsError": "فشل تحميل الإعدادات"
+    "loadSettingsError": "فشل تحميل الإعدادات",
+    "draftRetentionTitle": "[AR] Draft Auto-Delete Days",
+    "draftRetentionHint": "[AR] Days to keep drafts before auto-deletion.",
+    "cloudinaryThresholdTitle": "[AR] Cloudinary Storage Threshold (%)",
+    "cloudinaryThresholdHint": "[AR] Threshold limit to trigger auto-cleanup.",
+    "storageCleanupTitle": "[AR] Storage Cleanup Target",
+    "storageCleanupHint": "[AR] Action taken when the storage threshold is reached. Only Cloudinary media is deleted, DB records remain intact.",
+    "storageCleanupTargetNone": "[AR] None (Disable auto-cleanup)",
+    "storageCleanupTargetDrafts": "[AR] Drafts (Delete media associated with drafts)",
+    "storageCleanupTargetUnused": "[AR] Unused Media",
+    "downloadBackup": "[AR] Download Backup",
+    "uploadRestore": "[AR] Upload & Restore",
+    "restoring": "[AR] Restoring...",
+    "dataRetentionTitle": "[AR] Data Retention & Cleanup"
   },
   "settings": {
     "title": "الإعدادات",

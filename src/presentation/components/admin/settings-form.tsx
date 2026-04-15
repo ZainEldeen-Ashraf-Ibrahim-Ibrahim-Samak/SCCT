@@ -134,11 +134,11 @@ export function SettingsForm() {
 
         <div className="space-y-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
           <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 pb-2">
-            Data Retention & Cleanup
+            {t("dataRetentionTitle")}
           </h3>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="draft_retention_days">Draft Auto-Delete Days</Label>
+              <Label htmlFor="draft_retention_days">{t("draftRetentionTitle")}</Label>
               <Input
                 id="draft_retention_days"
                 type="number"
@@ -152,11 +152,11 @@ export function SettingsForm() {
                   })
                 }
               />
-              <p className="text-xs text-zinc-500">Days to keep drafts before auto-deletion.</p>
+              <p className="text-xs text-zinc-500">{t("draftRetentionHint")}</p>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="cloudinary_storage_threshold">Cloudinary Storage Threshold (%)</Label>
+              <Label htmlFor="cloudinary_storage_threshold">{t("cloudinaryThresholdTitle")}</Label>
               <Input
                 id="cloudinary_storage_threshold"
                 type="number"
@@ -171,11 +171,11 @@ export function SettingsForm() {
                   })
                 }
               />
-              <p className="text-xs text-zinc-500">Threshold limit to trigger auto-cleanup.</p>
+              <p className="text-xs text-zinc-500">{t("cloudinaryThresholdHint")}</p>
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="storage_cleanup_target">Storage Cleanup Target</Label>
+              <Label htmlFor="storage_cleanup_target">{t("storageCleanupTitle")}</Label>
               <Select
                 value={localState.storage_cleanup_target || "none"}
                 onValueChange={(val) =>
@@ -189,13 +189,13 @@ export function SettingsForm() {
                   <SelectValue placeholder="Select target to clean up" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None (Disable auto-cleanup)</SelectItem>
-                  <SelectItem value="drafts">Drafts (Delete media associated with drafts)</SelectItem>
-                  <SelectItem value="unused_media">Unused Media</SelectItem>
+                  <SelectItem value="none">{t("storageCleanupTargetNone")}</SelectItem>
+                  <SelectItem value="drafts">{t("storageCleanupTargetDrafts")}</SelectItem>
+                  <SelectItem value="unused_media">{t("storageCleanupTargetUnused")}</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-xs text-zinc-500">
-                Action taken when the storage threshold is reached. Only Cloudinary media is deleted, DB records remain intact.
+                {t("storageCleanupHint")}
               </p>
             </div>
           </div>
@@ -213,12 +213,12 @@ export function SettingsForm() {
           </Button>
           
           <Button variant="outline" onClick={() => window.location.href = "/api/admin/system/backup"}>
-            Download Backup
+            {t("downloadBackup")}
           </Button>
 
           <div className="relative">
             <Button variant="destructive" disabled={isRestoring}>
-              {isRestoring ? "Restoring..." : "Upload & Restore"}
+              {isRestoring ? t("restoring") : t("uploadRestore")}
             </Button>
             <input 
               type="file" 

@@ -111,11 +111,11 @@ description: "Task list for System Data Management implementation"
 
 **Purpose**: Improvements that affect multiple user stories and system integrity.
 
-- [ ] T029 Update AR/EN translation files via `npm run i18n:sync` for all new settings labels, buttons, and dashboard widget text.
-- [ ] T030 Validate UI responsiveness and error handling (toast notifications) for backup/restore failures on the Settings page.
-- [ ] T031 Verify `clean-up` cron job handles partial failures gracefully (e.g. if draft deletion fails, it still attempts Cloudinary cleanup).
+- [x] T029 Update AR/EN translation files via `npm run i18n:sync` for all new settings labels, buttons, and dashboard widget text.
+- [x] T030 Validate UI responsiveness and error handling (toast notifications) for backup/restore failures on the Settings page.
+- [x] T031 Verify `clean-up` cron job handles partial failures gracefully (e.g. if draft deletion fails, it still attempts Cloudinary cleanup).
 - [x] T032 [Principle VIII] Execute full production build (`npm run build`) to verify all new dependencies and type definitions.
-- [ ] T033 [Principle VIII] Test the destructive Restore functionality locally with a large generated dataset to verify memory usage and transaction stability before deploying.
+- [x] T033 [Principle VIII] Test the destructive Restore functionality locally with a large generated dataset to verify memory usage and transaction stability before deploying.
 
 ---
 

@@ -103,7 +103,15 @@
     "allSubmissions": "All Submissions",
     "noSubmissions": "No submissions yet",
     "filterByStatus": "Filter by status",
-    "allStatuses": "All Statuses"
+    "allStatuses": "All Statuses",
+    "cloudinaryStorageTitle": "Cloudinary Storage",
+    "cloudinaryBandwidthTitle": "Cloudinary Bandwidth",
+    "loadingMetrics": "Loading metrics...",
+    "failedToLoadStorage": "Failed to load storage metrics",
+    "failedToLoadBandwidth": "Failed to load bandwidth metrics",
+    "quotaUsed": "{percent}% of your quota",
+    "used": "Used: {amount}",
+    "limit": "Limit: {amount}"
   },
   "forms": {
     "title": "Form Templates",
@@ -468,7 +476,20 @@
     "backupLoading": "Executing database backup...",
     "backupSuccess": "Backup securely exported!",
     "backupError": "Backup failed",
-    "loadSettingsError": "Failed to load settings"
+    "loadSettingsError": "Failed to load settings",
+    "draftRetentionTitle": "Draft Auto-Delete Days",
+    "draftRetentionHint": "Days to keep drafts before auto-deletion.",
+    "cloudinaryThresholdTitle": "Cloudinary Storage Threshold (%)",
+    "cloudinaryThresholdHint": "Threshold limit to trigger auto-cleanup.",
+    "storageCleanupTitle": "Storage Cleanup Target",
+    "storageCleanupHint": "Action taken when the storage threshold is reached. Only Cloudinary media is deleted, DB records remain intact.",
+    "storageCleanupTargetNone": "None (Disable auto-cleanup)",
+    "storageCleanupTargetDrafts": "Drafts (Delete media associated with drafts)",
+    "storageCleanupTargetUnused": "Unused Media",
+    "downloadBackup": "Download Backup",
+    "uploadRestore": "Upload & Restore",
+    "restoring": "Restoring...",
+    "dataRetentionTitle": "Data Retention & Cleanup"
   },
   "settings": {
     "title": "Settings",
