@@ -109,6 +109,9 @@ class EvaluateQrDestinationUseCase {
       "submit",
       "submission",
       "submissions",
+      "f",
+      "form",
+      "forms",
     };
 
     final pathSegments = uri.pathSegments.map((item) => item.trim()).toList();

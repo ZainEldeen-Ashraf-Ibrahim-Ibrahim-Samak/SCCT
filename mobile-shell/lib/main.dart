@@ -127,6 +127,9 @@ class _ScctMobileAppState extends State<ScctMobileApp> {
       "submit",
       "submission",
       "submissions",
+      "f",
+      "form",
+      "forms",
     }..removeWhere((item) => item.isEmpty);
 
     final pathSegments = uri.pathSegments.map((item) => item.trim()).toList();
