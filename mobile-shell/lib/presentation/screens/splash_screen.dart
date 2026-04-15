@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 
+import "../../i18n/index.dart";
 import "../components/app_logo.dart";
 
 class SplashScreen extends StatelessWidget {
@@ -12,21 +13,6 @@ class SplashScreen extends StatelessWidget {
   final VoidCallback? onToggleTheme;
   final ValueChanged<String>? onLocaleSelected;
 
-  static const Map<String, Map<String, String>> _messages = {
-    "en": {
-      "mobile.splash.title": "SCCT DAMAGES",
-      "mobile.splash.subtitle": "Preparing secure scanner experience...",
-      "mobile.scan.themeToggle": "Toggle theme",
-      "mobile.scan.language": "Language",
-    },
-    "ar": {
-      "mobile.splash.title": "أعطال SCCT",
-      "mobile.splash.subtitle": "جاري تجهيز تجربة المسح الآمنة...",
-      "mobile.scan.themeToggle": "تبديل المظهر",
-      "mobile.scan.language": "اللغة",
-    },
-  };
-
   String _localeCode(BuildContext context) {
     final code = Localizations.localeOf(context).languageCode.toLowerCase();
     return code == "ar" ? "ar" : "en";
@@ -34,7 +20,9 @@ class SplashScreen extends StatelessWidget {
 
   String _t(BuildContext context, String key) {
     final locale = _localeCode(context);
-    return _messages[locale]?[key] ?? _messages["en"]?[key] ?? key;
+    final catalog =
+        I18nCatalog.getCached(locale) ?? I18nCatalog.getCached("en");
+    return catalog?.t(key) ?? key;
   }
 
   @override
@@ -44,8 +32,10 @@ class SplashScreen extends StatelessWidget {
     final bgStart = isDark ? const Color(0xFF081526) : const Color(0xFFEAF3FB);
     final bgEnd = isDark ? const Color(0xFF123454) : const Color(0xFFDDEAF7);
     final cardColor = isDark ? const Color(0xFF102941) : Colors.white;
-    final cardBorder = isDark ? const Color(0xFF295374) : const Color(0xFFD3E2F0);
-    final titleColor = isDark ? const Color(0xFFE5F2FF) : const Color(0xFF102C44);
+    final cardBorder =
+        isDark ? const Color(0xFF295374) : const Color(0xFFD3E2F0);
+    final titleColor =
+        isDark ? const Color(0xFFE5F2FF) : const Color(0xFF102C44);
     final subColor = isDark ? const Color(0xFFB7D0E7) : const Color(0xFF5A7691);
 
     return Scaffold(
@@ -72,7 +62,9 @@ class SplashScreen extends StatelessWidget {
                           width: 38,
                           height: 38,
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF163852) : const Color(0xFFDCEAF7),
+                            color: isDark
+                                ? const Color(0xFF163852)
+                                : const Color(0xFFDCEAF7),
                             shape: BoxShape.circle,
                             border: Border.all(color: cardBorder),
                           ),
@@ -82,32 +74,41 @@ class SplashScreen extends StatelessWidget {
                             iconSize: 18,
                             visualDensity: VisualDensity.compact,
                             icon: Icon(
-                              isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                              isDark
+                                  ? Icons.light_mode_rounded
+                                  : Icons.dark_mode_rounded,
                               color: titleColor,
                             ),
                           ),
                         ),
-                      if (onToggleTheme != null && onLocaleSelected != null) const SizedBox(width: 8),
+                      if (onToggleTheme != null && onLocaleSelected != null)
+                        const SizedBox(width: 8),
                       if (onLocaleSelected != null)
                         PopupMenuButton<String>(
                           tooltip: _t(context, "mobile.scan.language"),
                           initialValue: localeCode,
                           onSelected: onLocaleSelected,
-                          itemBuilder: (context) => const <PopupMenuEntry<String>>[
-                            PopupMenuItem<String>(value: "en", child: Text("EN")),
-                            PopupMenuItem<String>(value: "ar", child: Text("AR")),
+                          itemBuilder: (context) =>
+                              const <PopupMenuEntry<String>>[
+                            PopupMenuItem<String>(
+                                value: "en", child: Text("EN")),
+                            PopupMenuItem<String>(
+                                value: "ar", child: Text("AR")),
                           ],
                           child: Container(
                             height: 38,
                             padding: const EdgeInsets.symmetric(horizontal: 10),
                             decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF163852) : const Color(0xFFDCEAF7),
+                              color: isDark
+                                  ? const Color(0xFF163852)
+                                  : const Color(0xFFDCEAF7),
                               borderRadius: BorderRadius.circular(999),
                               border: Border.all(color: cardBorder),
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.language_rounded, size: 16, color: titleColor),
+                                Icon(Icons.language_rounded,
+                                    size: 16, color: titleColor),
                                 const SizedBox(width: 6),
                                 Text(
                                   localeCode.toUpperCase(),
@@ -118,7 +119,8 @@ class SplashScreen extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(width: 2),
-                                Icon(Icons.expand_more_rounded, size: 16, color: titleColor),
+                                Icon(Icons.expand_more_rounded,
+                                    size: 16, color: titleColor),
                               ],
                             ),
                           ),
@@ -138,14 +140,16 @@ class SplashScreen extends StatelessWidget {
                   },
                   child: Container(
                     width: 300,
-                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 22, vertical: 24),
                     decoration: BoxDecoration(
                       color: cardColor,
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(color: cardBorder),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: isDark ? 0.22 : 0.08),
+                          color: Colors.black
+                              .withValues(alpha: isDark ? 0.22 : 0.08),
                           blurRadius: 18,
                           offset: const Offset(0, 10),
                         ),
@@ -184,22 +188,4 @@ class SplashScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
                         SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.4,
-                            color: isDark ? const Color(0xFF94C7F0) : const Color(0xFF0B5F91),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+                          wi

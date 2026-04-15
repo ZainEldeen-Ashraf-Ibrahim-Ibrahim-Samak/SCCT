@@ -7,6 +7,7 @@ import "package:image_picker/image_picker.dart";
 import "package:mobile_scanner/mobile_scanner.dart";
 
 import "../../config/brand_config.dart";
+import "../../i18n/index.dart";
 import "../components/app_logo.dart";
 import "scan_error_sheet.dart";
 import "../view_models/scan_view_model.dart";
@@ -36,7 +37,8 @@ class ScanScreen extends StatefulWidget {
 class _ScanScreenState extends State<ScanScreen> {
   final TextEditingController _controller = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
-  final MobileScannerController _scannerController = MobileScannerController(autoStart: false);
+  final MobileScannerController _scannerController =
+      MobileScannerController(autoStart: false);
 
   String? _error;
   XFile? _selectedPhoto;
@@ -47,7 +49,8 @@ class _ScanScreenState extends State<ScanScreen> {
   static const Map<String, Map<String, String>> _messages = {
     "en": {
       "mobile.home.title": "Smart QR Scanner",
-      "mobile.home.subtitle": "Validate SCCT links quickly and open them safely.",
+      "mobile.home.subtitle":
+          "Validate SCCT links quickly and open them safely.",
       "mobile.scan.secure": "Secure validation enabled",
       "mobile.scan.manual": "Manual link input",
       "mobile.scan.quickActions": "Quick actions",
@@ -80,7 +83,8 @@ class _ScanScreenState extends State<ScanScreen> {
       "mobile.scan.secure": "التحقق الآمن مفعل",
       "mobile.scan.manual": "إدخال الرابط يدويًا",
       "mobile.scan.quickActions": "إجراءات سريعة",
-      "mobile.scan.dragHint": "معلومة: يمكنك سحب ملف صورة وإفلاته في منطقة الإسقاط.",
+      "mobile.scan.dragHint":
+          "معلومة: يمكنك سحب ملف صورة وإفلاته في منطقة الإسقاط.",
       "mobile.scan.photoPreview": "معاينة الصورة",
       "mobile.scan.invalid": "رمز QR غير صالح.",
       "mobile.scan.disallowed": "هذا الرابط غير مسموح.",
@@ -189,7 +193,8 @@ class _ScanScreenState extends State<ScanScreen> {
               height: MediaQuery.of(sheetContext).size.height * 0.78,
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final frameSize = math.min(constraints.maxWidth * 0.74, constraints.maxHeight * 0.5);
+                  final frameSize = math.min(
+                      constraints.maxWidth * 0.74, constraints.maxHeight * 0.5);
                   final frameLeft = (constraints.maxWidth - frameSize) / 2;
                   final frameTop = (constraints.maxHeight - frameSize) / 2;
                   final overlayColor = Colors.black.withValues(alpha: 0.50);
@@ -206,7 +211,8 @@ class _ScanScreenState extends State<ScanScreen> {
 
                           final decodedValue = capture.barcodes
                               .map((barcode) => barcode.rawValue?.trim() ?? "")
-                              .firstWhere((value) => value.isNotEmpty, orElse: () => "")
+                              .firstWhere((value) => value.isNotEmpty,
+                                  orElse: () => "")
                               .trim();
 
                           if (decodedValue.isEmpty) {
@@ -223,7 +229,12 @@ class _ScanScreenState extends State<ScanScreen> {
                           _submit();
                         },
                       ),
-                      Positioned(top: 0, left: 0, right: 0, height: frameTop, child: ColoredBox(color: overlayColor)),
+                      Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          height: frameTop,
+                          child: ColoredBox(color: overlayColor)),
                       Positioned(
                         top: frameTop + frameSize,
                         left: 0,
@@ -254,18 +265,60 @@ class _ScanScreenState extends State<ScanScreen> {
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(18),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.95), width: 2),
+                              border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.95),
+                                  width: 2),
                             ),
                             child: Stack(
                               children: [
-                                Positioned(top: 0, left: 0, width: 46, height: 4, child: _cornerStripe()),
-                                Positioned(top: 0, left: 0, width: 4, height: 46, child: _cornerStripe()),
-                                Positioned(top: 0, right: 0, width: 46, height: 4, child: _cornerStripe()),
-                                Positioned(top: 0, right: 0, width: 4, height: 46, child: _cornerStripe()),
-                                Positioned(bottom: 0, left: 0, width: 46, height: 4, child: _cornerStripe()),
-                                Positioned(bottom: 0, left: 0, width: 4, height: 46, child: _cornerStripe()),
-                                Positioned(bottom: 0, right: 0, width: 46, height: 4, child: _cornerStripe()),
-                                Positioned(bottom: 0, right: 0, width: 4, height: 46, child: _cornerStripe()),
+                                Positioned(
+                                    top: 0,
+                                    left: 0,
+                                    width: 46,
+                                    height: 4,
+                                    child: _cornerStripe()),
+                                Positioned(
+                                    top: 0,
+                                    left: 0,
+                                    width: 4,
+                                    height: 46,
+                                    child: _cornerStripe()),
+                                Positioned(
+                                    top: 0,
+                                    right: 0,
+                                    width: 46,
+                                    height: 4,
+                                    child: _cornerStripe()),
+                                Positioned(
+                                    top: 0,
+                                    right: 0,
+                                    width: 4,
+                                    height: 46,
+                                    child: _cornerStripe()),
+                                Positioned(
+                                    bottom: 0,
+                                    left: 0,
+                                    width: 46,
+                                    height: 4,
+                                    child: _cornerStripe()),
+                                Positioned(
+                                    bottom: 0,
+                                    left: 0,
+                                    width: 4,
+                                    height: 46,
+                                    child: _cornerStripe()),
+                                Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    width: 46,
+                                    height: 4,
+                                    child: _cornerStripe()),
+                                Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    width: 4,
+                                    height: 46,
+                                    child: _cornerStripe()),
                               ],
                             ),
                           ),
@@ -283,7 +336,9 @@ class _ScanScreenState extends State<ScanScreen> {
                               // Ignore torch failures for unsupported devices.
                             }
                           },
-                          icon: Icon(isTorchOn ? Icons.flash_on_rounded : Icons.flash_off_rounded),
+                          icon: Icon(isTorchOn
+                              ? Icons.flash_on_rounded
+                              : Icons.flash_off_rounded),
                         ),
                       ),
                       Positioned(
@@ -308,11 +363,14 @@ class _ScanScreenState extends State<ScanScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 10),
                             child: Text(
                               _t("mobile.scan.alignCode"),
                               textAlign: TextAlign.center,
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600),
                             ),
                           ),
                         ),
@@ -327,11 +385,14 @@ class _ScanScreenState extends State<ScanScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 10),
                             child: Text(
                               _t("mobile.scan.cameraHint"),
                               textAlign: TextAlign.center,
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600),
                             ),
                           ),
                         ),
@@ -492,7 +553,8 @@ class _ScanScreenState extends State<ScanScreen> {
     );
   }
 
-  ButtonStyle _filledButtonStyle({required Color background, required Color foreground}) {
+  ButtonStyle _filledButtonStyle(
+      {required Color background, required Color foreground}) {
     return ButtonStyle(
       backgroundColor: WidgetStatePropertyAll<Color>(background),
       foregroundColor: WidgetStatePropertyAll<Color>(foreground),
@@ -524,21 +586,30 @@ class _ScanScreenState extends State<ScanScreen> {
     const brandBlueDeep = Color(0xFF083C63);
     const brandRed = Color(0xFFE33B43);
 
-    final appBarColor = isDark ? const Color(0xFF081E33) : const Color(0xFFE9F2FA);
+    final appBarColor =
+        isDark ? const Color(0xFF081E33) : const Color(0xFFE9F2FA);
     final bgTop = isDark ? const Color(0xFF061221) : const Color(0xFFF3F8FD);
     final bgBottom = isDark ? const Color(0xFF0D2942) : const Color(0xFFE6EFF8);
-    final cardColor = isDark ? const Color(0xFF0F263D) : const Color(0xFFFFFFFF);
-    final cardBorder = isDark ? const Color(0xFF285375) : const Color(0xFFD6E4F1);
-    final textPrimary = isDark ? const Color(0xFFE8F1FA) : const Color(0xFF11283D);
-    final textSecondary = isDark ? const Color(0xFFB9CCDD) : const Color(0xFF4F6479);
-    final inputFill = isDark ? const Color(0xFF142E49) : const Color(0xFFF7FBFF);
+    final cardColor =
+        isDark ? const Color(0xFF0F263D) : const Color(0xFFFFFFFF);
+    final cardBorder =
+        isDark ? const Color(0xFF285375) : const Color(0xFFD6E4F1);
+    final textPrimary =
+        isDark ? const Color(0xFFE8F1FA) : const Color(0xFF11283D);
+    final textSecondary =
+        isDark ? const Color(0xFFB9CCDD) : const Color(0xFF4F6479);
+    final inputFill =
+        isDark ? const Color(0xFF142E49) : const Color(0xFFF7FBFF);
     final dropBase = isDark ? const Color(0xFF11283E) : const Color(0xFFF6FAFE);
     final dropDrag = isDark ? const Color(0xFF164166) : const Color(0xFFD9ECFD);
     final infoBg = isDark ? const Color(0xFF183A57) : const Color(0xFFEAF5FF);
     final infoText = isDark ? const Color(0xFFB9DFFF) : const Color(0xFF1F5C8E);
-    final actionChipBg = isDark ? const Color(0xFF12314D) : const Color(0xFFE4EFF9);
-    final actionChipBorder = isDark ? const Color(0xFF2D5D84) : const Color(0xFFD0E0EF);
-    final actionChipFg = isDark ? const Color(0xFFE5F2FF) : const Color(0xFF1B4B75);
+    final actionChipBg =
+        isDark ? const Color(0xFF12314D) : const Color(0xFFE4EFF9);
+    final actionChipBorder =
+        isDark ? const Color(0xFF2D5D84) : const Color(0xFFD0E0EF);
+    final actionChipFg =
+        isDark ? const Color(0xFFE5F2FF) : const Color(0xFF1B4B75);
 
     return Scaffold(
       appBar: AppBar(
@@ -563,8 +634,10 @@ class _ScanScreenState extends State<ScanScreen> {
             AppLogo(
               size: 30,
               radius: 10,
-              backgroundColor: isDark ? const Color(0xFF17324B) : const Color(0xFFE4EFF9),
-              borderColor: isDark ? const Color(0xFF2D5D84) : const Color(0xFFD0E0EF),
+              backgroundColor:
+                  isDark ? const Color(0xFF17324B) : const Color(0xFFE4EFF9),
+              borderColor:
+                  isDark ? const Color(0xFF2D5D84) : const Color(0xFFD0E0EF),
             ),
             const SizedBox(width: 10),
             Text(
@@ -592,7 +665,8 @@ class _ScanScreenState extends State<ScanScreen> {
                     border: Border.all(color: actionChipBorder),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.08),
+                        color: Colors.black
+                            .withValues(alpha: isDark ? 0.30 : 0.08),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -606,9 +680,12 @@ class _ScanScreenState extends State<ScanScreen> {
                     visualDensity: VisualDensity.compact,
                     icon: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 220),
-                      transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
+                      transitionBuilder: (child, animation) =>
+                          ScaleTransition(scale: animation, child: child),
                       child: Icon(
-                        isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                        isDark
+                            ? Icons.light_mode_rounded
+                            : Icons.dark_mode_rounded,
                         key: ValueKey<bool>(isDark),
                       ),
                     ),
@@ -631,7 +708,9 @@ class _ScanScreenState extends State<ScanScreen> {
                           Icon(
                             Icons.check_rounded,
                             size: 16,
-                            color: localeCode == "en" ? brandBlue : Colors.transparent,
+                            color: localeCode == "en"
+                                ? brandBlue
+                                : Colors.transparent,
                           ),
                           const SizedBox(width: 8),
                           const Text("EN"),
@@ -645,7 +724,9 @@ class _ScanScreenState extends State<ScanScreen> {
                           Icon(
                             Icons.check_rounded,
                             size: 16,
-                            color: localeCode == "ar" ? brandBlue : Colors.transparent,
+                            color: localeCode == "ar"
+                                ? brandBlue
+                                : Colors.transparent,
                           ),
                           const SizedBox(width: 8),
                           const Text("AR"),
@@ -662,7 +743,8 @@ class _ScanScreenState extends State<ScanScreen> {
                       border: Border.all(color: actionChipBorder),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.08),
+                          color: Colors.black
+                              .withValues(alpha: isDark ? 0.30 : 0.08),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -670,7 +752,8 @@ class _ScanScreenState extends State<ScanScreen> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.language_rounded, size: 16, color: actionChipFg),
+                        Icon(Icons.language_rounded,
+                            size: 16, color: actionChipFg),
                         const SizedBox(width: 6),
                         Text(
                           localeCode.toUpperCase(),
@@ -681,7 +764,8 @@ class _ScanScreenState extends State<ScanScreen> {
                           ),
                         ),
                         const SizedBox(width: 2),
-                        Icon(Icons.expand_more_rounded, size: 16, color: actionChipFg),
+                        Icon(Icons.expand_more_rounded,
+                            size: 16, color: actionChipFg),
                       ],
                     ),
                   ),
@@ -745,8 +829,12 @@ class _ScanScreenState extends State<ScanScreen> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      _buildTag(icon: Icons.verified_user_outlined, label: _t("mobile.scan.secure")),
-                      _buildTag(icon: Icons.language_rounded, label: localeCode.toUpperCase()),
+                      _buildTag(
+                          icon: Icons.verified_user_outlined,
+                          label: _t("mobile.scan.secure")),
+                      _buildTag(
+                          icon: Icons.language_rounded,
+                          label: localeCode.toUpperCase()),
                     ],
                   ),
                 ],
@@ -777,7 +865,8 @@ class _ScanScreenState extends State<ScanScreen> {
                     style: TextStyle(color: textPrimary),
                     decoration: InputDecoration(
                       labelText: _t("mobile.scan.prompt"),
-                      hintText: "https://scct-damages.vercel.app/ar/submit/abc123",
+                      hintText:
+                          "https://scct-damages.vercel.app/ar/submit/abc123",
                       hintStyle: TextStyle(color: textSecondary),
                       labelStyle: TextStyle(color: textSecondary),
                       filled: true,
@@ -852,8 +941,12 @@ class _ScanScreenState extends State<ScanScreen> {
                         icon: const Icon(Icons.photo_library_outlined),
                         label: Text(_t("mobile.scan.choosePhoto")),
                         style: _filledButtonStyle(
-                          background: isDark ? const Color(0xFF1A4568) : const Color(0xFFE3F1FF),
-                          foreground: isDark ? const Color(0xFFE3F1FF) : const Color(0xFF174B78),
+                          background: isDark
+                              ? const Color(0xFF1A4568)
+                              : const Color(0xFFE3F1FF),
+                          foreground: isDark
+                              ? const Color(0xFFE3F1FF)
+                              : const Color(0xFF174B78),
                         ),
                       ),
                       if (_selectedPhoto != null)
@@ -862,8 +955,12 @@ class _ScanScreenState extends State<ScanScreen> {
                           icon: const Icon(Icons.clear_rounded),
                           label: Text(_t("mobile.scan.clearPhoto")),
                           style: _filledButtonStyle(
-                            background: isDark ? const Color(0xFF563136) : const Color(0xFFFBE5E8),
-                            foreground: isDark ? const Color(0xFFFFCDD2) : const Color(0xFF942F35),
+                            background: isDark
+                                ? const Color(0xFF563136)
+                                : const Color(0xFFFBE5E8),
+                            foreground: isDark
+                                ? const Color(0xFFFFCDD2)
+                                : const Color(0xFF942F35),
                           ),
                         ),
                     ],
@@ -878,9 +975,12 @@ class _ScanScreenState extends State<ScanScreen> {
                   ),
                   const SizedBox(height: 10),
                   DropTarget(
-                    onDragDone: (details) => _handleDroppedPhotos(details.files),
-                    onDragEntered: (_) => setState(() => _isDraggingPhoto = true),
-                    onDragExited: (_) => setState(() => _isDraggingPhoto = false),
+                    onDragDone: (details) =>
+                        _handleDroppedPhotos(details.files),
+                    onDragEntered: (_) =>
+                        setState(() => _isDraggingPhoto = true),
+                    onDragExited: (_) =>
+                        setState(() => _isDraggingPhoto = false),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 180),
                       width: double.infinity,
@@ -898,7 +998,8 @@ class _ScanScreenState extends State<ScanScreen> {
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.upload_file_rounded, color: textSecondary),
+                              Icon(Icons.upload_file_rounded,
+                                  color: textSecondary),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
@@ -921,7 +1022,9 @@ class _ScanScreenState extends State<ScanScreen> {
                     ),
                   ),
                   _buildPhotoPreviewCard(
-                    cardColor: isDark ? const Color(0xFF0D2135) : const Color(0xFFF8FBFF),
+                    cardColor: isDark
+                        ? const Color(0xFF0D2135)
+                        : const Color(0xFFF8FBFF),
                     borderColor: cardBorder,
                     textPrimary: textPrimary,
                     textSecondary: textSecondary,
@@ -932,7 +1035,8 @@ class _ScanScreenState extends State<ScanScreen> {
             if (_isDecodingPhoto) ...[
               const SizedBox(height: 12),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
                   color: infoBg,
                   borderRadius: BorderRadius.circular(12),
