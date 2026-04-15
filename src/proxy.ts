@@ -15,6 +15,23 @@ declare global {
 
 const intlMiddleware = createMiddleware(routing);
 
+const defaultAllowedApiOrigins = [
+  "capacitor://localhost",
+  "ionic://localhost",
+  "http://localhost",
+  "http://localhost:3000",
+  "https://localhost",
+  "https://localhost:3000",
+];
+
+const allowedApiOrigins = new Set(
+  (process.env.APP_ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0)
+    .concat(defaultAllowedApiOrigins),
+);
+
 const rateLimitStore = globalThis.__scctApiRateLimitStore ?? new Map<string, RateBucket>();
 if (!globalThis.__scctApiRateLimitStore) {
   globalThis.__scctApiRateLimitStore = rateLimitStore;
@@ -117,18 +134,40 @@ function withRateLimitHeaders(response: NextResponse, rate: { limit: number; rem
   return response;
 }
 
+function withApiCorsHeaders(response: NextResponse, origin: string | null) {
+  response.headers.append("Vary", "Origin");
+  response.headers.set("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+  response.headers.set("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Requested-With,X-CSRF-Token");
+  response.headers.set("Access-Control-Max-Age", "86400");
+
+  if (origin && allowedApiOrigins.has(origin)) {
+    response.headers.set("Access-Control-Allow-Origin", origin);
+    response.headers.set("Access-Control-Allow-Credentials", "true");
+  }
+
+  return response;
+}
+
 async function handleApiSecurity(request: NextRequest): Promise<NextResponse> {
   const pathname = request.nextUrl.pathname;
+  const origin = request.headers.get("origin");
+
+  if (request.method === "OPTIONS") {
+    return withApiCorsHeaders(new NextResponse(null, { status: 204 }), origin);
+  }
 
   const pathThreat = detectMaliciousContent(pathname, "path");
   if (pathThreat) {
-    return NextResponse.json(
+    return withApiCorsHeaders(
+      NextResponse.json(
       {
         success: false,
         error: "Potential malicious request path detected",
         code: "MALICIOUS_REQUEST_PATH",
       },
       { status: 400 },
+      ),
+      origin,
     );
   }
 
@@ -139,13 +178,16 @@ async function handleApiSecurity(request: NextRequest): Promise<NextResponse> {
 
   const queryThreat = detectMaliciousContent(querySnapshot, "query");
   if (queryThreat) {
-    return NextResponse.json(
+    return withApiCorsHeaders(
+      NextResponse.json(
       {
         success: false,
         error: "Potential malicious query payload detected",
         code: "MALICIOUS_QUERY_DETECTED",
       },
       { status: 400 },
+      ),
+      origin,
     );
   }
 
@@ -161,7 +203,7 @@ async function handleApiSecurity(request: NextRequest): Promise<NextResponse> {
       { status: 429 },
     );
     response.headers.set("Retry-After", String(retryAfter));
-    return withRateLimitHeaders(response, rate);
+    return withApiCorsHeaders(withRateLimitHeaders(response, rate), origin);
   }
 
   if (pathname.startsWith("/api/admin")) {
@@ -183,7 +225,7 @@ async function handleApiSecurity(request: NextRequest): Promise<NextResponse> {
         },
         { status: 401 },
       );
-      return withRateLimitHeaders(response, rate);
+      return withApiCorsHeaders(withRateLimitHeaders(response, rate), origin);
     }
 
     if (token.role !== "admin") {
@@ -195,12 +237,12 @@ async function handleApiSecurity(request: NextRequest): Promise<NextResponse> {
         },
         { status: 403 },
       );
-      return withRateLimitHeaders(response, rate);
+      return withApiCorsHeaders(withRateLimitHeaders(response, rate), origin);
     }
   }
 
   const next = NextResponse.next();
-  return withRateLimitHeaders(next, rate);
+  return withApiCorsHeaders(withRateLimitHeaders(next, rate), origin);
 }
 
 export default async function proxy(request: NextRequest) {
