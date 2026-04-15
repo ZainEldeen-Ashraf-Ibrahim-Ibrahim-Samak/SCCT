@@ -12,6 +12,19 @@ import { NotificationPublisher } from "@/lib/events/publisher";
 const RESUBMISSION_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 const DEFAULT_CONTACT_NAME = "Primary Contact";
 
+function isSubmissionEntity(value: unknown): value is Submission {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.id === "string" &&
+    candidate.id.length > 0 &&
+    typeof candidate.accessToken === "string" &&
+    candidate.accessToken.length > 0 &&
+    typeof candidate.formTemplateId === "string" &&
+    candidate.formTemplateId.length > 0
+  );
+}
+
 function normalizeContactRecords(records: unknown): Submission["contactRecords"] {
   if (!Array.isArray(records)) return [];
   const processed = records.map((item) => {
@@ -89,6 +102,35 @@ function toEntity(doc: Record<string, unknown>): Submission {
   };
 }
 
+async function fetchSubmissionByTokenFromDb(accessToken: string): Promise<Submission | null> {
+  await connectToDatabase();
+  const doc = await SubmissionModel.findOne({ accessToken });
+  if (!doc) return null;
+
+  const now = new Date();
+  if (doc.resubmissionRequest) {
+    const req = doc.resubmissionRequest;
+    const expiresAt = req.expiresAt instanceof Date ? req.expiresAt : new Date(req.expiresAt);
+    const expiresAtTime = expiresAt.getTime();
+
+    if (!Number.isNaN(expiresAtTime)) {
+      if (
+        req.status !== "expired" &&
+        expiresAtTime <= now.getTime()
+      ) {
+        req.status = "expired";
+        await doc.save();
+      } else if (req.status === "pending_delivery") {
+        req.status = "delivered";
+        req.deliveredAt = now;
+        await doc.save();
+      }
+    }
+  }
+
+  return toEntity(doc.toObject() as unknown as Record<string, unknown>);
+}
+
 export class MongoSubmissionRepository implements SubmissionRepository {
   async create(input: CreateSubmissionInput, accessToken: string): Promise<Submission> {
     try {
@@ -122,34 +164,26 @@ export class MongoSubmissionRepository implements SubmissionRepository {
 
   async findByToken(accessToken: string): Promise<Submission | null> {
     try {
-      return await CacheService.getSubmission(accessToken, async () => {
-        await connectToDatabase();
-        const doc = await SubmissionModel.findOne({ accessToken });
-        if (!doc) return null;
+      const cachedSubmission = (await CacheService.getSubmission(
+        accessToken,
+        async () => fetchSubmissionByTokenFromDb(accessToken),
+      )) as unknown;
 
-        const now = new Date();
-        if (doc.resubmissionRequest) {
-          const req = doc.resubmissionRequest;
-          const expiresAt = req.expiresAt instanceof Date ? req.expiresAt : new Date(req.expiresAt);
-          const expiresAtTime = expiresAt.getTime();
+      if (cachedSubmission === null) {
+        return null;
+      }
 
-          if (!Number.isNaN(expiresAtTime)) {
-            if (
-              req.status !== "expired" &&
-              expiresAtTime <= now.getTime()
-            ) {
-              req.status = "expired";
-              await doc.save();
-            } else if (req.status === "pending_delivery") {
-              req.status = "delivered";
-              req.deliveredAt = now;
-              await doc.save();
-            }
-          }
-        }
+      if (isSubmissionEntity(cachedSubmission)) {
+        return cachedSubmission;
+      }
 
-        return toEntity(doc.toObject() as unknown as Record<string, unknown>);
+      logger.warn("Invalid cached submission payload detected; forcing DB refresh", {
+        accessToken,
+        payloadType: typeof cachedSubmission,
       });
+
+      await CacheService.invalidateSubmissionCache(accessToken);
+      return fetchSubmissionByTokenFromDb(accessToken);
     } catch (error) {
       logger.error("Failed to find submission by token", { accessToken, error });
       throw error;

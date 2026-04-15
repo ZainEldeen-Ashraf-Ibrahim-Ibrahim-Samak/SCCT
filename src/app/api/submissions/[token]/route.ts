@@ -2,11 +2,9 @@ import { MongoSubmissionRepository } from "@/data/repositories/mongo-submission-
 import { MongoFieldValueRepository } from "@/data/repositories/mongo-field-value-repository";
 import { MongoFormTemplateRepository } from "@/data/repositories/mongo-form-template-repository";
 import { MongoFieldDefinitionRepository } from "@/data/repositories/mongo-field-definition-repository";
-import { createSubmissionSchema } from "@/lib/validations";
-import { SubmitFormUseCase, ViewSubmissionUseCase } from "@/domain/use-cases/client";
+import { ViewSubmissionUseCase } from "@/domain/use-cases/client/view-submission";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { logger } from "@/lib/dev-logger";
-import { NotificationPublisher } from "@/lib/events/publisher";
 import { parseSecureJson } from "@/lib/api-security";
 
 const submissionRepo = new MongoSubmissionRepository();
@@ -14,18 +12,37 @@ const fieldValueRepo = new MongoFieldValueRepository();
 const formTemplateRepo = new MongoFormTemplateRepository();
 const fieldDefRepo = new MongoFieldDefinitionRepository();
 
-const submitUseCase = new SubmitFormUseCase(
-  submissionRepo,
-  fieldValueRepo,
-  formTemplateRepo,
-  fieldDefRepo
-);
 const viewUseCase = new ViewSubmissionUseCase(
   submissionRepo,
   fieldValueRepo,
   formTemplateRepo,
   fieldDefRepo
 );
+
+async function createSubmitUseCase() {
+  const { SubmitFormUseCase } = await import("@/domain/use-cases/client/submit-form");
+  return new SubmitFormUseCase(
+    submissionRepo,
+    fieldValueRepo,
+    formTemplateRepo,
+    fieldDefRepo,
+  );
+}
+
+async function loadCreateSubmissionSchema() {
+  const { createSubmissionSchema } = await import("@/lib/validations");
+  return createSubmissionSchema;
+}
+
+async function notifyAdmins(notification: {
+  type: "NEW_SUBMISSION" | "SYSTEM_ALERT";
+  title: string;
+  message: string;
+  link?: string;
+}) {
+  const { NotificationPublisher } = await import("@/lib/events/publisher");
+  await NotificationPublisher.notifyAdmins(notification);
+}
 
 export const dynamic = "force-dynamic";
 
@@ -73,6 +90,8 @@ export async function POST(
 ) {
   try {
     const { token } = await params;
+    const createSubmissionSchema = await loadCreateSubmissionSchema();
+    const submitUseCase = await createSubmitUseCase();
     const parsedBody = await parseSecureJson(request);
     if (!parsedBody.success) {
       return errorResponse(parsedBody.error, 400, parsedBody.code);
@@ -120,7 +139,7 @@ export async function POST(
     });
 
     // Notify admins
-    await NotificationPublisher.notifyAdmins({
+    await notifyAdmins({
       type: "NEW_SUBMISSION",
       title: "New Submission",
       message: `${parsed.data.clientName} has submitted a new form.`,
@@ -137,6 +156,8 @@ export async function POST(
 export async function PATCH(request: Request, { params }: { params: Promise<{ token: string }> }) {
   try {
     const { token } = await params;
+    const createSubmissionSchema = await loadCreateSubmissionSchema();
+    const submitUseCase = await createSubmitUseCase();
     const parsedBody = await parseSecureJson(request);
     if (!parsedBody.success) {
       return errorResponse(parsedBody.error, 400, parsedBody.code);
@@ -181,7 +202,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ to
     });
 
     // Notify admins
-    await NotificationPublisher.notifyAdmins({
+    await notifyAdmins({
       type: "NEW_SUBMISSION",
       title: "Form Resubmitted",
       message: `${parsed.data.clientName} has updated their submission.`,

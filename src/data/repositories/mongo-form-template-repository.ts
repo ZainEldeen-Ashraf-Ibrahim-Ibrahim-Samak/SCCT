@@ -9,6 +9,17 @@ import { normalizeContactFormFields } from "@/lib/contact-form";
 
 const DEFAULT_CONTACT_NAME = "Primary Contact";
 
+function isFormTemplateEntity(value: unknown): value is FormTemplate {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.id === "string" &&
+    candidate.id.length > 0 &&
+    typeof candidate.name === "string" &&
+    Array.isArray(candidate.contactFormFields)
+  );
+}
+
 function toEntity(doc: Record<string, unknown>): FormTemplate {
   const rawContactRecords = Array.isArray(doc.contactRecords) ? doc.contactRecords : [];
   const contactRecords = rawContactRecords
@@ -75,11 +86,28 @@ export class MongoFormTemplateRepository implements FormTemplateRepository {
 
   async findActive(): Promise<FormTemplate | null> {
     try {
-      return await CacheService.getActiveForm(async () => {
+      const cachedOrFresh = (await CacheService.getActiveForm(async () => {
         await connectToDatabase();
         const doc = await FormTemplateModel.findOne({ isActive: true }).lean();
         return doc ? toEntity(doc) : null;
+      })) as unknown;
+
+      if (cachedOrFresh === null) {
+        return null;
+      }
+
+      if (isFormTemplateEntity(cachedOrFresh)) {
+        return cachedOrFresh;
+      }
+
+      logger.warn("Invalid cached active form payload detected; forcing DB refresh", {
+        payloadType: typeof cachedOrFresh,
       });
+
+      await CacheService.invalidateFormCache();
+      await connectToDatabase();
+      const doc = await FormTemplateModel.findOne({ isActive: true }).lean();
+      return doc ? toEntity(doc) : null;
     } catch (error) {
       logger.error("Failed to find active form template", error);
       throw error;

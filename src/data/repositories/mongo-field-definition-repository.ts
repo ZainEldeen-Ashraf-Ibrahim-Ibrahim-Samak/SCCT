@@ -57,7 +57,14 @@ export class MongoFieldDefinitionRepository implements FieldDefinitionRepository
     if (includeInactive) {
       return compute();
     }
-    return CacheService.getFields(formTemplateId, compute);
+
+    const cachedOrFresh = (await CacheService.getFields(formTemplateId, compute)) as unknown;
+    if (Array.isArray(cachedOrFresh)) {
+      return cachedOrFresh as FieldDefinition[];
+    }
+
+    await CacheService.invalidateFieldsCache(formTemplateId);
+    return compute();
   }
 
   async update(id: string, input: UpdateFieldDefinitionInput): Promise<FieldDefinition | null> {
