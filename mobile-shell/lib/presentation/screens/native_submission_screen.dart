@@ -131,7 +131,8 @@ class _NativeSubmissionScreenState extends State<NativeSubmissionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final localeCode = widget.currentLocale.languageCode.toLowerCase() == "ar" ? "ar" : "en";
+    final localeCode =
+        widget.currentLocale.languageCode.toLowerCase() == "ar" ? "ar" : "en";
 
     return Scaffold(
       appBar: AppBar(
@@ -162,7 +163,8 @@ class _NativeSubmissionScreenState extends State<NativeSubmissionScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surfaceContainer,
                     borderRadius: BorderRadius.circular(999),
@@ -291,12 +293,15 @@ class _NativeSubmissionScreenState extends State<NativeSubmissionScreen> {
                           child: Text(
                             _t(viewModel.statusMessageKey!),
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onPrimaryContainer,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
-                        if (viewModel.statusMessageKey == MessageKeys.submissionStaleConflict)
+                        if (viewModel.statusMessageKey ==
+                            MessageKeys.submissionStaleConflict)
                           TextButton(
                             onPressed: viewModel.refresh,
                             child: Text(_t(MessageKeys.submissionRetry)),
@@ -326,24 +331,32 @@ class _NativeSubmissionScreenState extends State<NativeSubmissionScreen> {
                 const SizedBox(height: 12),
                 ContactRecordsSection(
                   contacts: viewModel.contacts,
+                  contactFields:
+                      viewModel.session?.contactFormFields ?? const [],
                   enabled: viewModel.isEditable,
-                  errorText: viewModel.contactErrorKey == null ? null : _t(viewModel.contactErrorKey!),
+                  localeCode: widget.localeCode,
+                  errorText: viewModel.contactErrorKey == null
+                      ? null
+                      : _t(viewModel.contactErrorKey!),
                   t: _t,
-                  onAddContact: viewModel.addContact,
-                  onRemoveContact: viewModel.removeContact,
                   onContactChanged: (contactId, fieldKey, value) {
                     switch (fieldKey) {
                       case "name":
-                        viewModel.updateContactField(id: contactId, name: value);
+                        viewModel.updateContactField(
+                            id: contactId, name: value);
                         break;
                       case "email":
-                        viewModel.updateContactField(id: contactId, email: value);
+                        viewModel.updateContactField(
+                            id: contactId, email: value);
                         break;
                       case "phone":
-                        viewModel.updateContactField(id: contactId, phone: value);
+                        viewModel.updateContactField(
+                            id: contactId, phone: value);
                         break;
+                      case "address":
                       case "contact":
-                        viewModel.updateContactField(id: contactId, contact: value);
+                        viewModel.updateContactField(
+                            id: contactId, contact: value);
                         break;
                     }
                   },
@@ -381,7 +394,9 @@ class _NativeSubmissionScreenState extends State<NativeSubmissionScreen> {
                                 await viewModel.saveDraftNow();
                                 if (!mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(_t(MessageKeys.submissionSaveDraft))),
+                                  SnackBar(
+                                      content: Text(
+                                          _t(MessageKeys.submissionSaveDraft))),
                                 );
                               }
                             : null,
@@ -391,14 +406,16 @@ class _NativeSubmissionScreenState extends State<NativeSubmissionScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: FilledButton.icon(
-                        onPressed: (!viewModel.isEditable || viewModel.isSubmitting)
-                            ? null
-                            : viewModel.submitOrResubmit,
+                        onPressed:
+                            (!viewModel.isEditable || viewModel.isSubmitting)
+                                ? null
+                                : viewModel.submitOrResubmit,
                         icon: viewModel.isSubmitting
                             ? const SizedBox(
                                 width: 16,
                                 height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Icon(Icons.send_rounded),
                         label: Text(_t(viewModel.submitActionKey)),

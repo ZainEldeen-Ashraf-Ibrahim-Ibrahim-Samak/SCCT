@@ -42,12 +42,25 @@ void main() {
 
     final result = validator.execute(
       contacts: contacts,
+      contactFormFields: const <SubmissionContactField>[
+        SubmissionContactField(
+          id: "contact_name",
+          key: SubmissionContactFieldKey.name,
+          labelEn: "Name",
+          labelAr: "الاسم",
+          placeholderEn: "Enter name",
+          placeholderAr: "ادخل الاسم",
+          required: true,
+          sortOrder: 0,
+        ),
+      ],
       fields: fields,
       responses: responses,
     );
 
     expect(result.isValid, isFalse);
     expect(result.contactErrorKey, MessageKeys.submissionValidationEmail);
-    expect(result.fieldErrorKeys["email_field"], MessageKeys.submissionValidationEmail);
+    expect(result.fieldErrorKeys["email_field"],
+        MessageKeys.submissionValidationEmail);
   });
 }

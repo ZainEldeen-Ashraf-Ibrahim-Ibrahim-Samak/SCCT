@@ -50,9 +50,13 @@ class NativeSubmissionViewModel extends ChangeNotifier {
   String? _statusMessageKey;
   String _clientName = "";
   String _clientContact = "";
-  List<ContactRecord> _contacts = <ContactRecord>[ContactRecord(id: "contact_primary")];
-  final Map<String, FieldResponse> _responsesByFieldId = <String, FieldResponse>{};
-  final Map<String, MediaUploadItem> _mediaQueueByFieldId = <String, MediaUploadItem>{};
+  List<ContactRecord> _contacts = <ContactRecord>[
+    ContactRecord(id: "contact_primary")
+  ];
+  final Map<String, FieldResponse> _responsesByFieldId =
+      <String, FieldResponse>{};
+  final Map<String, MediaUploadItem> _mediaQueueByFieldId =
+      <String, MediaUploadItem>{};
   final Map<String, String> _fieldErrorKeys = <String, String>{};
   String? _contactErrorKey;
   final Set<String> _uploadingFieldIds = <String>{};
@@ -68,15 +72,19 @@ class NativeSubmissionViewModel extends ChangeNotifier {
   String? get statusMessageKey => _statusMessageKey;
   String get clientName => _clientName;
   String get clientContact => _clientContact;
-  List<ContactRecord> get contacts => List<ContactRecord>.unmodifiable(_contacts);
-  Map<String, FieldResponse> get responsesByFieldId => Map<String, FieldResponse>.unmodifiable(_responsesByFieldId);
-  Map<String, String> get fieldErrorKeys => Map<String, String>.unmodifiable(_fieldErrorKeys);
+  List<ContactRecord> get contacts =>
+      List<ContactRecord>.unmodifiable(_contacts);
+  Map<String, FieldResponse> get responsesByFieldId =>
+      Map<String, FieldResponse>.unmodifiable(_responsesByFieldId);
+  Map<String, String> get fieldErrorKeys =>
+      Map<String, String>.unmodifiable(_fieldErrorKeys);
   String? get contactErrorKey => _contactErrorKey;
 
   bool get isEditable => _session?.isEditable ?? false;
 
   String get submitActionKey {
-    if (_session?.mode == SubmissionMode.needsRewrite || _session?.mode == SubmissionMode.draft) {
+    if (_session?.mode == SubmissionMode.needsRewrite ||
+        _session?.mode == SubmissionMode.draft) {
       return MessageKeys.submissionResubmit;
     }
     return MessageKeys.submissionSubmit;
@@ -91,7 +99,8 @@ class NativeSubmissionViewModel extends ChangeNotifier {
 
     _isOnline = await _connectivityService.isOnline();
     await _connectivitySubscription?.cancel();
-    _connectivitySubscription = _connectivityService.watchOnlineStatus().listen((online) {
+    _connectivitySubscription =
+        _connectivityService.watchOnlineStatus().listen((online) {
       _isOnline = online;
       if (_session != null) {
         _session = _session!.copyWith(isOnline: online);
@@ -165,7 +174,8 @@ class NativeSubmissionViewModel extends ChangeNotifier {
       return;
     }
 
-    _contacts = _contacts.where((contact) => contact.id != id).toList(growable: false);
+    _contacts =
+        _contacts.where((contact) => contact.id != id).toList(growable: false);
     _scheduleAutosave();
     notifyListeners();
   }
@@ -295,7 +305,8 @@ class NativeSubmissionViewModel extends ChangeNotifier {
   }
 
   bool get hasBlockingRequiredMedia {
-    for (final field in _session?.fields ?? const <SubmissionFieldDefinition>[]) {
+    for (final field
+        in _session?.fields ?? const <SubmissionFieldDefinition>[]) {
       final isMediaField = field.inputType == SubmissionFieldType.image ||
           field.inputType == SubmissionFieldType.file;
       if (!isMediaField || !field.validation.required) {
@@ -305,7 +316,8 @@ class NativeSubmissionViewModel extends ChangeNotifier {
       final response = _responsesByFieldId[field.id] ??
           FieldResponse(fieldDefinitionId: field.id);
       final hasResponseMedia =
-          (response.mediaUrl?.trim().isNotEmpty ?? false) || response.mediaItems.isNotEmpty;
+          (response.mediaUrl?.trim().isNotEmpty ?? false) ||
+              response.mediaItems.isNotEmpty;
       if (!hasResponseMedia) {
         return true;
       }
@@ -334,6 +346,7 @@ class NativeSubmissionViewModel extends ChangeNotifier {
 
     final validation = _validator.execute(
       contacts: _contacts,
+      contactFormFields: session.contactFormFields,
       fields: session.fields,
       responses: _responsesByFieldId,
     );
@@ -431,7 +444,8 @@ class NativeSubmissionViewModel extends ChangeNotifier {
       return;
     }
 
-    final session = await _repository.loadSession(token, localeCode: _localeCode);
+    final session =
+        await _repository.loadSession(token, localeCode: _localeCode);
     _session = session.copyWith(isOnline: _isOnline);
 
     _clientName = _session!.clientName;
@@ -440,7 +454,8 @@ class NativeSubmissionViewModel extends ChangeNotifier {
 
     _responsesByFieldId
       ..clear()
-      ..addEntries(_session!.fieldResponses.map((response) => MapEntry(response.fieldDefinitionId, response)));
+      ..addEntries(_session!.fieldResponses
+          .map((response) => MapEntry(response.fieldDefinitionId, response)));
 
     final draft = await _secureDraftRepository.load(token);
     if (draft != null) {
@@ -463,7 +478,8 @@ class NativeSubmissionViewModel extends ChangeNotifier {
 
     _mediaQueueByFieldId
       ..clear()
-      ..addEntries(draft.mediaQueue.map((item) => MapEntry(item.fieldDefinitionId, item)));
+      ..addEntries(draft.mediaQueue
+          .map((item) => MapEntry(item.fieldDefinitionId, item)));
   }
 
   bool _isFieldMediaRequired(String fieldDefinitionId) {

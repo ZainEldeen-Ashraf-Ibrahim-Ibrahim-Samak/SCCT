@@ -23,14 +23,61 @@ enum SubmissionRegexType {
   name,
 }
 
+enum SubmissionContactFieldKey {
+  name,
+  email,
+  phone,
+  address,
+}
+
+class SubmissionContactField {
+  const SubmissionContactField({
+    required this.id,
+    required this.key,
+    required this.labelEn,
+    required this.labelAr,
+    required this.placeholderEn,
+    required this.placeholderAr,
+    required this.required,
+    required this.sortOrder,
+  });
+
+  final String id;
+  final SubmissionContactFieldKey key;
+  final String labelEn;
+  final String labelAr;
+  final String placeholderEn;
+  final String placeholderAr;
+  final bool required;
+  final int sortOrder;
+
+  String labelForLocale(String localeCode) {
+    return localeCode.toLowerCase() == "ar" ? labelAr : labelEn;
+  }
+
+  String placeholderForLocale(String localeCode) {
+    return localeCode.toLowerCase() == "ar" ? placeholderAr : placeholderEn;
+  }
+}
+
 class SubmissionFieldValidation {
   const SubmissionFieldValidation({
     this.required = false,
     this.regexType,
+    this.minLength,
+    this.maxLength,
+    this.min,
+    this.max,
+    this.maxFileSize,
   });
 
   final bool required;
   final SubmissionRegexType? regexType;
+  final int? minLength;
+  final int? maxLength;
+  final num? min;
+  final num? max;
+  final int? maxFileSize;
 }
 
 class SubmissionFieldDefinition {
@@ -71,6 +118,7 @@ class SubmissionSession {
     required this.localeCode,
     required this.isOnline,
     required this.fields,
+    required this.contactFormFields,
     required this.contacts,
     required this.fieldResponses,
     this.submissionId,
@@ -89,6 +137,7 @@ class SubmissionSession {
   final String localeCode;
   final bool isOnline;
   final List<SubmissionFieldDefinition> fields;
+  final List<SubmissionContactField> contactFormFields;
   final List<ContactRecord> contacts;
   final List<FieldResponse> fieldResponses;
 
@@ -111,6 +160,7 @@ class SubmissionSession {
     String? localeCode,
     bool? isOnline,
     List<SubmissionFieldDefinition>? fields,
+    List<SubmissionContactField>? contactFormFields,
     List<ContactRecord>? contacts,
     List<FieldResponse>? fieldResponses,
   }) {
@@ -127,6 +177,7 @@ class SubmissionSession {
       localeCode: localeCode ?? this.localeCode,
       isOnline: isOnline ?? this.isOnline,
       fields: fields ?? this.fields,
+      contactFormFields: contactFormFields ?? this.contactFormFields,
       contacts: contacts ?? this.contacts,
       fieldResponses: fieldResponses ?? this.fieldResponses,
     );

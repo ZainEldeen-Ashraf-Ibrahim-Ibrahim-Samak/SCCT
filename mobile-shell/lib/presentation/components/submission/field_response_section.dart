@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 
 import "../../../domain/constants/message_keys.dart";
 import "../../../domain/entities/field_response.dart";
@@ -37,7 +38,8 @@ class FieldResponseSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ...fields.map((field) {
-          final response = responsesByFieldId[field.id] ?? FieldResponse(fieldDefinitionId: field.id);
+          final response = responsesByFieldId[field.id] ??
+              FieldResponse(fieldDefinitionId: field.id);
           final errorText = fieldErrorTextById[field.id];
 
           return Card(
@@ -47,10 +49,7 @@ class FieldResponseSection extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    field.labelForLocale(localeCode),
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
+                  _buildFieldLabel(context, field),
                   const SizedBox(height: 8),
                   _buildFieldInput(
                     context: context,
@@ -88,22 +87,72 @@ class FieldResponseSection extends StatelessWidget {
       case SubmissionFieldType.text:
       case SubmissionFieldType.number:
       case SubmissionFieldType.date:
+        final rawValue = response.value?.toString() ?? "";
+
+        if (field.inputType == SubmissionFieldType.date) {
+          return TextFormField(
+            key: ValueKey("field_${field.id}_$rawValue"),
+            enabled: enabled,
+            readOnly: true,
+            initialValue: rawValue,
+            onTap: !enabled
+                ? null
+                : () async {
+                    final now = DateTime.now();
+                    final parsed = _parseDate(rawValue);
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: parsed ?? now,
+                      firstDate: DateTime(now.year - 50),
+                      lastDate: DateTime(now.year + 50),
+                    );
+                    if (picked != null) {
+                      onValueChanged(field.id, _formatDate(picked));
+                    }
+                  },
+            decoration: _inputDecoration(
+              hintText: field.validation.required
+                  ? t(MessageKeys.commonRequired)
+                  : t(MessageKeys.commonOptional),
+              suffixIcon: const Icon(Icons.calendar_today_rounded, size: 18),
+            ),
+          );
+        }
+
+        if (field.inputType == SubmissionFieldType.number) {
+          return TextFormField(
+            key: ValueKey("field_${field.id}_$rawValue"),
+            enabled: enabled,
+            initialValue: rawValue,
+            keyboardType: TextInputType.number,
+            inputFormatters: <TextInputFormatter>[
+              FilteringTextInputFormatter.digitsOnly,
+            ],
+            onChanged: (value) {
+              onValueChanged(
+                  field.id, value.trim().isEmpty ? null : value.trim());
+            },
+            decoration: _inputDecoration(
+              hintText: "0",
+            ),
+          );
+        }
+
+        final useMultiLine = field.validation.maxLength == null ||
+            (field.validation.maxLength ?? 0) > 100;
+
         return TextFormField(
-          key: ValueKey("field_${field.id}_${response.value}"),
+          key: ValueKey("field_${field.id}_$rawValue"),
           enabled: enabled,
-          initialValue: response.value?.toString() ?? "",
-          keyboardType: field.inputType == SubmissionFieldType.number
-              ? TextInputType.number
-              : TextInputType.text,
+          initialValue: rawValue,
+          keyboardType: TextInputType.text,
+          minLines: useMultiLine ? 3 : 1,
+          maxLines: useMultiLine ? 5 : 1,
+          maxLength: field.validation.maxLength,
           onChanged: (value) {
-            onValueChanged(
-              field.id,
-              field.inputType == SubmissionFieldType.number
-                  ? num.tryParse(value)
-                  : value,
-            );
+            onValueChanged(field.id, value);
           },
-          decoration: InputDecoration(
+          decoration: _inputDecoration(
             hintText: field.validation.required
                 ? t(MessageKeys.commonRequired)
                 : t(MessageKeys.commonOptional),
@@ -133,7 +182,8 @@ class FieldResponseSection extends StatelessWidget {
     FieldResponse response,
     bool enabled,
   ) {
-    final options = localeCode == "ar" ? field.dropdownOptionsAr : field.dropdownOptionsEn;
+    final options =
+        localeCode == "ar" ? field.dropdownOptionsAr : field.dropdownOptionsEn;
     final selected = response.value?.toString();
     final normalizedSelected = options.contains(selected) ? selected : null;
 
@@ -148,7 +198,7 @@ class FieldResponseSection extends StatelessWidget {
           )
           .toList(growable: false),
       onChanged: enabled ? (value) => onValueChanged(field.id, value) : null,
-      decoration: InputDecoration(
+      decoration: _inputDecoration(
         hintText: field.validation.required
             ? t(MessageKeys.commonRequired)
             : t(MessageKeys.commonOptional),
@@ -161,9 +211,12 @@ class FieldResponseSection extends StatelessWidget {
     FieldResponse response,
     bool enabled,
   ) {
-    final options = localeCode == "ar" ? field.dropdownOptionsAr : field.dropdownOptionsEn;
+    final options =
+        localeCode == "ar" ? field.dropdownOptionsAr : field.dropdownOptionsEn;
     final selected = (response.value is List<dynamic>)
-        ? (response.value as List<dynamic>).map((item) => item.toString()).toSet()
+        ? (response.value as List<dynamic>)
+            .map((item) => item.toString())
+            .toSet()
         : <String>{};
 
     return Wrap(
@@ -188,5 +241,57 @@ class FieldResponseSection extends StatelessWidget {
         );
       }).toList(growable: false),
     );
+  }
+
+  Widget _buildFieldLabel(
+    BuildContext context,
+    SubmissionFieldDefinition field,
+  ) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            field.labelForLocale(localeCode),
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+        ),
+        if (field.validation.required)
+          Text(
+            "*",
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.error,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+      ],
+    );
+  }
+
+  InputDecoration _inputDecoration({
+    required String hintText,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      hintText: hintText,
+      suffixIcon: suffixIcon,
+      border: const OutlineInputBorder(),
+      enabledBorder: const OutlineInputBorder(),
+      focusedBorder: const OutlineInputBorder(),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+    );
+  }
+
+  DateTime? _parseDate(String value) {
+    if (value.trim().isEmpty) {
+      return null;
+    }
+
+    return DateTime.tryParse(value.trim());
+  }
+
+  String _formatDate(DateTime date) {
+    final month = date.month.toString().padLeft(2, "0");
+    final day = date.day.toString().padLeft(2, "0");
+    return "${date.year}-$month-$day";
   }
 }

@@ -21,52 +21,76 @@ class ValidateSubmissionDraftUseCase {
 
   SubmissionValidationResult execute({
     required List<ContactRecord> contacts,
+    required List<SubmissionContactField> contactFormFields,
     required List<SubmissionFieldDefinition> fields,
     required Map<String, FieldResponse> responses,
   }) {
     final fieldErrors = <String, String>{};
     String? contactError;
 
-    final meaningfulContacts = contacts.where((contact) => contact.hasAnyMeaningfulValue).toList(growable: false);
-    if (meaningfulContacts.isEmpty) {
+    final orderedContactFields = (contactFormFields.isNotEmpty
+        ? [...contactFormFields]
+        : const <SubmissionContactField>[
+            SubmissionContactField(
+              id: "contact_name",
+              key: SubmissionContactFieldKey.name,
+              labelEn: "Name",
+              labelAr: "الاسم",
+              placeholderEn: "Enter name",
+              placeholderAr: "ادخل الاسم",
+              required: true,
+              sortOrder: 0,
+            ),
+          ])
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+    if (contacts.isEmpty) {
       contactError = MessageKeys.submissionValidationContactRequired;
     }
 
-    final seenContactSignatures = <String>{};
-    for (final contact in meaningfulContacts) {
-      final signature = [
-        contact.name.trim().toLowerCase(),
-        (contact.email ?? "").trim().toLowerCase(),
-        (contact.phone ?? "").trim(),
-        (contact.contact ?? "").trim().toLowerCase(),
-      ].join("|");
+    final primaryContact = contacts.isNotEmpty
+        ? contacts.first
+        : const ContactRecord(id: "contact_primary");
 
-      if (signature.replaceAll("|", "").isNotEmpty && !seenContactSignatures.add(signature)) {
+    for (final field in orderedContactFields) {
+      final value = _contactFieldValue(primaryContact, field.key).trim();
+      if (field.required && value.isEmpty) {
         contactError = MessageKeys.submissionValidationContactRequired;
+        break;
       }
+    }
 
-      if (contact.name.trim().isNotEmpty && !nameRegex.hasMatch(contact.name.trim())) {
+    if (contactError == null) {
+      final name = primaryContact.name.trim();
+      if (name.isNotEmpty && !nameRegex.hasMatch(name)) {
         contactError = MessageKeys.submissionValidationName;
       }
 
-      final email = (contact.email ?? "").trim();
-      if (email.isNotEmpty && !emailRegex.hasMatch(email)) {
+      final email = (primaryContact.email ?? "").trim();
+      if (contactError == null &&
+          email.isNotEmpty &&
+          !emailRegex.hasMatch(email)) {
         contactError = MessageKeys.submissionValidationEmail;
       }
 
-      final phone = (contact.phone ?? "").trim();
-      if (phone.isNotEmpty && !phoneRegex.hasMatch(phone)) {
+      final phone = (primaryContact.phone ?? "").trim();
+      if (contactError == null &&
+          phone.isNotEmpty &&
+          !phoneRegex.hasMatch(phone)) {
         contactError = MessageKeys.submissionValidationPhone;
       }
 
-      final contactText = (contact.contact ?? "").trim();
-      if (contactText.isNotEmpty && !textRegex.hasMatch(contactText)) {
+      final contactText = (primaryContact.contact ?? "").trim();
+      if (contactError == null &&
+          contactText.isNotEmpty &&
+          !textRegex.hasMatch(contactText)) {
         contactError = MessageKeys.submissionValidationText;
       }
     }
 
     for (final field in fields) {
-      final response = responses[field.id] ?? FieldResponse(fieldDefinitionId: field.id);
+      final response =
+          responses[field.id] ?? FieldResponse(fieldDefinitionId: field.id);
       final value = response.value;
 
       if (field.validation.required && !response.hasMeaningfulValue) {
@@ -82,7 +106,8 @@ class ValidateSubmissionDraftUseCase {
 
         if (field.isMultiple) {
           if (value != null && value is! List<dynamic>) {
-            fieldErrors[field.id] = MessageKeys.submissionValidationRequiredField;
+            fieldErrors[field.id] =
+                MessageKeys.submissionValidationRequiredField;
             continue;
           }
 
@@ -90,19 +115,22 @@ class ValidateSubmissionDraftUseCase {
             for (final item in value) {
               final asString = item.toString().trim();
               if (asString.isNotEmpty && !allowed.contains(asString)) {
-                fieldErrors[field.id] = MessageKeys.submissionValidationRequiredField;
+                fieldErrors[field.id] =
+                    MessageKeys.submissionValidationRequiredField;
               }
             }
           }
         } else {
           if (value is List<dynamic>) {
-            fieldErrors[field.id] = MessageKeys.submissionValidationRequiredField;
+            fieldErrors[field.id] =
+                MessageKeys.submissionValidationRequiredField;
             continue;
           }
 
           final text = value?.toString().trim() ?? "";
           if (text.isNotEmpty && !allowed.contains(text)) {
-            fieldErrors[field.id] = MessageKeys.submissionValidationRequiredField;
+            fieldErrors[field.id] =
+                MessageKeys.submissionValidationRequiredField;
           }
         }
       }
@@ -140,5 +168,21 @@ class ValidateSubmissionDraftUseCase {
       fieldErrorKeys: fieldErrors,
       contactErrorKey: contactError,
     );
+  }
+
+  String _contactFieldValue(
+    ContactRecord contact,
+    SubmissionContactFieldKey key,
+  ) {
+    switch (key) {
+      case SubmissionContactFieldKey.name:
+        return contact.name;
+      case SubmissionContactFieldKey.email:
+        return contact.email ?? "";
+      case SubmissionContactFieldKey.phone:
+        return contact.phone ?? "";
+      case SubmissionContactFieldKey.address:
+        return contact.contact ?? "";
+    }
   }
 }
