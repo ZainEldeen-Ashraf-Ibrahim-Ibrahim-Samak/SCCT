@@ -17,6 +17,7 @@ export interface SignUploadParams {
   folder?: string;
   eager?: string;
   public_id?: string;
+  upload_preset?: string;
 }
 
 export interface SignUploadResult {

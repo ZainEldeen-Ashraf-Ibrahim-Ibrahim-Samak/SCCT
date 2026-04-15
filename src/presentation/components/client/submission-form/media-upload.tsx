@@ -177,7 +177,7 @@ export function MediaUpload({
         const signRes = await fetch("/api/cloudinary/sign", {
           method: "POST",
           body: JSON.stringify({
-            folder: "submissions",
+            fieldType: type,
             timestamp: Math.round(new Date().getTime() / 1000)
           }),
         });
@@ -187,17 +187,50 @@ export function MediaUpload({
           throw new Error("Failed to get upload signature");
         }
 
-        const { signature, timestamp: signedTimestamp, apikey, cloudname } = signData.data;
+        const {
+          signature,
+          timestamp: signedTimestamp,
+          apikey,
+          cloudname,
+          folder,
+          uploadPreset,
+          upload_preset,
+          resourceType,
+          resource_type,
+          eager,
+        } = signData.data;
+
+        const resolvedFolder =
+          typeof folder === "string" && folder.trim().length > 0
+            ? folder.trim()
+            : "submissions";
+        const resolvedUploadPreset =
+          typeof uploadPreset === "string" && uploadPreset.trim().length > 0
+            ? uploadPreset.trim()
+            : (typeof upload_preset === "string" && upload_preset.trim().length > 0
+              ? upload_preset.trim()
+              : "");
+        const resolvedResourceType =
+          (typeof resourceType === "string" && resourceType.trim().toLowerCase() === "image") ||
+          (typeof resource_type === "string" && resource_type.trim().toLowerCase() === "image")
+            ? "image"
+            : "auto";
+        const resolvedEager = typeof eager === "string" ? eager.trim() : "";
 
         const formData = new FormData();
         formData.append("file", file);
         formData.append("api_key", apikey);
         formData.append("timestamp", signedTimestamp.toString());
         formData.append("signature", signature);
-        formData.append("folder", "submissions");
+        formData.append("folder", resolvedFolder);
+        if (resolvedUploadPreset.length > 0) {
+          formData.append("upload_preset", resolvedUploadPreset);
+        }
+        if (resolvedEager.length > 0) {
+          formData.append("eager", resolvedEager);
+        }
 
-        const resourceType = type === "image" ? "image" : "auto";
-        const cloudUrl = `https://api.cloudinary.com/v1_1/${cloudname}/${resourceType}/upload`;
+        const cloudUrl = `https://api.cloudinary.com/v1_1/${cloudname}/${resolvedResourceType}/upload`;
 
         setUploadProgress(0);
 

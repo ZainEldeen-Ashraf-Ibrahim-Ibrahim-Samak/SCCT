@@ -11,10 +11,12 @@ import "../../domain/entities/contact_record.dart";
 import "../../domain/entities/field_response.dart";
 import "../../domain/entities/local_draft.dart";
 import "../../domain/entities/media_upload_item.dart";
+import "../../domain/entities/submission_event.dart";
 import "../../domain/entities/submission_outcome.dart";
 import "../../domain/entities/submission_session.dart";
 import "../../domain/repositories/submission_repository.dart";
 import "../../domain/services/connectivity_service.dart";
+import "../../domain/services/submission_event_bus.dart";
 import "../../domain/use_cases/validate_submission_draft.dart";
 
 class NativeSubmissionViewModel extends ChangeNotifier {
@@ -26,13 +28,15 @@ class NativeSubmissionViewModel extends ChangeNotifier {
     required ValidateSubmissionDraftUseCase validator,
     required String localeCode,
     required int draftAutosaveDebounceMs,
+    SubmissionEventBus? eventBus,
   })  : _repository = repository,
         _secureDraftRepository = secureDraftRepository,
         _cloudinarySignClient = cloudinarySignClient,
         _connectivityService = connectivityService,
         _validator = validator,
         _localeCode = localeCode,
-        _draftAutosaveDebounceMs = draftAutosaveDebounceMs;
+        _draftAutosaveDebounceMs = draftAutosaveDebounceMs,
+        _eventBus = eventBus;
 
   final SubmissionRepository _repository;
   final SecureDraftRepository _secureDraftRepository;
@@ -41,6 +45,7 @@ class NativeSubmissionViewModel extends ChangeNotifier {
   final ValidateSubmissionDraftUseCase _validator;
   final String _localeCode;
   final int _draftAutosaveDebounceMs;
+  final SubmissionEventBus? _eventBus;
 
   SubmissionSession? _session;
   String? _token;
@@ -102,7 +107,14 @@ class NativeSubmissionViewModel extends ChangeNotifier {
     await _connectivitySubscription?.cancel();
     _connectivitySubscription =
         _connectivityService.watchOnlineStatus().listen((online) {
+      final wasOnline = _isOnline;
       _isOnline = online;
+      if (!wasOnline && online) {
+        _emitEvent(
+          SubmissionEventName.queueOnlineResume,
+          MessageKeys.submissionOfflineBlocked,
+        );
+      }
       if (_session != null) {
         _session = _session!.copyWith(isOnline: online);
       }
@@ -259,6 +271,12 @@ class NativeSubmissionViewModel extends ChangeNotifier {
   }) async {
     final requiredMedia = _isFieldMediaRequired(fieldDefinitionId);
 
+    _emitEvent(
+      SubmissionEventName.uploadStarted,
+      MessageKeys.submissionMediaUpload,
+      fieldId: fieldDefinitionId,
+    );
+
     _uploadingFieldIds.add(fieldDefinitionId);
     _mediaQueueByFieldId[fieldDefinitionId] = MediaUploadItem(
       fieldDefinitionId: fieldDefinitionId,
@@ -269,14 +287,18 @@ class NativeSubmissionViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final session = _session;
+      final fieldType = _cloudinaryFieldTypeFor(fieldDefinitionId);
       final signature = await _cloudinarySignClient.requestSignature(
-        folder: "scct/submissions",
+        fieldType: fieldType,
+        formId: session?.formTemplateId,
+        draftId: _token,
       );
 
       final uploaded = await _cloudinarySignClient.uploadFile(
         filePath: filePath,
         signature: signature,
-        folder: "scct/submissions",
+        resourceType: signature.resourceType,
       );
 
       final existing = _responsesByFieldId[fieldDefinitionId] ??
@@ -305,9 +327,20 @@ class NativeSubmissionViewModel extends ChangeNotifier {
         required: requiredMedia,
       );
 
+      _emitEvent(
+        SubmissionEventName.uploadSuccess,
+        MessageKeys.submissionSuccess,
+        fieldId: fieldDefinitionId,
+      );
+
       _scheduleAutosave();
     } on SubmissionApiException {
       _statusMessageKey = MessageKeys.submissionServerFailure;
+      _emitEvent(
+        SubmissionEventName.uploadFailed,
+        MessageKeys.submissionServerFailure,
+        fieldId: fieldDefinitionId,
+      );
       _mediaQueueByFieldId[fieldDefinitionId] = MediaUploadItem(
         fieldDefinitionId: fieldDefinitionId,
         localUri: filePath,
@@ -317,6 +350,11 @@ class NativeSubmissionViewModel extends ChangeNotifier {
       );
     } catch (_) {
       _statusMessageKey = MessageKeys.submissionServerFailure;
+      _emitEvent(
+        SubmissionEventName.uploadFailed,
+        MessageKeys.submissionServerFailure,
+        fieldId: fieldDefinitionId,
+      );
       _mediaQueueByFieldId[fieldDefinitionId] = MediaUploadItem(
         fieldDefinitionId: fieldDefinitionId,
         localUri: filePath,
@@ -387,15 +425,28 @@ class NativeSubmissionViewModel extends ChangeNotifier {
 
     if (!validation.isValid) {
       _statusMessageKey = MessageKeys.submissionValidationFailed;
+      _emitEvent(
+        SubmissionEventName.validationFailed,
+        MessageKeys.submissionValidationFailed,
+      );
       notifyListeners();
       return;
     }
 
     if (hasBlockingRequiredMedia) {
       _statusMessageKey = MessageKeys.submissionRequiredMedia;
+      _emitEvent(
+        SubmissionEventName.validationFailed,
+        MessageKeys.submissionRequiredMedia,
+      );
       notifyListeners();
       return;
     }
+
+    _emitEvent(
+      SubmissionEventName.submitStarted,
+      MessageKeys.submissionSubmit,
+    );
 
     _isSubmitting = true;
     _statusMessageKey = null;
@@ -420,25 +471,49 @@ class NativeSubmissionViewModel extends ChangeNotifier {
     switch (outcome.kind) {
       case SubmissionOutcomeKind.success:
         _statusMessageKey = MessageKeys.submissionSuccess;
+        _emitEvent(
+          SubmissionEventName.submitSuccess,
+          MessageKeys.submissionSuccess,
+        );
         await _clearSensitiveSessionData();
         break;
       case SubmissionOutcomeKind.validationError:
         _statusMessageKey = MessageKeys.submissionValidationFailed;
+        _emitEvent(
+          SubmissionEventName.validationFailed,
+          MessageKeys.submissionValidationFailed,
+        );
         break;
       case SubmissionOutcomeKind.staleConflict:
         _statusMessageKey = MessageKeys.submissionStaleConflict;
+        _emitEvent(
+          SubmissionEventName.submitFailed,
+          MessageKeys.submissionStaleConflict,
+        );
         break;
       case SubmissionOutcomeKind.unauthorized:
         _statusMessageKey = MessageKeys.submissionUnauthorized;
+        _emitEvent(
+          SubmissionEventName.submitFailed,
+          MessageKeys.submissionUnauthorized,
+        );
         await _clearSensitiveSessionData();
         break;
       case SubmissionOutcomeKind.invalidToken:
         _statusMessageKey = MessageKeys.submissionInvalidToken;
+        _emitEvent(
+          SubmissionEventName.submitFailed,
+          MessageKeys.submissionInvalidToken,
+        );
         await _clearSensitiveSessionData();
         break;
       case SubmissionOutcomeKind.networkError:
       case SubmissionOutcomeKind.serverError:
         _statusMessageKey = MessageKeys.submissionServerFailure;
+        _emitEvent(
+          SubmissionEventName.submitFailed,
+          MessageKeys.submissionServerFailure,
+        );
         break;
     }
 
@@ -466,6 +541,10 @@ class NativeSubmissionViewModel extends ChangeNotifier {
     );
 
     await _secureDraftRepository.save(token, draft);
+    _emitEvent(
+      SubmissionEventName.draftSaved,
+      MessageKeys.submissionSaveDraft,
+    );
   }
 
   Future<void> _loadSessionAndDraft() async {
@@ -490,7 +569,27 @@ class NativeSubmissionViewModel extends ChangeNotifier {
     final draft = await _secureDraftRepository.load(token);
     if (draft != null) {
       _applyDraft(draft);
+      _emitEvent(
+        SubmissionEventName.draftRestored,
+        MessageKeys.submissionSaveDraft,
+      );
     }
+  }
+
+  void _emitEvent(
+    SubmissionEventName name,
+    String messageKey, {
+    String? fieldId,
+    Map<String, Object?> payload = const <String, Object?>{},
+  }) {
+    _eventBus?.emit(
+      SubmissionEvent(
+        name: name,
+        messageKey: messageKey,
+        fieldId: fieldId,
+        payload: payload,
+      ),
+    );
   }
 
   void _applyDraft(LocalDraft draft) {
@@ -559,6 +658,24 @@ class NativeSubmissionViewModel extends ChangeNotifier {
         field.inputType == SubmissionFieldType.file;
 
     return isMedia && field.isMultiple;
+  }
+
+  String _cloudinaryFieldTypeFor(String fieldDefinitionId) {
+    final field = _session?.fields.firstWhere(
+      (item) => item.id == fieldDefinitionId,
+      orElse: () => const SubmissionFieldDefinition(
+        id: "",
+        nameEn: "",
+        nameAr: "",
+        inputType: SubmissionFieldType.text,
+        isMultiple: false,
+        validation: SubmissionFieldValidation(),
+        dropdownOptionsEn: <String>[],
+        dropdownOptionsAr: <String>[],
+      ),
+    );
+
+    return field?.inputType == SubmissionFieldType.image ? "image" : "file";
   }
 
   String _newContactId() {

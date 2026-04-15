@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:flutter_localizations/flutter_localizations.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
+import "package:hive_flutter/hive_flutter.dart";
 
 import "app/router.dart";
 import "app/startup_coordinator.dart";
@@ -15,8 +16,27 @@ import "presentation/view_models/scan_view_model.dart";
 import "widgets/secure_widget.dart";
 import "i18n/index.dart";
 
+const String _draftsBoxName = "drafts";
+const String _submissionQueueBoxName = "submission_queue";
+const String _formDefinitionsBoxName = "form_definitions";
+
+Future<void> _initializeLocalStorage() async {
+  await Hive.initFlutter();
+  // Type adapters can be registered here as local models are introduced.
+  if (!Hive.isBoxOpen(_draftsBoxName)) {
+    await Hive.openBox<dynamic>(_draftsBoxName);
+  }
+  if (!Hive.isBoxOpen(_submissionQueueBoxName)) {
+    await Hive.openBox<dynamic>(_submissionQueueBoxName);
+  }
+  if (!Hive.isBoxOpen(_formDefinitionsBoxName)) {
+    await Hive.openBox<dynamic>(_formDefinitionsBoxName);
+  }
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await _initializeLocalStorage();
   try {
     await dotenv.load(fileName: ".env");
   } catch (e) {
@@ -90,7 +110,8 @@ class _ScctMobileAppState extends State<ScctMobileApp> {
 
   String _t(String key) {
     final locale = _locale.languageCode.toLowerCase() == "ar" ? "ar" : "en";
-    final catalog = I18nCatalog.getCached(locale) ?? I18nCatalog.getCached("ar");
+    final catalog =
+        I18nCatalog.getCached(locale) ?? I18nCatalog.getCached("ar");
     return catalog?.t(key) ?? key;
   }
 

@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:flutter/material.dart";
 
 import "../../data/adapters/connectivity_adapter.dart";
@@ -14,7 +16,9 @@ import "../../i18n/index.dart";
 import "../components/submission/contact_records_section.dart";
 import "../components/submission/field_response_section.dart";
 import "../components/submission/offline_banner.dart";
+import "../components/submission/submission_toast_host.dart";
 import "../view_models/native_submission_view_model.dart";
+import "../../domain/services/submission_event_bus.dart";
 
 class NativeSubmissionScreen extends StatefulWidget {
   const NativeSubmissionScreen({
@@ -46,6 +50,7 @@ class NativeSubmissionScreen extends StatefulWidget {
 
 class _NativeSubmissionScreenState extends State<NativeSubmissionScreen> {
   NativeSubmissionViewModel? _viewModel;
+  final SubmissionEventBus _eventBus = SubmissionEventBus();
   I18nCatalog? _catalog;
   bool _isBootstrapping = true;
   String? _bootstrapError;
@@ -91,6 +96,7 @@ class _NativeSubmissionScreenState extends State<NativeSubmissionScreen> {
         validator: const ValidateSubmissionDraftUseCase(),
         localeCode: widget.localeCode,
         draftAutosaveDebounceMs: widget.draftAutosaveDebounceMs,
+        eventBus: _eventBus,
       );
 
       final catalog = await I18nCatalog.load(widget.localeCode);
@@ -125,6 +131,7 @@ class _NativeSubmissionScreenState extends State<NativeSubmissionScreen> {
 
   @override
   void dispose() {
+    unawaited(_eventBus.dispose());
     _viewModel?.dispose();
     super.dispose();
   }
@@ -270,141 +277,148 @@ class _NativeSubmissionScreenState extends State<NativeSubmissionScreen> {
           );
         }
 
-        return SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (!viewModel.isOnline)
-                  OfflineBanner(text: _t(MessageKeys.submissionOfflineBlocked)),
-                if (viewModel.statusMessageKey != null)
-                  Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            _t(viewModel.statusMessageKey!),
-                            style: TextStyle(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onPrimaryContainer,
-                              fontWeight: FontWeight.w600,
+        return SubmissionToastHost(
+          eventBus: _eventBus,
+          t: _t,
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (!viewModel.isOnline)
+                    OfflineBanner(
+                        text: _t(MessageKeys.submissionOfflineBlocked)),
+                  if (viewModel.statusMessageKey != null)
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _t(viewModel.statusMessageKey!),
+                              style: TextStyle(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onPrimaryContainer,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
-                        ),
-                        if (viewModel.statusMessageKey ==
-                            MessageKeys.submissionStaleConflict)
-                          TextButton(
-                            onPressed: viewModel.refresh,
-                            child: Text(_t(MessageKeys.submissionRetry)),
-                          ),
-                      ],
+                          if (viewModel.statusMessageKey ==
+                              MessageKeys.submissionStaleConflict)
+                            TextButton(
+                              onPressed: viewModel.refresh,
+                              child: Text(_t(MessageKeys.submissionRetry)),
+                            ),
+                        ],
+                      ),
                     ),
+                  const SizedBox(height: 4),
+                  ContactRecordsSection(
+                    contacts: viewModel.contacts,
+                    contactFields:
+                        viewModel.session?.contactFormFields ?? const [],
+                    enabled: viewModel.isEditable,
+                    localeCode: widget.localeCode,
+                    errorText: viewModel.contactErrorKey == null
+                        ? null
+                        : _t(viewModel.contactErrorKey!),
+                    t: _t,
+                    onContactChanged: (contactId, fieldKey, value) {
+                      switch (fieldKey) {
+                        case "name":
+                          viewModel.updateContactField(
+                              id: contactId, name: value);
+                          break;
+                        case "email":
+                          viewModel.updateContactField(
+                              id: contactId, email: value);
+                          break;
+                        case "phone":
+                          viewModel.updateContactField(
+                              id: contactId, phone: value);
+                          break;
+                        case "address":
+                        case "contact":
+                          viewModel.updateContactField(
+                              id: contactId, contact: value);
+                          break;
+                      }
+                    },
                   ),
-                const SizedBox(height: 4),
-                ContactRecordsSection(
-                  contacts: viewModel.contacts,
-                  contactFields:
-                      viewModel.session?.contactFormFields ?? const [],
-                  enabled: viewModel.isEditable,
-                  localeCode: widget.localeCode,
-                  errorText: viewModel.contactErrorKey == null
-                      ? null
-                      : _t(viewModel.contactErrorKey!),
-                  t: _t,
-                  onContactChanged: (contactId, fieldKey, value) {
-                    switch (fieldKey) {
-                      case "name":
-                        viewModel.updateContactField(
-                            id: contactId, name: value);
-                        break;
-                      case "email":
-                        viewModel.updateContactField(
-                            id: contactId, email: value);
-                        break;
-                      case "phone":
-                        viewModel.updateContactField(
-                            id: contactId, phone: value);
-                        break;
-                      case "address":
-                      case "contact":
-                        viewModel.updateContactField(
-                            id: contactId, contact: value);
-                        break;
-                    }
-                  },
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _t(MessageKeys.submissionSectionForm),
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 8),
-                FieldResponseSection(
-                  fields: viewModel.session?.fields ?? const [],
-                  responsesByFieldId: viewModel.responsesByFieldId,
-                  fieldErrorTextById: fieldErrors,
-                  enabled: viewModel.isEditable,
-                  localeCode: widget.localeCode,
-                  onValueChanged: viewModel.setFieldValue,
-                  onUploadMedia: (fieldId, filePath) {
-                    return viewModel.uploadMediaForField(
-                      fieldDefinitionId: fieldId,
-                      filePath: filePath,
-                    );
-                  },
-                  onClearMedia: viewModel.clearFieldMedia,
-                  isFieldUploading: viewModel.isFieldUploading,
-                  t: _t,
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: viewModel.isEditable
-                            ? () async {
-                                await viewModel.saveDraftNow();
-                                if (!mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text(
-                                          _t(MessageKeys.submissionSaveDraft))),
-                                );
-                              }
-                            : null,
-                        child: Text(_t(MessageKeys.submissionSaveDraft)),
+                  const SizedBox(height: 8),
+                  Text(
+                    _t(MessageKeys.submissionSectionForm),
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  FieldResponseSection(
+                    fields: viewModel.session?.fields ?? const [],
+                    responsesByFieldId: viewModel.responsesByFieldId,
+                    fieldErrorTextById: fieldErrors,
+                    enabled: viewModel.isEditable,
+                    localeCode: widget.localeCode,
+                    onValueChanged: viewModel.setFieldValue,
+                    onUploadMedia: (fieldId, filePath) {
+                      return viewModel.uploadMediaForField(
+                        fieldDefinitionId: fieldId,
+                        filePath: filePath,
+                      );
+                    },
+                    onClearMedia: viewModel.clearFieldMedia,
+                    isFieldUploading: viewModel.isFieldUploading,
+                    t: _t,
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: viewModel.isEditable
+                              ? () async {
+                                  final messenger =
+                                      ScaffoldMessenger.of(context);
+                                  await viewModel.saveDraftNow();
+                                  if (!mounted) return;
+                                  messenger.showSnackBar(
+                                    SnackBar(
+                                        content: Text(_t(
+                                            MessageKeys.submissionSaveDraft))),
+                                  );
+                                }
+                              : null,
+                          child: Text(_t(MessageKeys.submissionSaveDraft)),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed:
-                            (!viewModel.isEditable || viewModel.isSubmitting)
-                                ? null
-                                : viewModel.submitOrResubmit,
-                        icon: viewModel.isSubmitting
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : const Icon(Icons.send_rounded),
-                        label: Text(_t(viewModel.submitActionKey)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed:
+                              (!viewModel.isEditable || viewModel.isSubmitting)
+                                  ? null
+                                  : viewModel.submitOrResubmit,
+                          icon: viewModel.isSubmitting
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.send_rounded),
+                          label: Text(_t(viewModel.submitActionKey)),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         );
