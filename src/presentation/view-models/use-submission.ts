@@ -313,17 +313,38 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
     isEditingRef.current = true;
     updateDraft((prev) => ({
       ...prev,
-      contactRecords: (prev.contactRecords ?? []).map((record) =>
-        record.id === id
-          ? {
-              ...record,
-              name: patch.name ?? record.name,
-              email: patch.email ?? record.email,
-              phone: patch.phone ?? record.phone,
-              address: patch.address ?? record.address,
-            }
-          : record,
-      ),
+      contactRecords: (() => {
+        const records = prev.contactRecords ?? [];
+        let matched = false;
+        const next = records.map((record) => {
+          if (record.id !== id) return record;
+          matched = true;
+          return {
+            ...record,
+            name: patch.name ?? record.name,
+            email: patch.email ?? record.email,
+            phone: patch.phone ?? record.phone,
+            address: patch.address ?? record.address,
+          };
+        });
+
+        if (matched) {
+          return next;
+        }
+
+        const fallback = records[0] ?? createEmptyContactRecord();
+        return [
+          {
+            ...fallback,
+            id: fallback.id || id || createEmptyContactRecord().id,
+            name: patch.name ?? fallback.name,
+            email: patch.email ?? fallback.email,
+            phone: patch.phone ?? fallback.phone,
+            address: patch.address ?? fallback.address,
+          },
+          ...records.slice(1),
+        ];
+      })(),
     }));
   };
 
@@ -438,6 +459,10 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
         const shouldHydrateFromServer = formVersionChanged || !isEditingRef.current || !hasDraftData;
         if (shouldHydrateFromServer) {
           const nextDraftContactRecords = mapSourceContactRecords(data.submission?.contactRecords ?? []);
+          const {
+            hasMeaningfulContacts: hasMeaningfulLocalContacts,
+            resolvedContactRecords: resolvedLocalContactRecords,
+          } = normalizeContactRecordDrafts(currentDraft?.contactRecords ?? []);
 
           const currentDraftFormData = currentDraft?.formData ?? {};
           const dropped: string[] = [];
@@ -481,8 +506,8 @@ export function useSubmission(tokenOrId: string): UseSubmissionReturn {
             clientName: isEditingRef.current 
               ? (currentDraft?.clientName || data.submission?.clientName || "") 
               : (data.submission?.clientName || ""), 
-            contactRecords: isEditingRef.current && currentDraft?.contactRecords?.length
-              ? currentDraft.contactRecords
+            contactRecords: hasMeaningfulLocalContacts
+              ? resolvedLocalContactRecords
               : (nextDraftContactRecords.length > 0
                   ? nextDraftContactRecords
                   : [createEmptyContactRecord()]),
