@@ -38,7 +38,7 @@ export class CloudinaryStorageRepository implements StorageRepository {
           limit: bandwidthLimit,
           used_percent: result.bandwidth?.used_percent || (bandwidthUsage / bandwidthLimit),
         },
-        requests: result.requests || 0,
+        requests: typeof result.requests === 'number' ? result.requests : (result.requests?.usage || 0),
       };
     } catch (error) {
       logger.error("Failed to fetch Cloudinary usage metrics", error);
