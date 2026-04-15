@@ -111,7 +111,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ toke
 
     return successResponse(result);
   } catch (error) {
-    logger.error("Failed to fetch submission by token", { error, url: request.url });
+    logger.error("Failed to fetch submission by token", { error });
     return errorResponse("server_error", 500, "SUBMISSION_FETCH_FAILED");
   }
 }
@@ -147,14 +147,12 @@ export async function POST(
 
     if (!parsed.success) {
       logger.warn("Submission validation failed", {
-        token,
         issues: parsed.error.flatten(),
       });
       return errorResponse("Validation error", 400, "VALIDATION_ERROR", parsed.error.flatten());
     }
 
     logger.info("Submission POST accepted", {
-      token,
       clientNameLength: parsed.data.clientName.length,
       clientContactLength: parsed.data.clientContact?.length ?? 0,
       contactRecordsCount: parsed.data.contactRecords?.length ?? 0,
@@ -172,14 +170,12 @@ export async function POST(
 
     if (!result.success || !result.submission) {
       logger.warn("Submission POST rejected by use-case", {
-        token,
         reason: result.error ?? "Unknown",
       });
       return errorResponse(result.error ?? "Invalid submission", 400, "SUBMISSION_INVALID");
     }
 
     logger.info("Submission POST persisted", {
-      token,
       submissionId: result.submission.id,
       accessToken: result.submission.accessToken,
     });
@@ -247,14 +243,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ to
 
     if (!parsed.success) {
       logger.warn("Resubmission validation failed", {
-        token,
         issues: parsed.error.flatten(),
       });
       return errorResponse("Validation error", 400, "VALIDATION_ERROR", parsed.error.flatten());
     }
 
     logger.info("Submission PATCH accepted", {
-      token,
       clientNameLength: parsed.data.clientName.length,
       clientContactLength: parsed.data.clientContact?.length ?? 0,
       contactRecordsCount: parsed.data.contactRecords?.length ?? 0,
@@ -277,7 +271,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ to
       }
 
       logger.warn("Submission PATCH rejected by use-case", {
-        token,
         reason: result.error ?? "Unknown",
       });
       return errorResponse(result.error ?? "Invalid resubmission", 400, "RESUBMISSION_INVALID");

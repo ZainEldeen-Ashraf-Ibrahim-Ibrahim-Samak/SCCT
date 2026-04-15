@@ -279,12 +279,23 @@ class _NativeSubmissionScreenState extends State<NativeSubmissionScreen> {
                       color: Theme.of(context).colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
-                      _t(viewModel.statusMessageKey!),
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _t(viewModel.statusMessageKey!),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        if (viewModel.statusMessageKey == MessageKeys.submissionStaleConflict)
+                          TextButton(
+                            onPressed: viewModel.refresh,
+                            child: Text(_t(MessageKeys.submissionRetry)),
+                          ),
+                      ],
                     ),
                   ),
                 TextFormField(
