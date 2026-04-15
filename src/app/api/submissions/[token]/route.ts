@@ -2,25 +2,14 @@ import { MongoSubmissionRepository } from "@/data/repositories/mongo-submission-
 import { MongoFieldValueRepository } from "@/data/repositories/mongo-field-value-repository";
 import { MongoFormTemplateRepository } from "@/data/repositories/mongo-form-template-repository";
 import { MongoFieldDefinitionRepository } from "@/data/repositories/mongo-field-definition-repository";
-import { createSubmissionSchema } from "@/lib/validations";
-import { SubmitFormUseCase } from "@/domain/use-cases/client/submit-form";
 import { ViewSubmissionUseCase } from "@/domain/use-cases/client/view-submission";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { logger } from "@/lib/dev-logger";
-import { NotificationPublisher } from "@/lib/events/publisher";
-import { parseSecureJson } from "@/lib/api-security";
 
 const submissionRepo = new MongoSubmissionRepository();
 const fieldValueRepo = new MongoFieldValueRepository();
 const formTemplateRepo = new MongoFormTemplateRepository();
 const fieldDefRepo = new MongoFieldDefinitionRepository();
-
-const submitUseCase = new SubmitFormUseCase(
-  submissionRepo,
-  fieldValueRepo,
-  formTemplateRepo,
-  fieldDefRepo,
-);
 
 const viewUseCase = new ViewSubmissionUseCase(
   submissionRepo,
@@ -28,6 +17,54 @@ const viewUseCase = new ViewSubmissionUseCase(
   formTemplateRepo,
   fieldDefRepo
 );
+
+type SubmitRouteDependencies = {
+  createSubmissionSchema: typeof import("@/lib/validations").createSubmissionSchema;
+  submitUseCase: InstanceType<typeof import("@/domain/use-cases/client/submit-form").SubmitFormUseCase>;
+  NotificationPublisher: typeof import("@/lib/events/publisher").NotificationPublisher;
+  parseSecureJson: typeof import("@/lib/api-security").parseSecureJson;
+};
+
+let submitDepsPromise: Promise<SubmitRouteDependencies> | null = null;
+
+async function getSubmitDependencies(): Promise<SubmitRouteDependencies> {
+  if (!submitDepsPromise) {
+    submitDepsPromise = (async () => {
+      const [
+        { createSubmissionSchema },
+        { SubmitFormUseCase },
+        { NotificationPublisher },
+        { parseSecureJson },
+      ] = await Promise.all([
+        import("@/lib/validations"),
+        import("@/domain/use-cases/client/submit-form"),
+        import("@/lib/events/publisher"),
+        import("@/lib/api-security"),
+      ]);
+
+      const submitUseCase = new SubmitFormUseCase(
+        submissionRepo,
+        fieldValueRepo,
+        formTemplateRepo,
+        fieldDefRepo,
+      );
+
+      return {
+        createSubmissionSchema,
+        submitUseCase,
+        NotificationPublisher,
+        parseSecureJson,
+      };
+    })();
+  }
+
+  try {
+    return await submitDepsPromise;
+  } catch (error) {
+    submitDepsPromise = null;
+    throw error;
+  }
+}
 
 export const dynamic = "force-dynamic";
 
@@ -75,6 +112,12 @@ export async function POST(
 ) {
   try {
     const { token } = await params;
+    const {
+      createSubmissionSchema,
+      submitUseCase,
+      NotificationPublisher,
+      parseSecureJson,
+    } = await getSubmitDependencies();
     const parsedBody = await parseSecureJson(request);
     if (!parsedBody.success) {
       return errorResponse(parsedBody.error, 400, parsedBody.code);
@@ -139,6 +182,12 @@ export async function POST(
 export async function PATCH(request: Request, { params }: { params: Promise<{ token: string }> }) {
   try {
     const { token } = await params;
+    const {
+      createSubmissionSchema,
+      submitUseCase,
+      NotificationPublisher,
+      parseSecureJson,
+    } = await getSubmitDependencies();
     const parsedBody = await parseSecureJson(request);
     if (!parsedBody.success) {
       return errorResponse(parsedBody.error, 400, parsedBody.code);
