@@ -221,6 +221,7 @@ export function SettingsForm() {
               {isRestoring ? t("restoring") : t("uploadRestore")}
             </Button>
             <input 
+              title="Upload & Restore"
               type="file" 
               accept=".json,application/json"
               onChange={handleRestore}
