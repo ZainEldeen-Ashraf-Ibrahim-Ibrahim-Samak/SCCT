@@ -19,6 +19,7 @@ interface SubmissionFormProps {
 export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
   const t = useTranslations("client");
   const tc = useTranslations("common");
+  const te = useTranslations("errors");
   const {
     isNew,
     isLoading,
@@ -310,7 +311,9 @@ export function SubmissionForm({ tokenOrId }: SubmissionFormProps) {
 
             {error && error !== "not_found" && (
               <div className="px-6 pb-2">
-                 <p className="text-sm text-destructive">{error}</p>
+                 <p className="text-sm text-destructive">
+                   {te(error) ? te(error) : error}
+                 </p>
               </div>
             )}
 

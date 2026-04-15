@@ -49,6 +49,9 @@ function normalizeResubmissionRequest(
     return null;
   }
 
+  const createdAtRaw = candidate.createdAt ? new Date(String(candidate.createdAt)).getTime() : 0;
+  const expiresAtRaw = candidate.expiresAt ? new Date(String(candidate.expiresAt)).getTime() : 0;
+
   return {
     id: String(candidate.id ?? ""),
     targetAccessToken: String(candidate.targetAccessToken ?? ""),
@@ -56,29 +59,33 @@ function normalizeResubmissionRequest(
     requestedByAdminName: String(candidate.requestedByAdminName ?? ""),
     comment: typeof candidate.comment === "string" ? candidate.comment : "",
     status,
-    createdAt: new Date(String(candidate.createdAt ?? new Date().toISOString())),
-    expiresAt: new Date(String(candidate.expiresAt ?? new Date().toISOString())),
+    createdAt: isNaN(createdAtRaw) || createdAtRaw === 0 ? new Date() : new Date(createdAtRaw),
+    expiresAt: isNaN(expiresAtRaw) || expiresAtRaw === 0 ? new Date(Date.now() + RESUBMISSION_RETENTION_MS) : new Date(expiresAtRaw),
     deliveredAt: candidate.deliveredAt ? new Date(String(candidate.deliveredAt)) : null,
     seenAt: candidate.seenAt ? new Date(String(candidate.seenAt)) : null,
   };
 }
 
 function toEntity(doc: Record<string, unknown>): Submission {
+  const submittedAtRaw = doc.submittedAt ? new Date(String(doc.submittedAt)).getTime() : 0;
+  const updatedAtRaw = doc.updatedAt ? new Date(String(doc.updatedAt)).getTime() : 0;
+  const lastResubmittedAtRaw = doc.lastResubmittedAt ? new Date(String(doc.lastResubmittedAt)).getTime() : 0;
+
   return {
     id: doc._id?.toString() ?? "",
     accessToken: doc.accessToken as string,
     formTemplateId: doc.formTemplateId?.toString() ?? "",
-    clientName: doc.clientName as string,
-    clientContact: doc.clientContact as string,
-    status: doc.status as Submission["status"],
-    rewriteComment: doc.rewriteComment as string,
+    clientName: (doc.clientName as string) || "Unnamed Submission",
+    clientContact: (doc.clientContact as string) || "",
+    status: (doc.status as Submission["status"]) || "pending",
+    rewriteComment: (doc.rewriteComment as string) || "",
     contactRecords: normalizeContactRecords(doc.contactRecords),
-    formSnapshot: (doc.formSnapshot as unknown as Submission["formSnapshot"]) ?? [],
-    auditTrail: (doc.auditTrail as unknown as Submission["auditTrail"]) ?? [],
+    formSnapshot: (doc.formSnapshot as unknown as Submission["formSnapshot"]) || [],
+    auditTrail: (doc.auditTrail as unknown as Submission["auditTrail"]) || [],
     resubmissionRequest: normalizeResubmissionRequest(doc.resubmissionRequest),
-    submittedAt: doc.submittedAt as Date,
-    lastResubmittedAt: doc.lastResubmittedAt as Date | null,
-    updatedAt: doc.updatedAt as Date,
+    submittedAt: isNaN(submittedAtRaw) || submittedAtRaw === 0 ? new Date() : new Date(submittedAtRaw),
+    lastResubmittedAt: isNaN(lastResubmittedAtRaw) || lastResubmittedAtRaw === 0 ? null : new Date(lastResubmittedAtRaw),
+    updatedAt: isNaN(updatedAtRaw) || updatedAtRaw === 0 ? new Date() : new Date(updatedAtRaw),
   };
 }
 

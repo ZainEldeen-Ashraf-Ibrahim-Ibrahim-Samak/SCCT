@@ -79,13 +79,17 @@ export class ViewSubmissionUseCase {
       }
     }
 
+    const fields = Array.isArray(submission.formSnapshot) && submission.formSnapshot.length > 0
+      ? [...submission.formSnapshot]
+      : (linkedForm ? await this.fieldDefRepo.findByFormId(linkedForm.id, true) : []);
+
     return {
       isNew: false,
       formTemplate: linkedForm ?? undefined,
       submission,
       values,
-      fields: [...submission.formSnapshot],
-      formVersion: computeFieldVersion([...submission.formSnapshot], linkedForm?.updatedAt),
+      fields,
+      formVersion: computeFieldVersion(fields, linkedForm?.updatedAt),
     };
   }
 
