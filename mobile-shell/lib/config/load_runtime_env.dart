@@ -1,19 +1,26 @@
 import "dart:io";
 
 import "package:flutter/foundation.dart";
+import "package:flutter_dotenv/flutter_dotenv.dart";
 
 import "../domain/entities/mobile_runtime_config.dart";
 
 RuntimeConfigInput loadRuntimeEnv() {
   const appBaseFromDefine = String.fromEnvironment("MOBILE_APP_BASE_URL");
   const allowedHostsFromDefine = String.fromEnvironment("MOBILE_ALLOWED_HOSTS");
-  const defaultLocaleFromDefine = String.fromEnvironment("MOBILE_DEFAULT_LOCALE");
-  const supportedLocalesFromDefine = String.fromEnvironment("MOBILE_SUPPORTED_LOCALES");
-  const splashMsFromDefine = String.fromEnvironment("MOBILE_SPLASH_MIN_DURATION_MS");
-  const scanTimeoutFromDefine = String.fromEnvironment("MOBILE_SCAN_TIMEOUT_MS");
-  const submissionPathFromDefine = String.fromEnvironment("MOBILE_SUBMISSION_PATH_SEGMENT");
+  const defaultLocaleFromDefine =
+      String.fromEnvironment("MOBILE_DEFAULT_LOCALE");
+  const supportedLocalesFromDefine =
+      String.fromEnvironment("MOBILE_SUPPORTED_LOCALES");
+  const splashMsFromDefine =
+      String.fromEnvironment("MOBILE_SPLASH_MIN_DURATION_MS");
+  const scanTimeoutFromDefine =
+      String.fromEnvironment("MOBILE_SCAN_TIMEOUT_MS");
+  const submissionPathFromDefine =
+      String.fromEnvironment("MOBILE_SUBMISSION_PATH_SEGMENT");
   const apiTimeoutFromDefine = String.fromEnvironment("MOBILE_API_TIMEOUT_MS");
-  const draftDebounceFromDefine = String.fromEnvironment("MOBILE_DRAFT_AUTOSAVE_DEBOUNCE_MS");
+  const draftDebounceFromDefine =
+      String.fromEnvironment("MOBILE_DRAFT_AUTOSAVE_DEBOUNCE_MS");
 
   return RuntimeConfigInput(
     mobileAppBaseUrl: _resolveRequiredValue(
@@ -74,6 +81,13 @@ String? _resolveRequiredValue({
     return fromDefine;
   }
 
+  if (dotenv.isInitialized) {
+    final fromDotEnv = dotenv.env[envKey]?.trim();
+    if (fromDotEnv != null && fromDotEnv.isNotEmpty) {
+      return fromDotEnv;
+    }
+  }
+
   final fromEnv = Platform.environment[envKey]?.trim();
   if (fromEnv != null && fromEnv.isNotEmpty) {
     return fromEnv;
@@ -94,6 +108,13 @@ String? _resolveOptionalValue({
   final fromDefine = defineValue.trim();
   if (fromDefine.isNotEmpty) {
     return fromDefine;
+  }
+
+  if (dotenv.isInitialized) {
+    final fromDotEnv = dotenv.env[envKey]?.trim();
+    if (fromDotEnv != null && fromDotEnv.isNotEmpty) {
+      return fromDotEnv;
+    }
   }
 
   final fromEnv = Platform.environment[envKey]?.trim();

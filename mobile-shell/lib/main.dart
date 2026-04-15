@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter_localizations/flutter_localizations.dart";
+import "package:flutter_dotenv/flutter_dotenv.dart";
 
 import "app/router.dart";
 import "app/startup_coordinator.dart";
@@ -12,8 +13,13 @@ import "presentation/screens/startup_error_screen.dart";
 import "presentation/view_models/scan_view_model.dart";
 import "widgets/secure_widget.dart";
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    debugPrint("Could not load .env file: $e");
+  }
   runApp(const ScctMobileApp());
 }
 
@@ -69,6 +75,59 @@ class _ScctMobileAppState extends State<ScctMobileApp> {
       _appliedStartupLocale = false;
       _startupFuture = _loadStartup();
     });
+  }
+
+  String? _extractSubmissionTokenFromUri(
+    Uri? uri, {
+    required String submissionPathSegment,
+  }) {
+    if (uri == null) {
+      return null;
+    }
+
+    final normalizedQuery = <String, String>{};
+    uri.queryParameters.forEach((key, value) {
+      normalizedQuery[key.toLowerCase()] = value;
+    });
+
+    const queryKeys = <String>[
+      "token",
+      "submissiontoken",
+      "submission_token",
+      "submission",
+      "t",
+    ];
+
+    for (final key in queryKeys) {
+      final value = normalizedQuery[key]?.trim();
+      if (value != null && value.isNotEmpty) {
+        return value;
+      }
+    }
+
+    final expectedPathSegments = <String>{
+      submissionPathSegment.trim().toLowerCase(),
+      "submit",
+      "submission",
+      "submissions",
+    }..removeWhere((item) => item.isEmpty);
+
+    final pathSegments = uri.pathSegments.map((item) => item.trim()).toList();
+    for (var index = 0; index < pathSegments.length; index++) {
+      final normalized = pathSegments[index].toLowerCase();
+      if (!expectedPathSegments.contains(normalized)) {
+        continue;
+      }
+
+      if (index + 1 < pathSegments.length) {
+        final token = pathSegments[index + 1].trim();
+        if (token.isNotEmpty) {
+          return token;
+        }
+      }
+    }
+
+    return null;
   }
 
   @override
@@ -150,7 +209,14 @@ class _ScctMobileAppState extends State<ScctMobileApp> {
               onToggleTheme: _toggleTheme,
               onLocaleSelected: _setLocaleFromCode,
               onAccepted: (scanResult) {
-                final submissionToken = scanResult.submissionToken;
+                final submissionToken =
+                    scanResult.submissionToken?.trim().isNotEmpty == true
+                    ? scanResult.submissionToken!.trim()
+                    : _extractSubmissionTokenFromUri(
+                        scanResult.acceptedUri,
+                        submissionPathSegment:
+                            result.config!.submissionPathSegment,
+                      );
                 if (submissionToken != null &&
                     submissionToken.trim().isNotEmpty) {
                   Navigator.of(context).push(
@@ -170,18 +236,13 @@ class _ScctMobileAppState extends State<ScctMobileApp> {
                   return;
                 }
 
-                final uri = scanResult.acceptedUri;
-                if (uri == null) {
+                if (!context.mounted) {
                   return;
                 }
 
-                Navigator.of(context).push(
-                  AppRouter.toWebview(
-                    uri,
-                    themeMode: _themeMode,
-                    currentLocale: _locale,
-                    onToggleTheme: _toggleTheme,
-                    onLocaleSelected: _setLocaleFromCode,
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Submission token not found in scanned link."),
                   ),
                 );
               },

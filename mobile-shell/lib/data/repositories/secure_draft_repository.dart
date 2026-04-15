@@ -42,7 +42,12 @@ class SecureDraftRepository {
   }
 
   Future<String> tokenRef(String token) {
-    return _tokenRef(token);
+    return tokenRefFor(token);
+  }
+
+  static Future<String> tokenRefFor(String token) async {
+    final digest = await Sha256().hash(utf8.encode(token));
+    return base64UrlEncode(digest.bytes).replaceAll("=", "");
   }
 
   Future<String> _key(String token) async {
@@ -51,7 +56,6 @@ class SecureDraftRepository {
   }
 
   Future<String> _tokenRef(String token) async {
-    final digest = await Sha256().hash(utf8.encode(token));
-    return base64UrlEncode(digest.bytes).replaceAll("=", "");
+    return tokenRefFor(token);
   }
 }

@@ -98,21 +98,72 @@ class EvaluateQrDestinationUseCase {
   }
 
   String? _extractSubmissionToken(Uri uri, String submissionPathSegment) {
+    final queryToken = _extractFromQuery(uri.queryParameters);
+    if (queryToken != null) {
+      return queryToken;
+    }
+
     final segment = submissionPathSegment.trim().toLowerCase();
-    if (segment.isEmpty) {
+    final expectedPathSegments = <String>{
+      if (segment.isNotEmpty) segment,
+      "submit",
+      "submission",
+      "submissions",
+    };
+
+    final pathSegments = uri.pathSegments.map((item) => item.trim()).toList();
+    for (var index = 0; index < pathSegments.length; index++) {
+      final normalized = pathSegments[index].toLowerCase();
+      if (!expectedPathSegments.contains(normalized)) {
+        continue;
+      }
+
+      if (index + 1 < pathSegments.length) {
+        final tokenCandidate = pathSegments[index + 1].trim();
+        if (tokenCandidate.isNotEmpty) {
+          return tokenCandidate;
+        }
+      }
+    }
+
+    if (uri.fragment.isNotEmpty) {
+      final fragmentUri = Uri.tryParse(uri.fragment);
+      if (fragmentUri != null) {
+        final fragmentToken = _extractFromQuery(fragmentUri.queryParameters);
+        if (fragmentToken != null) {
+          return fragmentToken;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  String? _extractFromQuery(Map<String, String> query) {
+    if (query.isEmpty) {
       return null;
     }
 
-    final segments = uri.pathSegments;
-    final index = segments.indexWhere(
-      (item) => item.toLowerCase() == segment,
-    );
+    final normalized = <String, String>{};
+    query.forEach((key, value) {
+      normalized[key.toLowerCase()] = value;
+    });
 
-    if (index < 0 || index + 1 >= segments.length) {
-      return null;
+    const keys = <String>[
+      "token",
+      "submissiontoken",
+      "submission_token",
+      "submission",
+      "t",
+    ];
+
+    for (final key in keys) {
+      final value = normalized[key]?.trim();
+      if (value != null && value.isNotEmpty) {
+        return value;
+      }
     }
 
-    final token = segments[index + 1].trim();
-    return token.isEmpty ? null : token;
+    return null;
   }
 }

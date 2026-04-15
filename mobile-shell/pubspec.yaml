@@ -20,6 +20,7 @@ dependencies:
   connectivity_plus: ^6.1.5
   http: ^1.5.0
   cryptography: ^2.7.0
+  flutter_dotenv: ^6.0.0
 
 dev_dependencies:
   flutter_test:
@@ -55,3 +56,4 @@ flutter:
     - assets/i18n/en.json
     - assets/i18n/ar.json
     - assets/favicon.ico
+    - .env
