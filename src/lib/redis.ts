@@ -22,35 +22,41 @@ function createRedisClient(): Redis | null {
 export const redis = createRedisClient();
 
 function decodeCachedValue<T>(cached: unknown): T {
-  if (typeof cached !== "string") {
-    return cached as T;
+  let value: unknown = cached;
+
+  for (let i = 0; i < 2; i++) {
+    if (typeof value !== "string") {
+      return value as T;
+    }
+
+    const normalized = value.trim();
+    if (normalized.length === 0) {
+      return value as T;
+    }
+
+    const firstChar = normalized[0];
+    const isLikelyJson =
+      firstChar === "{" ||
+      firstChar === "[" ||
+      firstChar === "\"" ||
+      firstChar === "n" ||
+      firstChar === "t" ||
+      firstChar === "f" ||
+      firstChar === "-" ||
+      (firstChar >= "0" && firstChar <= "9");
+
+    if (!isLikelyJson) {
+      return value as T;
+    }
+
+    try {
+      value = JSON.parse(normalized);
+    } catch {
+      return value as T;
+    }
   }
 
-  const normalized = cached.trim();
-  if (normalized.length === 0) {
-    return cached as T;
-  }
-
-  const firstChar = normalized[0];
-  const isLikelyJson =
-    firstChar === "{" ||
-    firstChar === "[" ||
-    firstChar === "\"" ||
-    firstChar === "n" ||
-    firstChar === "t" ||
-    firstChar === "f" ||
-    firstChar === "-" ||
-    (firstChar >= "0" && firstChar <= "9");
-
-  if (!isLikelyJson) {
-    return cached as T;
-  }
-
-  try {
-    return JSON.parse(normalized) as T;
-  } catch {
-    return cached as T;
-  }
+  return value as T;
 }
 
 /**
