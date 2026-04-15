@@ -2,6 +2,9 @@
 
 import { useAdminSettings, SettingsState } from "@/presentation/view-models/use-admin-settings";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 
@@ -88,6 +91,75 @@ export function SettingsForm() {
                 {dest === "cloud" ? t("destinationCloud") : dest === "local" ? t("destinationLocal") : t("destinationBoth")}
               </Button>
             ))}
+          </div>
+        </div>
+
+        <div className="space-y-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+          <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 pb-2">
+            Data Retention & Cleanup
+          </h3>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="draft_retention_days">Draft Auto-Delete Days</Label>
+              <Input
+                id="draft_retention_days"
+                type="number"
+                min="0"
+                placeholder="0 or empty to disable"
+                value={localState.draft_retention_days || ""}
+                onChange={(e) =>
+                  setLocalState({
+                    ...localState,
+                    draft_retention_days: e.target.value ? parseInt(e.target.value, 10) : null,
+                  })
+                }
+              />
+              <p className="text-xs text-zinc-500">Days to keep drafts before auto-deletion.</p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="cloudinary_storage_threshold">Cloudinary Storage Threshold (%)</Label>
+              <Input
+                id="cloudinary_storage_threshold"
+                type="number"
+                min="1"
+                max="100"
+                placeholder="e.g. 90"
+                value={localState.cloudinary_storage_threshold || ""}
+                onChange={(e) =>
+                  setLocalState({
+                    ...localState,
+                    cloudinary_storage_threshold: e.target.value ? parseInt(e.target.value, 10) : null,
+                  })
+                }
+              />
+              <p className="text-xs text-zinc-500">Threshold limit to trigger auto-cleanup.</p>
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="storage_cleanup_target">Storage Cleanup Target</Label>
+              <Select
+                value={localState.storage_cleanup_target || "none"}
+                onValueChange={(val) =>
+                  setLocalState({
+                    ...localState,
+                    storage_cleanup_target: val === "none" ? null : (val as "drafts" | "unused_media"),
+                  })
+                }
+              >
+                <SelectTrigger id="storage_cleanup_target">
+                  <SelectValue placeholder="Select target to clean up" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None (Disable auto-cleanup)</SelectItem>
+                  <SelectItem value="drafts">Drafts (Delete media associated with drafts)</SelectItem>
+                  <SelectItem value="unused_media">Unused Media</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-zinc-500">
+                Action taken when the storage threshold is reached. Only Cloudinary media is deleted, DB records remain intact.
+              </p>
+            </div>
           </div>
         </div>
       </div>

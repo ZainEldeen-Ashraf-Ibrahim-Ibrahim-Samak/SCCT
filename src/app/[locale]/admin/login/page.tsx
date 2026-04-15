@@ -19,6 +19,7 @@ import { ThemeToggle } from "@/presentation/components/shared/theme-toggle";
 import { Loader2 } from "lucide-react";
 import EmailRegix from "@/components/validation/EmailRegix";
 import { EMAIL_REGEX } from "@/constants/constants";
+import { Logo } from "@/presentation/components/shared/logo";
 
 export default function LoginPage() {
   const t = useTranslations("auth");
@@ -71,9 +72,11 @@ export default function LoginPage() {
 
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center space-y-2">
-          {/* <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <span className="text-2xl font-bold text-primary">S</span>
-          </div> */}
+          {/* SCCT Logo for branding (visible on login screen) */}
+          <div className="flex justify-center mb-2">
+            {/* If you want to hide the logo, comment out the next line. */}
+            <Logo />
+          </div>
           <CardTitle className="text-2xl font-bold">{t("loginTitle")}</CardTitle>
           <CardDescription>{t("loginSubtitle")}</CardDescription>
         </CardHeader>

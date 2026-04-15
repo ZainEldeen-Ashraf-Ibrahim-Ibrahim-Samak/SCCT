@@ -33,7 +33,10 @@ export function useAdminSettings() {
       if (data.data) {
         setSettings({
           backup: data.data.backup || { destination: "local", active: true, lastRunAt: null },
-          cron: data.data.cron || { activeInterval: "none", timezone: "UTC" }
+          cron: data.data.cron || { activeInterval: "none", timezone: "UTC" },
+          draft_retention_days: data.data.draft_retention_days ?? null,
+          cloudinary_storage_threshold: data.data.cloudinary_storage_threshold ?? null,
+          storage_cleanup_target: data.data.storage_cleanup_target ?? null,
         });
       }
     } catch (e: unknown) {
