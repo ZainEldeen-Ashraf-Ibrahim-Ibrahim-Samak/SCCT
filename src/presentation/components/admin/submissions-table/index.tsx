@@ -132,21 +132,24 @@ export function SubmissionsTable({ submissions, isLoading, onDelete, onRefresh, 
     },
     { header: t("clientName"), key: "clientName" as const },
     { 
-      header: t("contactRecords") || "Contact Details", 
+      header: t("contactEmail"), 
       key: (row: Submission) => {
-        if (row.contactRecords && row.contactRecords.length > 0) {
-          return row.contactRecords.map(r => {
-             const parts = [];
-             if (r.name) parts.push(r.name);
-             if (r.email) parts.push(r.email);
-             if (r.phone) parts.push(r.phone);
-             if (r.contact) parts.push(r.contact);
-             if (r.role) parts.push(r.role);
-             if ((r as any).address) parts.push((r as any).address);
-             return parts.join(" - ");
-          }).join(" | ");
-        }
-        return row.clientContact || "—";
+        const contact = getContactSummary(row);
+        return contact.email || "—";
+      }
+    },
+    { 
+      header: t("contactPhone"), 
+      key: (row: Submission) => {
+        const contact = getContactSummary(row);
+        return contact.phone || "—";
+      }
+    },
+    { 
+      header: t("contactAddress"), 
+      key: (row: Submission) => {
+        const contact = getContactSummary(row);
+        return contact.address || "—";
       }
     },
     { header: tc("status"), key: (row: Submission) => t(`statuses.${row.status}`) },

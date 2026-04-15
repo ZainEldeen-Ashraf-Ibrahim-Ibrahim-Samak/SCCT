@@ -1,4 +1,5 @@
 import "dart:typed_data";
+import "dart:math" as math;
 
 import "package:desktop_drop/desktop_drop.dart";
 import "package:flutter/material.dart";
@@ -6,6 +7,7 @@ import "package:image_picker/image_picker.dart";
 import "package:mobile_scanner/mobile_scanner.dart";
 
 import "../../config/brand_config.dart";
+import "../components/app_logo.dart";
 import "../view_models/scan_view_model.dart";
 
 class ScanScreen extends StatefulWidget {
@@ -60,6 +62,7 @@ class _ScanScreenState extends State<ScanScreen> {
       "mobile.scan.choosePhoto": "Choose from photo library",
       "mobile.scan.clearPhoto": "Clear selected photo",
       "mobile.scan.openCamera": "Open camera scanner",
+      "mobile.scan.alignCode": "Place the QR code inside the frame",
       "mobile.scan.cameraHint": "Point the camera at a QR code",
       "mobile.scan.themeToggle": "Toggle theme",
       "mobile.scan.language": "Language",
@@ -87,6 +90,7 @@ class _ScanScreenState extends State<ScanScreen> {
       "mobile.scan.choosePhoto": "اختر من معرض الصور",
       "mobile.scan.clearPhoto": "إزالة الصورة المختارة",
       "mobile.scan.openCamera": "فتح ماسح الكاميرا",
+      "mobile.scan.alignCode": "ضع رمز QR داخل الإطار",
       "mobile.scan.cameraHint": "وجّه الكاميرا نحو رمز QR",
       "mobile.scan.themeToggle": "تبديل المظهر",
       "mobile.scan.language": "اللغة",
@@ -168,6 +172,7 @@ class _ScanScreenState extends State<ScanScreen> {
     );
 
     var handled = false;
+    var isTorchOn = false;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -175,75 +180,179 @@ class _ScanScreenState extends State<ScanScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.black,
       builder: (sheetContext) {
-        return SizedBox(
-          height: MediaQuery.of(sheetContext).size.height * 0.78,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              MobileScanner(
-                controller: cameraController,
-                onDetect: (capture) {
-                  if (handled || !mounted) {
-                    return;
-                  }
+        return StatefulBuilder(
+          builder: (sheetContext, setSheetState) {
+            return SizedBox(
+              height: MediaQuery.of(sheetContext).size.height * 0.78,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final frameSize = math.min(constraints.maxWidth * 0.74, constraints.maxHeight * 0.5);
+                  final frameLeft = (constraints.maxWidth - frameSize) / 2;
+                  final frameTop = (constraints.maxHeight - frameSize) / 2;
+                  final overlayColor = Colors.black.withValues(alpha: 0.50);
 
-                  final decodedValue = capture.barcodes
-                      .map((barcode) => barcode.rawValue?.trim() ?? "")
-                      .firstWhere((value) => value.isNotEmpty, orElse: () => "")
-                      .trim();
+                  return Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      MobileScanner(
+                        controller: cameraController,
+                        onDetect: (capture) {
+                          if (handled || !mounted) {
+                            return;
+                          }
 
-                  if (decodedValue.isEmpty) {
-                    return;
-                  }
+                          final decodedValue = capture.barcodes
+                              .map((barcode) => barcode.rawValue?.trim() ?? "")
+                              .firstWhere((value) => value.isNotEmpty, orElse: () => "")
+                              .trim();
 
-                  handled = true;
-                  _controller.text = decodedValue;
+                          if (decodedValue.isEmpty) {
+                            return;
+                          }
 
-                  if (Navigator.of(sheetContext).canPop()) {
-                    Navigator.of(sheetContext).pop();
-                  }
+                          handled = true;
+                          _controller.text = decodedValue;
 
-                  _submit();
+                          if (Navigator.of(sheetContext).canPop()) {
+                            Navigator.of(sheetContext).pop();
+                          }
+
+                          _submit();
+                        },
+                      ),
+                      Positioned(top: 0, left: 0, right: 0, height: frameTop, child: ColoredBox(color: overlayColor)),
+                      Positioned(
+                        top: frameTop + frameSize,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: ColoredBox(color: overlayColor),
+                      ),
+                      Positioned(
+                        top: frameTop,
+                        left: 0,
+                        width: frameLeft,
+                        height: frameSize,
+                        child: ColoredBox(color: overlayColor),
+                      ),
+                      Positioned(
+                        top: frameTop,
+                        right: 0,
+                        width: frameLeft,
+                        height: frameSize,
+                        child: ColoredBox(color: overlayColor),
+                      ),
+                      Positioned(
+                        top: frameTop,
+                        left: frameLeft,
+                        width: frameSize,
+                        height: frameSize,
+                        child: IgnorePointer(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.95), width: 2),
+                            ),
+                            child: Stack(
+                              children: [
+                                Positioned(top: 0, left: 0, width: 46, height: 4, child: _cornerStripe()),
+                                Positioned(top: 0, left: 0, width: 4, height: 46, child: _cornerStripe()),
+                                Positioned(top: 0, right: 0, width: 46, height: 4, child: _cornerStripe()),
+                                Positioned(top: 0, right: 0, width: 4, height: 46, child: _cornerStripe()),
+                                Positioned(bottom: 0, left: 0, width: 46, height: 4, child: _cornerStripe()),
+                                Positioned(bottom: 0, left: 0, width: 4, height: 46, child: _cornerStripe()),
+                                Positioned(bottom: 0, right: 0, width: 46, height: 4, child: _cornerStripe()),
+                                Positioned(bottom: 0, right: 0, width: 4, height: 46, child: _cornerStripe()),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 14,
+                        left: 14,
+                        child: IconButton.filledTonal(
+                          onPressed: () async {
+                            try {
+                              await cameraController.toggleTorch();
+                              setSheetState(() => isTorchOn = !isTorchOn);
+                            } catch (_) {
+                              // Ignore torch failures for unsupported devices.
+                            }
+                          },
+                          icon: Icon(isTorchOn ? Icons.flash_on_rounded : Icons.flash_off_rounded),
+                        ),
+                      ),
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: IconButton.filledTonal(
+                          onPressed: () {
+                            if (Navigator.of(sheetContext).canPop()) {
+                              Navigator.of(sheetContext).pop();
+                            }
+                          },
+                          icon: const Icon(Icons.close),
+                        ),
+                      ),
+                      Positioned(
+                        left: 18,
+                        right: 18,
+                        top: frameTop - 56,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.58),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            child: Text(
+                              _t("mobile.scan.alignCode"),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: 16,
+                        right: 16,
+                        bottom: 20,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.62),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            child: Text(
+                              _t("mobile.scan.cameraHint"),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
                 },
               ),
-              Positioned(
-                top: 12,
-                right: 12,
-                child: IconButton.filledTonal(
-                  onPressed: () {
-                    if (Navigator.of(sheetContext).canPop()) {
-                      Navigator.of(sheetContext).pop();
-                    }
-                  },
-                  icon: const Icon(Icons.close),
-                ),
-              ),
-              Positioned(
-                left: 16,
-                right: 16,
-                bottom: 20,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.62),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    child: Text(
-                      _t("mobile.scan.cameraHint"),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
 
     await cameraController.dispose();
+  }
+
+  Widget _cornerStripe() {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: const Color(0xFFE33B43),
+        borderRadius: BorderRadius.circular(999),
+      ),
+    );
   }
 
   Future<void> _decodeQrFromPhoto(XFile photo) async {
@@ -426,27 +535,35 @@ class _ScanScreenState extends State<ScanScreen> {
     final infoText = isDark ? const Color(0xFFB9DFFF) : const Color(0xFF1F5C8E);
     final errorBg = isDark ? const Color(0xFF4A1F23) : const Color(0xFFFDECEF);
     final errorText = isDark ? const Color(0xFFFFC2C5) : const Color(0xFFA33139);
+    final actionChipBg = isDark ? const Color(0xFF12314D) : const Color(0xFFE4EFF9);
+    final actionChipBorder = isDark ? const Color(0xFF2D5D84) : const Color(0xFFD0E0EF);
+    final actionChipFg = isDark ? const Color(0xFFE5F2FF) : const Color(0xFF1B4B75);
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: appBarColor,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         titleSpacing: 16,
+        flexibleSpace: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                appBarColor,
+                isDark ? const Color(0xFF0B2439) : const Color(0xFFF1F7FD),
+              ],
+            ),
+          ),
+        ),
         title: Row(
           children: [
-            Container(
-              width: 28,
-              height: 28,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [brandBlue, brandRed],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: const Icon(Icons.qr_code_2_rounded, size: 18, color: Colors.white),
+            AppLogo(
+              size: 30,
+              radius: 10,
+              backgroundColor: isDark ? const Color(0xFF17324B) : const Color(0xFFE4EFF9),
+              borderColor: isDark ? const Color(0xFF2D5D84) : const Color(0xFFD0E0EF),
             ),
             const SizedBox(width: 10),
             Text(
@@ -460,39 +577,115 @@ class _ScanScreenState extends State<ScanScreen> {
           ],
         ),
         actions: [
-          IconButton(
-            tooltip: _t("mobile.scan.themeToggle"),
-            onPressed: widget.onToggleTheme,
-            icon: Icon(isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded),
-            color: textPrimary,
-          ),
-          PopupMenuButton<String>(
-            tooltip: _t("mobile.scan.language"),
-            initialValue: localeCode,
-            onSelected: widget.onLocaleSelected,
-            itemBuilder: (context) => const <PopupMenuEntry<String>>[
-              PopupMenuItem<String>(value: "en", child: Text("EN")),
-              PopupMenuItem<String>(value: "ar", child: Text("AR")),
-            ],
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          Padding(
+            padding: const EdgeInsetsDirectional.only(end: 8),
+            child: Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  margin: const EdgeInsetsDirectional.only(end: 8),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF14334F) : const Color(0xFFDDEAF7),
+                    color: actionChipBg,
                     borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: actionChipBorder),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.08),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: Text(
-                    localeCode.toUpperCase(),
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                      color: textPrimary,
+                  child: IconButton(
+                    tooltip: _t("mobile.scan.themeToggle"),
+                    onPressed: widget.onToggleTheme,
+                    iconSize: 18,
+                    color: actionChipFg,
+                    visualDensity: VisualDensity.compact,
+                    icon: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 220),
+                      transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
+                      child: Icon(
+                        isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                        key: ValueKey<bool>(isDark),
+                      ),
                     ),
                   ),
                 ),
-              ),
+                PopupMenuButton<String>(
+                  tooltip: _t("mobile.scan.language"),
+                  initialValue: localeCode,
+                  onSelected: widget.onLocaleSelected,
+                  color: cardColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    side: BorderSide(color: cardBorder),
+                  ),
+                  itemBuilder: (context) => <PopupMenuEntry<String>>[
+                    PopupMenuItem<String>(
+                      value: "en",
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.check_rounded,
+                            size: 16,
+                            color: localeCode == "en" ? brandBlue : Colors.transparent,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text("EN"),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem<String>(
+                      value: "ar",
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.check_rounded,
+                            size: 16,
+                            color: localeCode == "ar" ? brandBlue : Colors.transparent,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text("AR"),
+                        ],
+                      ),
+                    ),
+                  ],
+                  child: Container(
+                    height: 38,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: actionChipBg,
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: actionChipBorder),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.08),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.language_rounded, size: 16, color: actionChipFg),
+                        const SizedBox(width: 6),
+                        Text(
+                          localeCode.toUpperCase(),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                            color: actionChipFg,
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        Icon(Icons.expand_more_rounded, size: 16, color: actionChipFg),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

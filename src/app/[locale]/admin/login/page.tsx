@@ -71,9 +71,9 @@ export default function LoginPage() {
 
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center space-y-2">
-          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+          {/* <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
             <span className="text-2xl font-bold text-primary">S</span>
-          </div>
+          </div> */}
           <CardTitle className="text-2xl font-bold">{t("loginTitle")}</CardTitle>
           <CardDescription>{t("loginSubtitle")}</CardDescription>
         </CardHeader>

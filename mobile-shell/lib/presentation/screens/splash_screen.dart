@@ -1,5 +1,7 @@
 import "package:flutter/material.dart";
 
+import "../components/app_logo.dart";
+
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 
@@ -11,13 +13,12 @@ class SplashScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: const [
-            SizedBox(
-              width: 110,
-              height: 110,
-              child: Image(
-                image: AssetImage("assets/app_icon.png"),
-                fit: BoxFit.contain,
-              ),
+            AppLogo(
+              size: 110,
+              radius: 20,
+              padding: 8,
+              backgroundColor: Colors.white,
+              borderColor: Color(0xFFCBDCEB),
             ),
             SizedBox(height: 18),
             Text(

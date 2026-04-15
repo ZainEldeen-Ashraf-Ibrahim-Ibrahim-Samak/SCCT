@@ -58,6 +58,10 @@ class _ScctMobileAppState extends State<ScctMobileApp> {
     });
   }
 
+  void _setLocaleFromCode(String localeCode) {
+    _setLocale(localeCode == "ar" ? AppLocale.ar : AppLocale.en);
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -124,11 +128,17 @@ class _ScctMobileAppState extends State<ScctMobileApp> {
             themeMode: _themeMode,
             currentLocale: _locale,
             onToggleTheme: _toggleTheme,
-            onLocaleSelected: (localeCode) {
-              _setLocale(localeCode == "ar" ? AppLocale.ar : AppLocale.en);
-            },
+            onLocaleSelected: _setLocaleFromCode,
             onAccepted: (uri) {
-              Navigator.of(context).push(AppRouter.toWebview(uri));
+              Navigator.of(context).push(
+                AppRouter.toWebview(
+                  uri,
+                  themeMode: _themeMode,
+                  currentLocale: _locale,
+                  onToggleTheme: _toggleTheme,
+                  onLocaleSelected: _setLocaleFromCode,
+                ),
+              );
             },
           );
         },

@@ -200,6 +200,7 @@
     }
   },
   "submissions": {
+    "exportTitle": "Submissions Export",
     "filterByAdmin": "Updating Admin",
     "allAdmins": "All Admins",
     "title": "Submissions",

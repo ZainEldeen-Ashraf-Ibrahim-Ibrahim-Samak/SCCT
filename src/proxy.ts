@@ -16,6 +16,7 @@ declare global {
 const intlMiddleware = createMiddleware(routing);
 
 const defaultAllowedApiOrigins = [
+  "https://scct-damages.vercel.app",
   "capacitor://localhost",
   "ionic://localhost",
   "http://localhost",
