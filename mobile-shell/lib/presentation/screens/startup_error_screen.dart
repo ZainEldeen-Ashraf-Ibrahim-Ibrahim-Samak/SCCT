@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 
 import "../../config/brand_config.dart";
+import "../../i18n/index.dart";
 import "../components/app_logo.dart";
 
 class StartupErrorScreen extends StatelessWidget {
@@ -17,25 +18,6 @@ class StartupErrorScreen extends StatelessWidget {
   final ValueChanged<String>? onLocaleSelected;
   final VoidCallback? onRetry;
 
-  static const Map<String, Map<String, String>> _messages = {
-    "en": {
-      "mobile.startupError.title": "Startup configuration issue",
-      "mobile.startupError.retry": "Retry startup",
-      "mobile.startupError.code": "Error code",
-      "mobile.startupError.help": "Update environment settings and try again.",
-      "mobile.scan.themeToggle": "Toggle theme",
-      "mobile.scan.language": "Language",
-    },
-    "ar": {
-      "mobile.startupError.title": "مشكلة في إعدادات التشغيل",
-      "mobile.startupError.retry": "إعادة محاولة التشغيل",
-      "mobile.startupError.code": "رمز الخطأ",
-      "mobile.startupError.help": "حدّث إعدادات البيئة ثم حاول مجددًا.",
-      "mobile.scan.themeToggle": "تبديل المظهر",
-      "mobile.scan.language": "اللغة",
-    },
-  };
-
   String _localeCode(BuildContext context) {
     final code = Localizations.localeOf(context).languageCode.toLowerCase();
     return code == "ar" ? "ar" : "en";
@@ -43,7 +25,9 @@ class StartupErrorScreen extends StatelessWidget {
 
   String _t(BuildContext context, String key) {
     final locale = _localeCode(context);
-    return _messages[locale]?[key] ?? _messages["en"]?[key] ?? key;
+    final catalog =
+        I18nCatalog.getCached(locale) ?? I18nCatalog.getCached("en");
+    return catalog?.t(key) ?? key;
   }
 
   String _message(BuildContext context) {
@@ -77,14 +61,18 @@ class StartupErrorScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final localeCode = _localeCode(context);
     final cardColor = isDark ? const Color(0xFF132C44) : Colors.white;
-    final cardBorder = isDark ? const Color(0xFF2D5676) : const Color(0xFFD0E1F0);
-    final textPrimary = isDark ? const Color(0xFFE8F2FC) : const Color(0xFF142D43);
-    final textSecondary = isDark ? const Color(0xFFB7CEE3) : const Color(0xFF5A748D);
+    final cardBorder =
+        isDark ? const Color(0xFF2D5676) : const Color(0xFFD0E1F0);
+    final textPrimary =
+        isDark ? const Color(0xFFE8F2FC) : const Color(0xFF142D43);
+    final textSecondary =
+        isDark ? const Color(0xFFB7CEE3) : const Color(0xFF5A748D);
 
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 12,
-        backgroundColor: isDark ? const Color(0xFF0D2439) : const Color(0xFFE8F3FC),
+        backgroundColor:
+            isDark ? const Color(0xFF0D2439) : const Color(0xFFE8F3FC),
         elevation: 0,
         scrolledUnderElevation: 0,
         title: Row(
@@ -92,8 +80,10 @@ class StartupErrorScreen extends StatelessWidget {
             AppLogo(
               size: 28,
               radius: 9,
-              backgroundColor: isDark ? const Color(0xFF17344E) : const Color(0xFFDDECF8),
-              borderColor: isDark ? const Color(0xFF2D5676) : const Color(0xFFC8DEEF),
+              backgroundColor:
+                  isDark ? const Color(0xFF17344E) : const Color(0xFFDDECF8),
+              borderColor:
+                  isDark ? const Color(0xFF2D5676) : const Color(0xFFC8DEEF),
             ),
             const SizedBox(width: 8),
             Text(
@@ -109,7 +99,8 @@ class StartupErrorScreen extends StatelessWidget {
           IconButton(
             tooltip: _t(context, "mobile.scan.themeToggle"),
             onPressed: onToggleTheme,
-            icon: Icon(isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded),
+            icon: Icon(
+                isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded),
             color: textPrimary,
           ),
           PopupMenuButton<String>(
@@ -124,9 +115,12 @@ class StartupErrorScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF17344E) : const Color(0xFFDDECF8),
+                    color: isDark
+                        ? const Color(0xFF17344E)
+                        : const Color(0xFFDDECF8),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
@@ -180,12 +174,16 @@ class StartupErrorScreen extends StatelessWidget {
                     height: 64,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isDark ? const Color(0xFF4C2B30) : const Color(0xFFFCEBED),
+                      color: isDark
+                          ? const Color(0xFF4C2B30)
+                          : const Color(0xFFFCEBED),
                     ),
                     child: Icon(
                       Icons.warning_amber_rounded,
                       size: 34,
-                      color: isDark ? const Color(0xFFFFB4BA) : const Color(0xFFB23A44),
+                      color: isDark
+                          ? const Color(0xFFFFB4BA)
+                          : const Color(0xFFB23A44),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -209,9 +207,12 @@ class StartupErrorScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1C3C58) : const Color(0xFFE9F3FC),
+                      color: isDark
+                          ? const Color(0xFF1C3C58)
+                          : const Color(0xFFE9F3FC),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(

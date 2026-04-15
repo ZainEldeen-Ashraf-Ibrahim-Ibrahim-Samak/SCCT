@@ -59,7 +59,19 @@
   "mobile.startup.contactAdmin": "اتصل بمسؤول النظام إذا استمرت المشكلة.",
   "mobile.startup.unknown": "حدث خطأ غير معروف أثناء بدء التشغيل.",
   "mobile.webview.close": "إغلاق المتصفح",
-  "mobile.webview.back": "للخلف",
-  "mobile.webview.forward": "للأمام",
-  "mobile.webview.refresh": "تحديث الصفحة"
+  "mobile.webview.back": "السابق",
+  "mobile.webview.forward": "التالي",
+  "mobile.webview.refresh": "تحديث الصفحة",
+  "mobile.startupError.title": "مشكلة في إعدادات التشغيل",
+  "mobile.startupError.retry": "إعادة محاولة التشغيل",
+  "mobile.startupError.code": "رمز الخطأ",
+  "mobile.startupError.help": "حدّث إعدادات البيئة ثم حاول مجددًا.",
+  "mobile.webview.title": "عرض SCCT",
+  "mobile.webview.reload": "إعادة تحميل",
+  "mobile.startupError.config_missing": "بعض إعدادات التشغيل المطلوبة مفقودة.",
+  "mobile.startupError.config_invalid_url": "رابط التشغيل الأساسي غير صالح.",
+  "mobile.startupError.config_invalid_hosts": "قائمة النطاقات المسموح بها غير صالحة.",
+  "mobile.startupError.config_invalid_locale": "إعدادات اللغة غير صالحة.",
+  "mobile.startupError.config_invalid_numeric_range": "قيم إعدادات التشغيل خارج النطاق المسموح.",
+  "mobile.startupError.unknown": "حدث خطأ في إعدادات التشغيل."
 }

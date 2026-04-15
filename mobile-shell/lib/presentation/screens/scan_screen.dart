@@ -866,7 +866,7 @@ class _ScanScreenState extends State<ScanScreen> {
                     decoration: InputDecoration(
                       labelText: _t("mobile.scan.prompt"),
                       hintText:
-                          "https://scct-damages.vercel.app/ar/submit/abc123",
+                          "https://your-domain.com/ar/submit/abc123",
                       hintStyle: TextStyle(color: textSecondary),
                       labelStyle: TextStyle(color: textSecondary),
                       filled: true,

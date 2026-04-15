@@ -59,7 +59,19 @@
   "mobile.startup.contactAdmin": "Contact administrator if the problem persists.",
   "mobile.startup.unknown": "An unknown error occurred during startup.",
   "mobile.webview.close": "Close browser",
-  "mobile.webview.back": "Go back",
-  "mobile.webview.forward": "Go forward",
-  "mobile.webview.refresh": "Refresh page"
+  "mobile.webview.back": "Back",
+  "mobile.webview.forward": "Forward",
+  "mobile.webview.refresh": "Refresh page",
+  "mobile.startupError.title": "Startup configuration issue",
+  "mobile.startupError.retry": "Retry startup",
+  "mobile.startupError.code": "Error code",
+  "mobile.startupError.help": "Update environment settings and try again.",
+  "mobile.webview.title": "SCCT Web View",
+  "mobile.webview.reload": "Reload",
+  "mobile.startupError.config_missing": "Some required configuration values are missing.",
+  "mobile.startupError.config_invalid_url": "The base startup URL is invalid.",
+  "mobile.startupError.config_invalid_hosts": "Allowed hosts configuration is invalid.",
+  "mobile.startupError.config_invalid_locale": "Locale configuration is invalid.",
+  "mobile.startupError.config_invalid_numeric_range": "Startup numeric configuration is out of range.",
+  "mobile.startupError.unknown": "Startup configuration error occurred."
 }

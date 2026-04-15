@@ -1,6 +1,7 @@
 import "package:flutter/material.dart";
 import "package:webview_flutter/webview_flutter.dart";
 
+import "../../i18n/index.dart";
 import "../components/app_logo.dart";
 
 class WebviewScreen extends StatefulWidget {
@@ -24,25 +25,6 @@ class WebviewScreen extends StatefulWidget {
 }
 
 class _WebviewScreenState extends State<WebviewScreen> {
-  static const Map<String, Map<String, String>> _messages = {
-    "en": {
-      "mobile.webview.title": "SCCT Web View",
-      "mobile.webview.back": "Back",
-      "mobile.webview.forward": "Forward",
-      "mobile.webview.reload": "Reload",
-      "mobile.scan.themeToggle": "Toggle theme",
-      "mobile.scan.language": "Language",
-    },
-    "ar": {
-      "mobile.webview.title": "عرض SCCT",
-      "mobile.webview.back": "السابق",
-      "mobile.webview.forward": "التالي",
-      "mobile.webview.reload": "إعادة تحميل",
-      "mobile.scan.themeToggle": "تبديل المظهر",
-      "mobile.scan.language": "اللغة",
-    },
-  };
-
   late final WebViewController _controller;
   double _loadingProgress = 0;
   bool _canGoBack = false;
@@ -57,7 +39,9 @@ class _WebviewScreenState extends State<WebviewScreen> {
 
   String _t(String key) {
     final locale = _localeCode();
-    return _messages[locale]?[key] ?? _messages["en"]?[key] ?? key;
+    final catalog =
+        I18nCatalog.getCached(locale) ?? I18nCatalog.getCached("en");
+    return catalog?.t(key) ?? key;
   }
 
   Future<void> _refreshNavigationState() async {
@@ -114,9 +98,12 @@ class _WebviewScreenState extends State<WebviewScreen> {
   Widget build(BuildContext context) {
     final isDark = widget.themeMode == ThemeMode.dark;
     final localeCode = _localeCode();
-    final topBarStart = isDark ? const Color(0xFF0F2A43) : const Color(0xFFE7F2FB);
-    final topBarEnd = isDark ? const Color(0xFF0A2033) : const Color(0xFFF5FAFF);
-    final titleColor = isDark ? const Color(0xFFE5F1FC) : const Color(0xFF11324C);
+    final topBarStart =
+        isDark ? const Color(0xFF0F2A43) : const Color(0xFFE7F2FB);
+    final topBarEnd =
+        isDark ? const Color(0xFF0A2033) : const Color(0xFFF5FAFF);
+    final titleColor =
+        isDark ? const Color(0xFFE5F1FC) : const Color(0xFF11324C);
     final subColor = isDark ? const Color(0xFFA9C1D8) : const Color(0xFF5A7590);
 
     return Scaffold(
@@ -145,8 +132,12 @@ class _WebviewScreenState extends State<WebviewScreen> {
                 AppLogo(
                   size: 26,
                   radius: 8,
-                  backgroundColor: isDark ? const Color(0xFF14334F) : const Color(0xFFDDEAF7),
-                  borderColor: isDark ? const Color(0xFF2B5778) : const Color(0xFFC9DEEF),
+                  backgroundColor: isDark
+                      ? const Color(0xFF14334F)
+                      : const Color(0xFFDDEAF7),
+                  borderColor: isDark
+                      ? const Color(0xFF2B5778)
+                      : const Color(0xFFC9DEEF),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -175,7 +166,8 @@ class _WebviewScreenState extends State<WebviewScreen> {
           IconButton(
             tooltip: _t("mobile.scan.themeToggle"),
             onPressed: widget.onToggleTheme,
-            icon: Icon(isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded),
+            icon: Icon(
+                isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded),
             color: titleColor,
           ),
           PopupMenuButton<String>(
@@ -190,9 +182,12 @@ class _WebviewScreenState extends State<WebviewScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF14334F) : const Color(0xFFDDEAF7),
+                    color: isDark
+                        ? const Color(0xFF14334F)
+                        : const Color(0xFFDDEAF7),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
@@ -216,7 +211,8 @@ class _WebviewScreenState extends State<WebviewScreen> {
             height: _loadingProgress < 1 ? 3 : 0,
             child: LinearProgressIndicator(
               value: _loadingProgress == 0 ? null : _loadingProgress,
-              backgroundColor: isDark ? const Color(0xFF1A3E5E) : const Color(0xFFD7E7F5),
+              backgroundColor:
+                  isDark ? const Color(0xFF1A3E5E) : const Color(0xFFD7E7F5),
               color: const Color(0xFF0B5F91),
             ),
           ),
@@ -226,10 +222,13 @@ class _WebviewScreenState extends State<WebviewScreen> {
             child: Container(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF0F2438) : const Color(0xFFF1F7FD),
+                color:
+                    isDark ? const Color(0xFF0F2438) : const Color(0xFFF1F7FD),
                 border: Border(
                   top: BorderSide(
-                    color: isDark ? const Color(0xFF204560) : const Color(0xFFD2E4F3),
+                    color: isDark
+                        ? const Color(0xFF204560)
+                        : const Color(0xFFD2E4F3),
                   ),
                 ),
               ),
