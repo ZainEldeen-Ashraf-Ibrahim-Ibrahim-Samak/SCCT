@@ -1,5 +1,16 @@
 import { redis } from "@/lib/redis";
 import { logger } from "@/lib/dev-logger";
+import Pusher from "pusher";
+
+const pusher = process.env.PUSHER_KEY 
+  ? new Pusher({
+      appId: process.env.PUSHER_APP_ID!,
+      key: process.env.PUSHER_KEY!,
+      secret: process.env.PUSHER_SECRET!,
+      cluster: process.env.PUSHER_CLUSTER!,
+      useTLS: true,
+    })
+  : null;
 
 export interface AdminNotification {
   type: "NEW_SUBMISSION" | "SYSTEM_ALERT";
@@ -29,8 +40,13 @@ export const NotificationPublisher = {
       await redis.rpush(ADMIN_CHANNEL, JSON.stringify(payload));
       // Keep only last 100 notifications
       await redis.ltrim(ADMIN_CHANNEL, -100, -1);
+
+      // REAL-TIME SIGNAL
+      if (pusher) {
+        await pusher.trigger(ADMIN_CHANNEL, "notification", payload);
+      }
     } catch (error) {
-      logger.error("Failed to publish notification to Upstash Redis", error);
+      logger.error("Failed to publish notification to Upstash Redis or Pusher", error);
     }
   },
 
@@ -54,6 +70,11 @@ export const NotificationPublisher = {
       await redis.ltrim(channel, -100, -1);
       // Keep stream available for offline users within the 7-day requirement window
       await redis.expire(channel, 60 * 60 * 24 * 7);
+
+      // REAL-TIME SIGNAL
+      if (pusher) {
+        await pusher.trigger(`submission-${token}`, "status-updated", payload);
+      }
     } catch (error) {
       logger.error("Failed to publish client update signal", { token, error });
     }

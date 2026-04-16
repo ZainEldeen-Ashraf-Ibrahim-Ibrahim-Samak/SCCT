@@ -273,6 +273,8 @@ class _ScctMobileAppState extends State<ScctMobileApp> {
                       apiTimeoutMs: result.config!.apiTimeoutMs,
                       draftAutosaveDebounceMs:
                           result.config!.draftAutosaveDebounceMs,
+                      pusherKey: result.config!.pusherKey,
+                      pusherCluster: result.config!.pusherCluster,
                       themeMode: _themeMode,
                       currentLocale: _locale,
                       onToggleTheme: _toggleTheme,

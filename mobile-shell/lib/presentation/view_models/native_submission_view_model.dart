@@ -1,4 +1,5 @@
 import "dart:async";
+import "dart:convert";
 
 import "package:flutter/foundation.dart";
 import "package:image_picker/image_picker.dart";
@@ -19,6 +20,7 @@ import "../../domain/repositories/submission_repository.dart";
 import "../../domain/services/connectivity_service.dart";
 import "../../domain/services/submission_event_bus.dart";
 import "../../domain/use_cases/validate_submission_draft.dart";
+import "../../data/services/socket_service.dart";
 
 class NativeSubmissionViewModel extends ChangeNotifier {
   NativeSubmissionViewModel({
@@ -29,6 +31,8 @@ class NativeSubmissionViewModel extends ChangeNotifier {
     required ValidateSubmissionDraftUseCase validator,
     required String localeCode,
     required int draftAutosaveDebounceMs,
+    required String pusherKey,
+    required String pusherCluster,
     SubmissionEventBus? eventBus,
   })  : _repository = repository,
         _secureDraftRepository = secureDraftRepository,
@@ -37,6 +41,8 @@ class NativeSubmissionViewModel extends ChangeNotifier {
         _validator = validator,
         _localeCode = localeCode,
         _draftAutosaveDebounceMs = draftAutosaveDebounceMs,
+        _pusherKey = pusherKey,
+        _pusherCluster = pusherCluster,
         _eventBus = eventBus;
 
   final SubmissionRepository _repository;
@@ -46,6 +52,8 @@ class NativeSubmissionViewModel extends ChangeNotifier {
   final ValidateSubmissionDraftUseCase _validator;
   final String _localeCode;
   final int _draftAutosaveDebounceMs;
+  final String _pusherKey;
+  final String _pusherCluster;
   final SubmissionEventBus? _eventBus;
 
   SubmissionSession? _session;
@@ -127,6 +135,12 @@ class NativeSubmissionViewModel extends ChangeNotifier {
     });
 
     try {
+      if (_pusherKey.isNotEmpty) {
+        await SocketService.instance.init(
+          apiKey: _pusherKey,
+          cluster: _pusherCluster,
+        );
+      }
       await _loadSessionAndDraft();
     } on SubmissionApiException catch (error) {
       _fatalMessageKey = _mapFatalMessage(error.code, error.statusCode);
@@ -577,6 +591,19 @@ class NativeSubmissionViewModel extends ChangeNotifier {
         await _repository.loadSession(token, localeCode: _localeCode);
     _session = session.copyWith(isOnline: _isOnline);
 
+    if (_pusherKey.isNotEmpty) {
+      unawaited(SocketService.instance.subscribe(
+        channelName: "submission-$token",
+        eventName: "status-updated",
+        onData: (data) {
+          if (kDebugMode) {
+            print("Pusher: Status updated signal received. Refreshing...");
+          }
+          refresh();
+        },
+      ));
+    }
+
     _clientName = _session!.clientName;
     _clientContact = _session!.clientContact;
     _contacts = List<ContactRecord>.from(_session!.contacts);
@@ -733,6 +760,9 @@ class NativeSubmissionViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
+    if (_token != null) {
+      SocketService.instance.unsubscribe("submission-$_token");
+    }
     _connectivitySubscription?.cancel();
     _autosaveTimer?.cancel();
     super.dispose();

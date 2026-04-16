@@ -28,6 +28,8 @@ class NativeSubmissionScreen extends StatefulWidget {
     required this.localeCode,
     required this.apiTimeoutMs,
     required this.draftAutosaveDebounceMs,
+    required this.pusherKey,
+    required this.pusherCluster,
     this.themeMode = ThemeMode.light,
     this.currentLocale = const Locale("en"),
     this.onToggleTheme,
@@ -39,6 +41,8 @@ class NativeSubmissionScreen extends StatefulWidget {
   final String localeCode;
   final int apiTimeoutMs;
   final int draftAutosaveDebounceMs;
+  final String pusherKey;
+  final String pusherCluster;
   final ThemeMode themeMode;
   final Locale currentLocale;
   final VoidCallback? onToggleTheme;
@@ -96,6 +100,8 @@ class _NativeSubmissionScreenState extends State<NativeSubmissionScreen> {
         validator: const ValidateSubmissionDraftUseCase(),
         localeCode: widget.localeCode,
         draftAutosaveDebounceMs: widget.draftAutosaveDebounceMs,
+        pusherKey: widget.pusherKey,
+        pusherCluster: widget.pusherCluster,
         eventBus: _eventBus,
       );
 

@@ -11,6 +11,8 @@ class MobileRuntimeConfig {
     required this.submissionPathSegment,
     required this.apiTimeoutMs,
     required this.draftAutosaveDebounceMs,
+    required this.pusherKey,
+    required this.pusherCluster,
   });
 
   final Uri appBaseUrl;
@@ -22,6 +24,8 @@ class MobileRuntimeConfig {
   final String submissionPathSegment;
   final int apiTimeoutMs;
   final int draftAutosaveDebounceMs;
+  final String pusherKey;
+  final String pusherCluster;
 }
 
 class RuntimeConfigInput {
@@ -35,6 +39,8 @@ class RuntimeConfigInput {
     this.mobileSubmissionPathSegment,
     this.mobileApiTimeoutMs,
     this.mobileDraftAutosaveDebounceMs,
+    this.pusherKey,
+    this.pusherCluster,
   });
 
   final String? mobileAppBaseUrl;
@@ -46,4 +52,6 @@ class RuntimeConfigInput {
   final String? mobileSubmissionPathSegment;
   final String? mobileApiTimeoutMs;
   final String? mobileDraftAutosaveDebounceMs;
+  final String? pusherKey;
+  final String? pusherCluster;
 }

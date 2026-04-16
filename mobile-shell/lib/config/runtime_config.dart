@@ -108,6 +108,8 @@ class RuntimeConfig {
       submissionPathSegment: submissionPathSegment,
       apiTimeoutMs: apiTimeoutMs,
       draftAutosaveDebounceMs: draftAutosaveDebounceMs,
+      pusherKey: input.pusherKey ?? "",
+      pusherCluster: input.pusherCluster ?? "mt1",
     );
   }
 

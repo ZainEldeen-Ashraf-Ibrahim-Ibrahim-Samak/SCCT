@@ -23,6 +23,8 @@ RuntimeConfigInput loadRuntimeEnv() {
   const apiTimeoutFromDefine = String.fromEnvironment("MOBILE_API_TIMEOUT_MS");
   const draftDebounceFromDefine =
       String.fromEnvironment("MOBILE_DRAFT_AUTOSAVE_DEBOUNCE_MS");
+  const pusherKeyFromDefine = String.fromEnvironment("PUSHER_KEY");
+  const pusherClusterFromDefine = String.fromEnvironment("PUSHER_CLUSTER");
 
   final resolvedBaseUrl = _resolveRequiredFromMany(
     defineValues: <String>[
@@ -80,6 +82,16 @@ RuntimeConfigInput loadRuntimeEnv() {
       defineValue: draftDebounceFromDefine,
       envKey: "MOBILE_DRAFT_AUTOSAVE_DEBOUNCE_MS",
       debugFallback: "450",
+    ),
+    pusherKey: _resolveOptionalValue(
+      defineValue: pusherKeyFromDefine,
+      envKey: "PUSHER_KEY",
+      debugFallback: "",
+    ),
+    pusherCluster: _resolveOptionalValue(
+      defineValue: pusherClusterFromDefine,
+      envKey: "PUSHER_CLUSTER",
+      debugFallback: "mt1",
     ),
   );
 }

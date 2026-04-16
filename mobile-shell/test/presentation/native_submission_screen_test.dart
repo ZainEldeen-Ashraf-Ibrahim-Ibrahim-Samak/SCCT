@@ -12,6 +12,8 @@ void main() {
           localeCode: "en",
           apiTimeoutMs: 5000,
           draftAutosaveDebounceMs: 250,
+          pusherKey: "test_key",
+          pusherCluster: "mt1",
         ),
       ),
     );

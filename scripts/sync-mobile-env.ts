@@ -116,6 +116,8 @@ function main(): void {
       "MOBILE_SUBMISSION_PATH_SEGMENT",
       firstNonEmpty(sourceEnv, ["MOBILE_SUBMISSION_PATH_SEGMENT"]) ?? "submit",
     ],
+    ["PUSHER_KEY", firstNonEmpty(sourceEnv, ["PUSHER_KEY"]) ?? ""],
+    ["PUSHER_CLUSTER", firstNonEmpty(sourceEnv, ["PUSHER_CLUSTER"]) ?? "mt1"],
     [
       "MOBILE_API_TIMEOUT_MS",
       firstNonEmpty(sourceEnv, ["MOBILE_API_TIMEOUT_MS"]) ?? "15000",
