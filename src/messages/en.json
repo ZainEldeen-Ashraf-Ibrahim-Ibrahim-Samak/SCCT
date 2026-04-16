@@ -528,5 +528,13 @@
       "DOMAIN_TYPO": "Did you mean {domain}?",
       "SAME_EMAIL": "New email cannot be the same as current email"
     }
+  },
+  "metadata": {
+    "title": "{siteName} — Client Data Collection",
+    "description": "Dynamic client data collection and admin review system with bilingual support",
+    "ogTitle": "{siteName} — Professional Data Collection",
+    "ogDescription": "Manage your data collection and review process efficiently with bilingual support.",
+    "twitterTitle": "{siteName} — Data Collection System",
+    "twitterDescription": "Professional data collection for business needs."
   }
 }

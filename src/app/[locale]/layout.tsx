@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+import { getMessages, getTranslations } from "next-intl/server";
 import { ThemeProvider } from "@/presentation/providers/theme-provider";
 import { AuthProvider } from "@/presentation/providers/auth-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -18,15 +18,54 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://scct-damages.vercel.app/"),
-  title: `${SITE_NAME} — Client Data Collection`,
-  description:
-    "Dynamic client data collection and admin review system with bilingual support",
-  verification: {
-    google: "K2hBH3SrfPai7vh5FKzjqFugBv_kw7QmvPr-HxqVOGQ",
-  },
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "metadata" });
+
+  return {
+    metadataBase: new URL("https://scct-damages.vercel.app/"),
+    title: t("title", { siteName: SITE_NAME }),
+    description: t("description"),
+    keywords: ["SCCT", "Damages", "Data Collection", "Bilingual", "Dashboard"],
+    authors: [{ name: "SCCT Team" }],
+    creator: "SCCT Team",
+    publisher: "SCCT Team",
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
+    },
+    openGraph: {
+      title: t("ogTitle", { siteName: SITE_NAME }),
+      description: t("ogDescription"),
+      url: "https://scct-damages.vercel.app/",
+      siteName: SITE_NAME,
+      locale: locale === "ar" ? "ar_EG" : "en_US",
+      type: "website",
+    },
+    verification: {
+      google: "K2hBH3SrfPai7vh5FKzjqFugBv_kw7QmvPr-HxqVOGQ",
+    },
+    alternates: {
+      canonical: "/",
+      languages: {
+        en: "/en",
+        ar: "/ar",
+      },
+    },
+    category: "Business",
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",

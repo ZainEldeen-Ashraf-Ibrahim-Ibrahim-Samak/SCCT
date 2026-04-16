@@ -3,9 +3,19 @@ import { ClientNotifications } from "@/presentation/components/client/notificati
 import type { Metadata } from "next";
 import { SITE_NAME } from "@/components/shared/site-name";
 
-export const metadata: Metadata = {
-  title: `Submit Data — ${SITE_NAME}`,
-};
+import { getTranslations } from "next-intl/server";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ token: string; locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "client" });
+  return {
+    title: `${t("formTitle")} — ${SITE_NAME}`,
+  };
+}
 
 interface SubmitPageProps {
   params: Promise<{ token: string }>;
