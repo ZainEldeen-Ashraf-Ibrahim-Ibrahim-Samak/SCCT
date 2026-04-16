@@ -1,6 +1,10 @@
 import { v2 as cloudinary } from "cloudinary";
 import { env } from "@/env.mjs";
 import { logger } from "@/lib/dev-logger";
+import { type ApiResponse } from "cloudinary";
+
+// In-memory cache for verified presets to avoid hitting Admin API repeatedly
+const verifiedPresets = new Set<string>();
 
 // Configure Cloudinary
 if (env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SECRET) {
@@ -60,6 +64,56 @@ export function signUploadRequest(params: SignUploadParams): SignUploadResult {
     cloudname: env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "",
     apikey: env.CLOUDINARY_API_KEY || "",
   };
+}
+
+/**
+ * Ensures a Cloudinary upload preset exists.
+ * This uses the Admin API and should be called sparingly.
+ */
+export async function ensureUploadPresetExists(presetName: string): Promise<boolean> {
+  if (!presetName || verifiedPresets.has(presetName)) {
+    return true;
+  }
+
+  const apiSecret = env.CLOUDINARY_API_SECRET;
+  if (!apiSecret) {
+    logger.warn("Skipping preset verification: CLOUDINARY_API_SECRET not configured");
+    return false;
+  }
+
+  try {
+    // Check if preset exists
+    try {
+      await cloudinary.api.upload_preset(presetName);
+      logger.info(`Cloudinary upload preset verified: ${presetName}`);
+      verifiedPresets.add(presetName);
+      return true;
+    } catch (error: any) {
+      // If error status isn't 404, it might be a permissions issue or network error
+      if (error?.http_code !== 404) {
+        logger.warn(`Could not verify Cloudinary preset ${presetName}`, error);
+        return false;
+      }
+      
+      // 404 - Preset doesn't exist, create it
+      logger.info(`Creating missing Cloudinary upload preset: ${presetName}`);
+      await cloudinary.api.create_upload_preset({
+        name: presetName,
+        unsigned: false, // Default to signed as we use api_sign_request
+        folder: "submissions", // Default root folder for this app
+        disallow_public_id: false,
+        resource_type: "auto",
+        eval: "if (resource_info.resource_type == 'image') { };" // Dummy eval to ensure standard behavior
+      });
+      
+      logger.info(`Successfully created Cloudinary upload preset: ${presetName}`);
+      verifiedPresets.add(presetName);
+      return true;
+    }
+  } catch (error) {
+    logger.error(`Fatal error in Cloudinary preset management for ${presetName}`, error);
+    return false;
+  }
 }
 
 /**

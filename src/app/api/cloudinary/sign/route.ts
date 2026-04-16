@@ -1,4 +1,4 @@
-import { signUploadRequest, type SignUploadParams } from "@/data/services/cloudinary-service";
+import { signUploadRequest, ensureUploadPresetExists, type SignUploadParams } from "@/data/services/cloudinary-service";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { logger } from "@/lib/dev-logger";
 import { parseSecureJson } from "@/lib/api-security";
@@ -29,6 +29,11 @@ export async function POST(request: Request) {
       folder: typeof raw.folder === "string" ? raw.folder : null,
       eager: typeof raw.eager === "string" ? raw.eager : null,
     });
+
+    // Auto-create preset if missing (only happens once due to server-side caching)
+    if (policy.uploadPreset) {
+      await ensureUploadPresetExists(policy.uploadPreset);
+    }
 
     const params: SignUploadParams = {
       timestamp: Math.floor(timestamp),
