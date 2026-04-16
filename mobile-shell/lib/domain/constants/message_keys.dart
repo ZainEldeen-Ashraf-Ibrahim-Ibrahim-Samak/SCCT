@@ -9,6 +9,27 @@ class MessageKeys {
   static const scanDecodeError = "mobile.scan.decodeError";
   static const scanNoQrInPhoto = "mobile.scan.noQrInPhoto";
   static const scanErrorTitle = "mobile.scan.errorTitle";
+  static const scanNoPhoto = "mobile.scan.noPhoto";
+  static const scanDecoding = "mobile.scan.decoding";
+  static const scanPrompt = "mobile.scan.prompt";
+  static const scanOpen = "mobile.scan.open";
+  static const scanChoosePhoto = "mobile.scan.choosePhoto";
+  static const scanDropPhoto = "mobile.scan.dropPhoto";
+  static const scanSelectedPhoto = "mobile.scan.selectedPhoto";
+  static const scanSecure = "mobile.scan.secure";
+  static const scanManual = "mobile.scan.manual";
+  static const scanQuickActions = "mobile.scan.quickActions";
+  static const scanDragHint = "mobile.scan.dragHint";
+  static const scanPhotoPreview = "mobile.scan.photoPreview";
+  static const scanClearPhoto = "mobile.scan.clearPhoto";
+  static const scanOpenCamera = "mobile.scan.openCamera";
+  static const scanAlignCode = "mobile.scan.alignCode";
+  static const scanCameraHint = "mobile.scan.cameraHint";
+  static const scanThemeToggle = "mobile.scan.themeToggle";
+  static const scanLanguage = "mobile.scan.language";
+  static const scanSwitchCamera = "mobile.scan.switchCamera";
+  static const scanLinkHint = "mobile.scan.linkHint";
+
   static const startupConfigMissing = "mobile.startup.config_missing";
   static const startupConfigInvalid = "mobile.startup.config_invalid";
   static const startupRecoveryHint = "mobile.startup.recovery";
@@ -80,7 +101,40 @@ class MessageKeys {
   static const commonLanguageEnglish = "mobile.common.language.english";
   static const commonLanguageArabic = "mobile.common.language.arabic";
 
-  static const scanLinkHint = "mobile.scan.linkHint";
+  static const startupTitle = "mobile.startup.title";
+  static const startupSubtitle = "mobile.startup.subtitle";
+  static const startupRetry = "mobile.startup.retry";
+  static const startupContactAdmin = "mobile.startup.contactAdmin";
+  static const startupUnknown = "mobile.startup.unknown";
+
+  static const homeTitle = "mobile.home.title";
+  static const homeSubtitle = "mobile.home.subtitle";
+
+  static const splashTitle = "mobile.splash.title";
+  static const splashSubtitle = "mobile.splash.subtitle";
+
+  static const webviewClose = "mobile.webview.close";
+  static const webviewBack = "mobile.webview.back";
+  static const webviewForward = "mobile.webview.forward";
+  static const webviewRefresh = "mobile.webview.refresh";
+  static const webviewTitle = "mobile.webview.title";
+  static const webviewReload = "mobile.webview.reload";
+
+  static const startupErrorTitle = "mobile.startupError.title";
+  static const startupErrorRetry = "mobile.startupError.retry";
+  static const startupErrorCode = "mobile.startupError.code";
+  static const startupErrorHelp = "mobile.startupError.help";
+  static const startupErrorConfigMissing = "mobile.startupError.config_missing";
+  static const startupErrorConfigInvalidUrl =
+      "mobile.startupError.config_invalid_url";
+  static const startupErrorConfigInvalidHosts =
+      "mobile.startupError.config_invalid_hosts";
+  static const startupErrorConfigInvalidLocale =
+      "mobile.startupError.config_invalid_locale";
+  static const startupErrorConfigInvalidNumericRange =
+      "mobile.startupError.config_invalid_numeric_range";
+  static const startupErrorUnknown = "mobile.startupError.unknown";
+
   static const mainSubmissionTokenNotFound =
       "mobile.main.submissionTokenNotFound";
 }

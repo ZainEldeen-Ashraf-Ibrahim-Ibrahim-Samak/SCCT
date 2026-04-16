@@ -70,7 +70,7 @@ class SplashScreen extends StatelessWidget {
                             border: Border.all(color: cardBorder),
                           ),
                           child: IconButton(
-                            tooltip: _t(context, "mobile.scan.themeToggle"),
+                            tooltip: _t(context, MessageKeys.scanThemeToggle),
                             onPressed: onToggleTheme,
                             iconSize: 18,
                             visualDensity: VisualDensity.compact,
@@ -86,7 +86,7 @@ class SplashScreen extends StatelessWidget {
                         const SizedBox(width: 8),
                       if (onLocaleSelected != null)
                         PopupMenuButton<String>(
-                          tooltip: _t(context, "mobile.scan.language"),
+                          tooltip: _t(context, MessageKeys.scanLanguage),
                           initialValue: localeCode,
                           onSelected: onLocaleSelected,
                           itemBuilder: (context) => <PopupMenuEntry<String>>[
@@ -175,7 +175,7 @@ class SplashScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          _t(context, "mobile.splash.title"),
+                          _t(context, MessageKeys.splashTitle),
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: titleColor,
@@ -186,7 +186,7 @@ class SplashScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          _t(context, "mobile.splash.subtitle"),
+                          _t(context, MessageKeys.splashSubtitle),
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: subColor,

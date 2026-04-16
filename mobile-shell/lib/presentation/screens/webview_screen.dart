@@ -142,7 +142,7 @@ class _WebviewScreenState extends State<WebviewScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  _t("mobile.webview.title"),
+                  _t(MessageKeys.webviewTitle),
                   style: TextStyle(
                     color: titleColor,
                     fontWeight: FontWeight.w700,
@@ -165,14 +165,14 @@ class _WebviewScreenState extends State<WebviewScreen> {
         ),
         actions: [
           IconButton(
-            tooltip: _t("mobile.scan.themeToggle"),
+            tooltip: _t(MessageKeys.scanThemeToggle),
             onPressed: widget.onToggleTheme,
             icon: Icon(
                 isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded),
             color: titleColor,
           ),
           PopupMenuButton<String>(
-            tooltip: _t("mobile.scan.language"),
+            tooltip: _t(MessageKeys.scanLanguage),
             initialValue: localeCode,
             onSelected: widget.onLocaleSelected,
             itemBuilder: (context) => <PopupMenuEntry<String>>[
@@ -241,7 +241,7 @@ class _WebviewScreenState extends State<WebviewScreen> {
               ),
               child: Row(
                 children: [
-                  Expanded(
+                   Expanded(
                     child: FilledButton.tonalIcon(
                       onPressed: _canGoBack
                           ? () async {
@@ -250,7 +250,7 @@ class _WebviewScreenState extends State<WebviewScreen> {
                             }
                           : null,
                       icon: const Icon(Icons.arrow_back_rounded, size: 18),
-                      label: Text(_t("mobile.webview.back")),
+                      label: Text(_t(MessageKeys.webviewBack)),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -263,7 +263,7 @@ class _WebviewScreenState extends State<WebviewScreen> {
                             }
                           : null,
                       icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-                      label: Text(_t("mobile.webview.forward")),
+                      label: Text(_t(MessageKeys.webviewForward)),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -273,7 +273,7 @@ class _WebviewScreenState extends State<WebviewScreen> {
                         _controller.reload();
                       },
                       icon: const Icon(Icons.refresh_rounded, size: 18),
-                      label: Text(_t("mobile.webview.reload")),
+                      label: Text(_t(MessageKeys.webviewReload)),
                     ),
                   ),
                 ],

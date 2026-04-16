@@ -478,7 +478,7 @@ class _ScanScreenState extends State<ScanScreen> {
   String _selectedPhotoLabel() {
     final selected = _selectedPhoto;
     if (selected == null) {
-      return _t("mobile.scan.noPhoto");
+      return _t(MessageKeys.scanNoPhoto);
     }
     if (selected.name.isNotEmpty) {
       return selected.name;
@@ -510,7 +510,7 @@ class _ScanScreenState extends State<ScanScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            _t("mobile.scan.photoPreview"),
+            _t(MessageKeys.scanPhotoPreview),
             style: TextStyle(
               color: textPrimary,
               fontSize: 13,
@@ -687,7 +687,7 @@ class _ScanScreenState extends State<ScanScreen> {
                     ],
                   ),
                   child: IconButton(
-                    tooltip: _t("mobile.scan.themeToggle"),
+                    tooltip: _t(MessageKeys.scanThemeToggle),
                     onPressed: widget.onToggleTheme,
                     iconSize: 18,
                     color: actionChipFg,
@@ -706,7 +706,7 @@ class _ScanScreenState extends State<ScanScreen> {
                   ),
                 ),
                 PopupMenuButton<String>(
-                  tooltip: _t("mobile.scan.language"),
+                  tooltip: _t(MessageKeys.scanLanguage),
                   initialValue: localeCode,
                   onSelected: widget.onLocaleSelected,
                   color: cardColor,
@@ -821,7 +821,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _t("mobile.home.title"),
+                    _t(MessageKeys.homeTitle),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 22,
@@ -831,7 +831,7 @@ class _ScanScreenState extends State<ScanScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _t("mobile.home.subtitle"),
+                    _t(MessageKeys.homeSubtitle),
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.92),
                       fontSize: 14,
@@ -845,7 +845,7 @@ class _ScanScreenState extends State<ScanScreen> {
                     children: [
                       _buildTag(
                           icon: Icons.verified_user_outlined,
-                          label: _t("mobile.scan.secure")),
+                          label: _t(MessageKeys.scanSecure)),
                       _buildTag(
                           icon: Icons.language_rounded,
                           label: localeCode.toUpperCase()),
@@ -866,7 +866,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _t("mobile.scan.manual"),
+                    _t(MessageKeys.scanManual),
                     style: TextStyle(
                       color: textPrimary,
                       fontSize: 14,
@@ -878,7 +878,7 @@ class _ScanScreenState extends State<ScanScreen> {
                     controller: _controller,
                     style: TextStyle(color: textPrimary),
                     decoration: InputDecoration(
-                      labelText: _t("mobile.scan.prompt"),
+                      labelText: _t(MessageKeys.scanPrompt),
                       hintText: _t(MessageKeys.scanLinkHint),
                       hintStyle: TextStyle(color: textSecondary),
                       labelStyle: TextStyle(color: textSecondary),
@@ -901,7 +901,7 @@ class _ScanScreenState extends State<ScanScreen> {
                         child: FilledButton.icon(
                           onPressed: _openCameraScanner,
                           icon: const Icon(Icons.qr_code_scanner_rounded),
-                          label: Text(_t("mobile.scan.openCamera")),
+                          label: Text(_t(MessageKeys.scanOpenCamera)),
                           style: _filledButtonStyle(
                             background: brandRed,
                             foreground: Colors.white,
@@ -913,7 +913,7 @@ class _ScanScreenState extends State<ScanScreen> {
                         child: FilledButton.icon(
                           onPressed: _submit,
                           icon: const Icon(Icons.open_in_new_rounded),
-                          label: Text(_t("mobile.scan.open")),
+                          label: Text(_t(MessageKeys.scanOpen)),
                           style: _filledButtonStyle(
                             background: brandBlue,
                             foreground: Colors.white,
@@ -937,7 +937,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _t("mobile.scan.quickActions"),
+                    _t(MessageKeys.scanQuickActions),
                     style: TextStyle(
                       color: textPrimary,
                       fontSize: 14,
@@ -952,7 +952,7 @@ class _ScanScreenState extends State<ScanScreen> {
                       FilledButton.icon(
                         onPressed: _chooseFromLibrary,
                         icon: const Icon(Icons.photo_library_outlined),
-                        label: Text(_t("mobile.scan.choosePhoto")),
+                        label: Text(_t(MessageKeys.scanChoosePhoto)),
                         style: _filledButtonStyle(
                           background: isDark
                               ? const Color(0xFF1A4568)
@@ -966,7 +966,7 @@ class _ScanScreenState extends State<ScanScreen> {
                         FilledButton.icon(
                           onPressed: _clearSelectedPhoto,
                           icon: const Icon(Icons.clear_rounded),
-                          label: Text(_t("mobile.scan.clearPhoto")),
+                          label: Text(_t(MessageKeys.scanClearPhoto)),
                           style: _filledButtonStyle(
                             background: isDark
                                 ? const Color(0xFF563136)
@@ -980,7 +980,7 @@ class _ScanScreenState extends State<ScanScreen> {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    _t("mobile.scan.dragHint"),
+                    _t(MessageKeys.scanDragHint),
                     style: TextStyle(
                       color: textSecondary,
                       fontSize: 12,
@@ -1016,7 +1016,7 @@ class _ScanScreenState extends State<ScanScreen> {
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  _t("mobile.scan.dropPhoto"),
+                                  _t(MessageKeys.scanDropPhoto),
                                   style: TextStyle(
                                     color: textPrimary,
                                     fontWeight: FontWeight.w600,
@@ -1027,7 +1027,7 @@ class _ScanScreenState extends State<ScanScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            "${_t("mobile.scan.selectedPhoto")}: ${_selectedPhotoLabel()}",
+                            "${_t(MessageKeys.scanSelectedPhoto)}: ${_selectedPhotoLabel()}",
                             style: TextStyle(color: textSecondary),
                           ),
                         ],
@@ -1067,7 +1067,7 @@ class _ScanScreenState extends State<ScanScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        _t("mobile.scan.decoding"),
+                        _t(MessageKeys.scanDecoding),
                         style: TextStyle(
                           color: infoText,
                           fontWeight: FontWeight.w600,
@@ -1081,7 +1081,7 @@ class _ScanScreenState extends State<ScanScreen> {
             if (_error != null) ...[
               const SizedBox(height: 12),
               ScanErrorSheet(
-                title: _t("mobile.scan.errorTitle"),
+                title: _t(MessageKeys.scanErrorTitle),
                 message: _t(_error!),
                 themeMode: widget.themeMode,
                 onDismiss: () {
