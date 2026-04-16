@@ -29,7 +29,7 @@ class MediaUploadSection extends StatefulWidget {
   final bool requiredMedia;
   final bool enabled;
   final bool isUploading;
-  final Future<void> Function(String fieldId, String filePath) onUpload;
+  final Future<void> Function(String fieldId, XFile file) onUpload;
   final ValueChanged<String> onClear;
   final String Function(String key) t;
   final String? errorText;
@@ -58,7 +58,7 @@ class _MediaUploadSectionState extends State<MediaUploadSection> {
       }
 
       for (final image in selected) {
-        await widget.onUpload(widget.fieldId, image.path);
+        await widget.onUpload(widget.fieldId, image);
       }
       return;
     }
@@ -68,13 +68,13 @@ class _MediaUploadSectionState extends State<MediaUploadSection> {
       return;
     }
 
-    await widget.onUpload(widget.fieldId, selected.path);
+    await widget.onUpload(widget.fieldId, selected);
   }
 
   Future<void> _pickAndUploadFiles() async {
     final picked = await FilePicker.platform.pickFiles(
       allowMultiple: widget.isMultiple,
-      withData: false,
+      withData: true,
     );
 
     if (picked == null || picked.files.isEmpty) {
@@ -82,12 +82,11 @@ class _MediaUploadSectionState extends State<MediaUploadSection> {
     }
 
     for (final file in picked.files) {
-      final path = file.path;
-      if (path == null || path.trim().isEmpty) {
-        continue;
-      }
+      final xFile = file.path != null
+          ? XFile(file.path!, name: file.name)
+          : XFile.fromData(file.bytes!, name: file.name);
 
-      await widget.onUpload(widget.fieldId, path);
+      await widget.onUpload(widget.fieldId, xFile);
     }
   }
 

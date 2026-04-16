@@ -6,6 +6,9 @@ class MessageKeys {
   static const scanBlocked = "mobile.scan.blocked";
   static const scanCameraDenied = "mobile.scan.camera_denied";
   static const scanOffline = "mobile.scan.offline";
+  static const scanDecodeError = "mobile.scan.decodeError";
+  static const scanNoQrInPhoto = "mobile.scan.noQrInPhoto";
+  static const scanErrorTitle = "mobile.scan.errorTitle";
   static const startupConfigMissing = "mobile.startup.config_missing";
   static const startupConfigInvalid = "mobile.startup.config_invalid";
   static const startupRecoveryHint = "mobile.startup.recovery";
@@ -22,6 +25,9 @@ class MessageKeys {
       "mobile.submission.validationFailed";
   static const submissionRequiredMedia = "mobile.submission.requiredMedia";
   static const submissionOfflineBlocked = "mobile.submission.offlineBlocked";
+  static const submissionMediaUploading = "mobile.submission.mediaUploading";
+  static const submissionWaitingForUploads =
+      "mobile.submission.waitingForUploads";
   static const submissionInvalidToken = "mobile.submission.invalidToken";
   static const submissionUnauthorized = "mobile.submission.unauthorized";
   static const submissionServerFailure = "mobile.submission.serverFailure";

@@ -183,6 +183,8 @@ export const createSubmissionSchema = z.object({
     .array(contactRecordSchema)
     .min(1, "At least one contact record is required"),
   fieldValues: z.array(fieldValueInputSchema),
+  expectedFormVersion: z.string().optional().nullable(),
+  expectedSubmissionUpdatedAt: z.string().optional().nullable(),
 });
 
 export const updateSubmissionStatusSchema = z

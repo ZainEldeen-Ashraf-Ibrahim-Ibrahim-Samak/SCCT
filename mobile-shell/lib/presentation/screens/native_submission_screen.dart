@@ -301,14 +301,35 @@ class _NativeSubmissionScreenState extends State<NativeSubmissionScreen> {
                       child: Row(
                         children: [
                           Expanded(
-                            child: Text(
-                              _t(viewModel.statusMessageKey!),
-                              style: TextStyle(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onPrimaryContainer,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _t(viewModel.statusMessageKey!),
+                                  style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimaryContainer,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                if (viewModel.lastServerError != null &&
+                                    viewModel.statusMessageKey ==
+                                        MessageKeys.submissionServerFailure)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2),
+                                    child: Text(
+                                      viewModel.lastServerError!,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimaryContainer
+                                            .withValues(alpha: 0.85),
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                           if (viewModel.statusMessageKey ==
@@ -366,10 +387,10 @@ class _NativeSubmissionScreenState extends State<NativeSubmissionScreen> {
                     enabled: viewModel.isEditable,
                     localeCode: widget.localeCode,
                     onValueChanged: viewModel.setFieldValue,
-                    onUploadMedia: (fieldId, filePath) {
+                    onUploadMedia: (fieldId, file) {
                       return viewModel.uploadMediaForField(
                         fieldDefinitionId: fieldId,
-                        filePath: filePath,
+                        file: file,
                       );
                     },
                     onClearMedia: viewModel.clearFieldMedia,
@@ -380,31 +401,14 @@ class _NativeSubmissionScreenState extends State<NativeSubmissionScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: OutlinedButton(
-                          onPressed: viewModel.isEditable
-                              ? () async {
-                                  final messenger =
-                                      ScaffoldMessenger.of(context);
-                                  await viewModel.saveDraftNow();
-                                  if (!mounted) return;
-                                  messenger.showSnackBar(
-                                    SnackBar(
-                                        content: Text(_t(
-                                            MessageKeys.submissionSaveDraft))),
-                                  );
-                                }
-                              : null,
-                          child: Text(_t(MessageKeys.submissionSaveDraft)),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
                         child: FilledButton.icon(
-                          onPressed:
-                              (!viewModel.isEditable || viewModel.isSubmitting)
-                                  ? null
-                                  : viewModel.submitOrResubmit,
-                          icon: viewModel.isSubmitting
+                          onPressed: (!viewModel.isEditable ||
+                                  viewModel.isSubmitting ||
+                                  viewModel.isAnyFieldUploading)
+                              ? null
+                              : viewModel.submitOrResubmit,
+                          icon: (viewModel.isSubmitting ||
+                                  viewModel.isAnyFieldUploading)
                               ? const SizedBox(
                                   width: 16,
                                   height: 16,
@@ -412,7 +416,11 @@ class _NativeSubmissionScreenState extends State<NativeSubmissionScreen> {
                                       CircularProgressIndicator(strokeWidth: 2),
                                 )
                               : const Icon(Icons.send_rounded),
-                          label: Text(_t(viewModel.submitActionKey)),
+                          label: Text(
+                            viewModel.isAnyFieldUploading
+                                ? _t(MessageKeys.submissionWaitingForUploads)
+                                : _t(viewModel.submitActionKey),
+                          ),
                         ),
                       ),
                     ],

@@ -1,6 +1,7 @@
 import "dart:async";
 
 import "package:flutter/foundation.dart";
+import "package:image_picker/image_picker.dart";
 
 import "../../data/repositories/secure_draft_repository.dart";
 import "../../data/services/cloudinary_sign_client.dart";
@@ -54,6 +55,7 @@ class NativeSubmissionViewModel extends ChangeNotifier {
   bool _isOnline = true;
   String? _fatalMessageKey;
   String? _statusMessageKey;
+  String? _lastServerError;
   String _clientName = "";
   String _clientContact = "";
   List<ContactRecord> _contacts = <ContactRecord>[
@@ -85,8 +87,11 @@ class NativeSubmissionViewModel extends ChangeNotifier {
   Map<String, String> get fieldErrorKeys =>
       Map<String, String>.unmodifiable(_fieldErrorKeys);
   String? get contactErrorKey => _contactErrorKey;
+  String? get lastServerError => _lastServerError;
 
   bool get isEditable => _session?.isEditable ?? false;
+  bool get isAnyFieldUploading => _uploadingFieldIds.isNotEmpty;
+  int get uploadingCount => _uploadingFieldIds.length;
 
   String get submitActionKey {
     if (_session?.mode == SubmissionMode.needsRewrite ||
@@ -267,7 +272,7 @@ class NativeSubmissionViewModel extends ChangeNotifier {
 
   Future<void> uploadMediaForField({
     required String fieldDefinitionId,
-    required String filePath,
+    required XFile file,
   }) async {
     final requiredMedia = _isFieldMediaRequired(fieldDefinitionId);
 
@@ -280,13 +285,14 @@ class NativeSubmissionViewModel extends ChangeNotifier {
     _uploadingFieldIds.add(fieldDefinitionId);
     _mediaQueueByFieldId[fieldDefinitionId] = MediaUploadItem(
       fieldDefinitionId: fieldDefinitionId,
-      localUri: filePath,
+      localUri: file.path,
       status: MediaUploadStatus.uploading,
       required: requiredMedia,
     );
     notifyListeners();
 
     try {
+      final bytes = await file.readAsBytes();
       final session = _session;
       final fieldType = _cloudinaryFieldTypeFor(fieldDefinitionId);
       final signature = await _cloudinarySignClient.requestSignature(
@@ -296,7 +302,8 @@ class NativeSubmissionViewModel extends ChangeNotifier {
       );
 
       final uploaded = await _cloudinarySignClient.uploadFile(
-        filePath: filePath,
+        bytes: bytes,
+        fileName: file.name,
         signature: signature,
         resourceType: signature.resourceType,
       );
@@ -320,7 +327,7 @@ class NativeSubmissionViewModel extends ChangeNotifier {
 
       _mediaQueueByFieldId[fieldDefinitionId] = MediaUploadItem(
         fieldDefinitionId: fieldDefinitionId,
-        localUri: filePath,
+        localUri: file.path,
         status: MediaUploadStatus.uploaded,
         uploadedUrl: uploaded.url,
         uploadedPublicId: uploaded.publicId,
@@ -343,7 +350,7 @@ class NativeSubmissionViewModel extends ChangeNotifier {
       );
       _mediaQueueByFieldId[fieldDefinitionId] = MediaUploadItem(
         fieldDefinitionId: fieldDefinitionId,
-        localUri: filePath,
+        localUri: file.path,
         status: MediaUploadStatus.failed,
         required: requiredMedia,
         lastError: MessageKeys.submissionServerFailure,
@@ -357,7 +364,7 @@ class NativeSubmissionViewModel extends ChangeNotifier {
       );
       _mediaQueueByFieldId[fieldDefinitionId] = MediaUploadItem(
         fieldDefinitionId: fieldDefinitionId,
-        localUri: filePath,
+        localUri: file.path,
         status: MediaUploadStatus.failed,
         required: requiredMedia,
         lastError: MessageKeys.submissionServerFailure,
@@ -408,6 +415,16 @@ class NativeSubmissionViewModel extends ChangeNotifier {
 
     if (!_isOnline) {
       _statusMessageKey = MessageKeys.submissionOfflineBlocked;
+      notifyListeners();
+      return;
+    }
+
+    if (isAnyFieldUploading) {
+      _statusMessageKey = MessageKeys.submissionMediaUpload;
+      _emitEvent(
+        SubmissionEventName.validationFailed,
+        MessageKeys.submissionMediaUpload,
+      );
       notifyListeners();
       return;
     }
@@ -510,9 +527,12 @@ class NativeSubmissionViewModel extends ChangeNotifier {
       case SubmissionOutcomeKind.networkError:
       case SubmissionOutcomeKind.serverError:
         _statusMessageKey = MessageKeys.submissionServerFailure;
+        _lastServerError = outcome.message;
         _emitEvent(
           SubmissionEventName.submitFailed,
-          MessageKeys.submissionServerFailure,
+          outcome.message.isNotEmpty
+              ? outcome.message
+              : MessageKeys.submissionServerFailure,
         );
         break;
     }

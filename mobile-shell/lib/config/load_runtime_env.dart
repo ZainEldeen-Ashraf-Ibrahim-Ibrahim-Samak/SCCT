@@ -101,9 +101,11 @@ String? _resolveRequiredValue({
     }
   }
 
-  final fromEnv = Platform.environment[envKey]?.trim();
-  if (fromEnv != null && fromEnv.isNotEmpty) {
-    return fromEnv;
+  if (!kIsWeb) {
+    final fromEnv = Platform.environment[envKey]?.trim();
+    if (fromEnv != null && fromEnv.isNotEmpty) {
+      return fromEnv;
+    }
   }
 
   if (!kReleaseMode && debugFallback != null && debugFallback.trim().isNotEmpty) {
@@ -134,10 +136,12 @@ String? _resolveRequiredFromMany({
     }
   }
 
-  for (final key in envKeys) {
-    final fromEnv = Platform.environment[key]?.trim();
-    if (fromEnv != null && fromEnv.isNotEmpty) {
-      return fromEnv;
+  if (!kIsWeb) {
+    for (final key in envKeys) {
+      final fromEnv = Platform.environment[key]?.trim();
+      if (fromEnv != null && fromEnv.isNotEmpty) {
+        return fromEnv;
+      }
     }
   }
 
@@ -178,9 +182,11 @@ String? _resolveOptionalValue({
     }
   }
 
-  final fromEnv = Platform.environment[envKey]?.trim();
-  if (fromEnv != null && fromEnv.isNotEmpty) {
-    return fromEnv;
+  if (!kIsWeb) {
+    final fromEnv = Platform.environment[envKey]?.trim();
+    if (fromEnv != null && fromEnv.isNotEmpty) {
+      return fromEnv;
+    }
   }
 
   if (!kReleaseMode) {

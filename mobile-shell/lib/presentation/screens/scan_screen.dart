@@ -1,10 +1,14 @@
-import "dart:typed_data";
+import "dart:io";
 import "dart:math" as math;
+import "dart:typed_data";
 
 import "package:desktop_drop/desktop_drop.dart";
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:flutter_image_compress/flutter_image_compress.dart";
 import "package:image_picker/image_picker.dart";
 import "package:mobile_scanner/mobile_scanner.dart";
+import "package:path_provider/path_provider.dart";
 
 import "../../domain/constants/message_keys.dart";
 import "../../i18n/index.dart";
@@ -280,6 +284,21 @@ class _ScanScreenState extends State<ScanScreen> {
                         ),
                       ),
                       Positioned(
+                        top: 14,
+                        left: 72,
+                        child: IconButton.filledTonal(
+                          tooltip: _t("mobile.scan.switchCamera"),
+                          onPressed: () async {
+                            try {
+                              await cameraController.switchCamera();
+                            } catch (_) {
+                              // Ignore failures for devices with single camera.
+                            }
+                          },
+                          icon: const Icon(Icons.flip_camera_ios_rounded),
+                        ),
+                      ),
+                      Positioned(
                         top: 12,
                         right: 12,
                         child: IconButton.filledTonal(
@@ -360,10 +379,47 @@ class _ScanScreenState extends State<ScanScreen> {
   Future<void> _decodeQrFromPhoto(XFile photo) async {
     setState(() {
       _isDecodingPhoto = true;
+      _error = null;
     });
 
     try {
-      final capture = await _scannerController.analyzeImage(photo.path);
+      XFile fileToScan = photo;
+
+      try {
+        final bytes = await photo.readAsBytes();
+        // Optimize image for QR detection: Downscale to a reasonable size if too large.
+        // This helps the detector focus on relevant features without noise from ultra-res sensors.
+        final compressedBytes = await FlutterImageCompress.compressWithList(
+          bytes,
+          minWidth: 1024,
+          minHeight: 1024,
+          quality: 85,
+          format: CompressFormat.jpeg,
+        );
+
+        if (kIsWeb) {
+          fileToScan = XFile.fromData(compressedBytes, name: "scan_preview.jpg");
+        } else {
+          final tempDir = await getTemporaryDirectory();
+          final tempFile = File(
+              '${tempDir.path}/qr_scan_${DateTime.now().millisecondsSinceEpoch}.jpg');
+          await tempFile.writeAsBytes(compressedBytes);
+          fileToScan = XFile(tempFile.path);
+        }
+      } catch (e) {
+        // Fallback to original photo if compression fails
+        fileToScan = photo;
+      }
+
+      if (kIsWeb) {
+        // analyzeImage is currently not supported on Flutter Web for mobile_scanner.
+        setState(() {
+          _error = MessageKeys.scanDecodeError;
+        });
+        return;
+      }
+
+      final capture = await _scannerController.analyzeImage(fileToScan.path);
       final decodedValue = capture?.barcodes
               .map((barcode) => barcode.rawValue?.trim() ?? "")
               .firstWhere((value) => value.isNotEmpty, orElse: () => "") ??
@@ -371,16 +427,19 @@ class _ScanScreenState extends State<ScanScreen> {
 
       if (decodedValue.isEmpty) {
         setState(() {
-          _error = "mobile.scan.noQrInPhoto";
+          _error = MessageKeys.scanNoQrInPhoto;
         });
         return;
       }
 
       _controller.text = decodedValue;
       _submit();
-    } catch (_) {
+    } catch (e) {
+      if (kDebugMode) {
+        print("QR Decode Error: $e");
+      }
       setState(() {
-        _error = "mobile.scan.noQrInPhoto";
+        _error = MessageKeys.scanDecodeError;
       });
     } finally {
       if (mounted) {

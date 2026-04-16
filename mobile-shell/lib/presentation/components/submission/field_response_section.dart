@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:image_picker/image_picker.dart";
 
 import "../../../domain/constants/message_keys.dart";
 import "../../../domain/constants/submission_regex.dart";
@@ -28,7 +29,7 @@ class FieldResponseSection extends StatelessWidget {
   final bool enabled;
   final String localeCode;
   final void Function(String fieldId, Object? value) onValueChanged;
-  final Future<void> Function(String fieldId, String filePath) onUploadMedia;
+  final Future<void> Function(String fieldId, XFile file) onUploadMedia;
   final ValueChanged<String> onClearMedia;
   final bool Function(String fieldId) isFieldUploading;
   final String Function(String key) t;
@@ -215,11 +216,15 @@ class FieldResponseSection extends StatelessWidget {
 
     return DropdownButtonFormField<String>(
       value: normalizedSelected,
+      isExpanded: true,
       items: options
           .map(
             (option) => DropdownMenuItem<String>(
               value: option,
-              child: Text(option),
+              child: Text(
+                option,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           )
           .toList(growable: false),

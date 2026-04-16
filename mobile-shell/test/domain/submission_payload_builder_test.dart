@@ -22,6 +22,8 @@ void main() {
           value: "Value",
         ),
       ],
+      expectedFormVersion: "v1",
+      expectedSubmissionUpdatedAt: "2024-01-01",
     );
 
     final body = input.toRequestJson();
@@ -29,7 +31,9 @@ void main() {
     expect(body["clientName"], "Client Name");
     expect(body["clientContact"], "+201234567890");
     expect((body["contactRecords"] as List<dynamic>).length, 1);
-    expect((body["fieldValues"] as List<dynamic>).length, 1);
-    expect((body["fieldValues"] as List<dynamic>).first["fieldDefinitionId"], "field_1");
+    expect((body["values"] as List<dynamic>).length, 1);
+    expect((body["values"] as List<dynamic>).first["fieldDefinitionId"], "field_1");
+    expect(body["expectedFormVersion"], "v1");
+    expect(body["expectedSubmissionUpdatedAt"], "2024-01-01");
   });
 }

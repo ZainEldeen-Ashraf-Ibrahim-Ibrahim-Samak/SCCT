@@ -1,4 +1,5 @@
 import "dart:convert";
+import "dart:typed_data";
 
 import "package:http/http.dart" as http;
 
@@ -148,7 +149,8 @@ class CloudinarySignClient {
   }
 
   Future<MediaReference> uploadFile({
-    required String filePath,
+    required Uint8List bytes,
+    required String fileName,
     required CloudinarySignResponse signature,
     String? folder,
     String? publicId,
@@ -197,7 +199,11 @@ class CloudinarySignClient {
       request.fields["eager"] = resolvedEager;
     }
 
-    request.files.add(await http.MultipartFile.fromPath("file", filePath));
+    request.files.add(http.MultipartFile.fromBytes(
+      "file",
+      bytes,
+      filename: fileName,
+    ));
 
     final streamResponse = await _httpClient
         .send(request)

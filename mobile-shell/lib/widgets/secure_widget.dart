@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 /// A wrapper widget that prevents the OS from capturing screenshots or
 /// screen recording while its child is being displayed.
@@ -42,6 +43,9 @@ class _SecureWidgetState extends State<SecureWidget>
   }
 
   Future<void> _enableSecureMode() async {
+    if (kIsWeb) {
+      return;
+    }
     try {
       await _channel.invokeMethod('enableSecure');
     } on PlatformException catch (e) {
@@ -50,6 +54,9 @@ class _SecureWidgetState extends State<SecureWidget>
   }
 
   Future<void> _disableSecureMode() async {
+    if (kIsWeb) {
+      return;
+    }
     try {
       await _channel.invokeMethod('disableSecure');
     } on PlatformException catch (e) {

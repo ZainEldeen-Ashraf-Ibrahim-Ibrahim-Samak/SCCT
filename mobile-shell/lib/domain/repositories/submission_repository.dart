@@ -29,6 +29,8 @@ class SubmissionMutationInput {
       "clientContact": clientContact,
       "contactRecords": contacts.map((item) => item.toJson()).toList(),
       "fieldValues": fieldResponses.map((item) => item.toJson()).toList(),
+      "expectedFormVersion": expectedFormVersion,
+      "expectedSubmissionUpdatedAt": expectedSubmissionUpdatedAt,
     };
   }
 }

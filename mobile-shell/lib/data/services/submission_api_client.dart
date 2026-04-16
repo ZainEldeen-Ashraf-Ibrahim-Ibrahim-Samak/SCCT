@@ -53,10 +53,7 @@ class SubmissionApiClient {
       method: "POST",
       uri: uri,
       body: payload,
-      headers: <String, String>{
-        if (ifMatchFormVersion != null && ifMatchFormVersion.trim().isNotEmpty)
-          "If-Match-Form-Version": ifMatchFormVersion.trim(),
-      },
+      headers: const <String, String>{},
     );
   }
 
@@ -71,12 +68,7 @@ class SubmissionApiClient {
       method: "PATCH",
       uri: uri,
       body: payload,
-      headers: <String, String>{
-        if (ifMatchFormVersion != null && ifMatchFormVersion.trim().isNotEmpty)
-          "If-Match-Form-Version": ifMatchFormVersion.trim(),
-        if (ifMatchSubmissionUpdatedAt != null && ifMatchSubmissionUpdatedAt.trim().isNotEmpty)
-          "If-Match-Submission-Updated-At": ifMatchSubmissionUpdatedAt.trim(),
-      },
+      headers: const <String, String>{},
     );
   }
 

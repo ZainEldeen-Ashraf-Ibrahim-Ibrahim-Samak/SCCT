@@ -36,7 +36,16 @@ class RuntimeConfig {
 
     final allowedHosts = hostsRaw!
         .split(",")
-        .map((e) => e.trim().toLowerCase())
+        .map((e) {
+          final trimmed = e.trim().toLowerCase();
+          try {
+            // Normalize host entries by extracting just the host part even if a port is provided.
+            final uri = Uri.tryParse(trimmed.contains("://") ? trimmed : "https://$trimmed");
+            return uri?.host ?? trimmed;
+          } catch (_) {
+            return trimmed;
+          }
+        })
         .where((e) => e.isNotEmpty)
         .toSet()
         .toList();
