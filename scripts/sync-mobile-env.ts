@@ -57,7 +57,7 @@ function firstNonEmpty(
 function hostFromUrl(rawUrl: string): string | undefined {
   try {
     const parsed = new URL(rawUrl);
-    return parsed.host || undefined;
+    return parsed.hostname || undefined;
   } catch {
     return undefined;
   }

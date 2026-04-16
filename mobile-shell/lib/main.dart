@@ -15,6 +15,7 @@ import "presentation/screens/startup_error_screen.dart";
 import "presentation/view_models/scan_view_model.dart";
 import "widgets/secure_widget.dart";
 import "i18n/index.dart";
+import "app/web_splash.dart";
 
 const String _draftsBoxName = "drafts";
 const String _submissionQueueBoxName = "submission_queue";
@@ -205,6 +206,10 @@ class _ScctMobileAppState extends State<ScctMobileApp> {
             }
 
             final result = snapshot.data!;
+            if (result.ok) {
+              hideWebSplash();
+            }
+
             if (!result.ok || result.config == null) {
               return StartupErrorScreen(
                 errorCode: result.errorCode ?? "unknown",
