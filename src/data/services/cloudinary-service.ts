@@ -88,8 +88,11 @@ export async function ensureUploadPresetExists(presetName: string): Promise<bool
       verifiedPresets.add(presetName);
       return true;
     } catch (error: any) {
+      // Cloudinary SDK structure: error might have http_code or error.http_code
+      const httpCode = error?.http_code || error?.error?.http_code;
+
       // If error status isn't 404, it might be a permissions issue or network error
-      if (error?.http_code !== 404) {
+      if (httpCode !== 404) {
         logger.warn(`Could not verify Cloudinary preset ${presetName}`, error);
         return false;
       }
@@ -99,10 +102,9 @@ export async function ensureUploadPresetExists(presetName: string): Promise<bool
       await cloudinary.api.create_upload_preset({
         name: presetName,
         unsigned: false, // Default to signed as we use api_sign_request
-        folder: "submissions", // Default root folder for this app
+        folder: "submissions", 
         disallow_public_id: false,
         resource_type: "auto",
-        eval: "if (resource_info.resource_type == 'image') { };" // Dummy eval to ensure standard behavior
       });
       
       logger.info(`Successfully created Cloudinary upload preset: ${presetName}`);
