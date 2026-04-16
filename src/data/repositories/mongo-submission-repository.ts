@@ -124,6 +124,8 @@ async function fetchSubmissionByTokenFromDb(accessToken: string): Promise<Submis
         req.status = "delivered";
         req.deliveredAt = now;
         await doc.save();
+        // Invalidate cache since we modified the document state (status and updatedAt changed)
+        await CacheService.invalidateSubmissionCache(accessToken);
       }
     }
   }

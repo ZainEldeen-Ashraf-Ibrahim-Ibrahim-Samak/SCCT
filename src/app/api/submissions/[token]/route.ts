@@ -71,7 +71,36 @@ export const dynamic = "force-dynamic";
 function normalizeVersion(value: string | null | undefined): string | null {
   if (!value) return null;
   const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
+  if (trimmed.length === 0) return null;
+
+  // If it looks like a date, normalize to a consistent ISO format to avoid precision mismatches.
+  try {
+    const date = new Date(trimmed);
+    if (!isNaN(date.getTime())) {
+      return date.toISOString();
+    }
+  } catch (_) {
+    // Treat as raw string
+  }
+  return trimmed;
+}
+
+function areVersionsMatch(v1: string | null, v2: string | null): boolean {
+  if (v1 === v2) return true;
+  if (!v1 || !v2) return false;
+
+  // Comparison logic for dates to account for millisecond precision differences.
+  try {
+    const d1 = new Date(v1);
+    const d2 = new Date(v2);
+    if (!isNaN(d1.getTime()) && !isNaN(d2.getTime())) {
+      // Compare based on ms timestamp to ignore string formatting differences (like .000Z).
+      return d1.getTime() === d2.getTime();
+    }
+  } catch (_) {
+    // Fallback to string match
+  }
+  return v1 === v2;
 }
 
 function conflictResponse(code: "STALE_FORM_VERSION" | "STALE_SUBMISSION_VERSION") {
@@ -142,7 +171,7 @@ export async function POST(
     if (expectedFormVersion) {
       const current = await viewUseCase.execute(token);
       const currentFormVersion = normalizeVersion(current?.formVersion);
-      if (!current || !currentFormVersion || currentFormVersion !== expectedFormVersion) {
+      if (expectedFormVersion && !areVersionsMatch(currentFormVersion, expectedFormVersion)) {
         return conflictResponse("STALE_FORM_VERSION");
       }
     }
@@ -235,13 +264,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ to
         return errorResponse("Not found", 404, "NOT_FOUND");
       }
 
-      if (expectedFormVersion && currentFormVersion !== expectedFormVersion) {
+      if (expectedFormVersion && !areVersionsMatch(currentFormVersion, expectedFormVersion)) {
         return conflictResponse("STALE_FORM_VERSION");
       }
 
       if (
         expectedSubmissionUpdatedAt &&
-        (!currentSubmissionUpdatedAt || currentSubmissionUpdatedAt !== expectedSubmissionUpdatedAt)
+        !areVersionsMatch(currentSubmissionUpdatedAt, expectedSubmissionUpdatedAt)
       ) {
         return conflictResponse("STALE_SUBMISSION_VERSION");
       }

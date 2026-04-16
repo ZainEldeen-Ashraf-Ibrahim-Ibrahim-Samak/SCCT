@@ -42,8 +42,10 @@ class ScanScreen extends StatefulWidget {
 class _ScanScreenState extends State<ScanScreen> {
   final TextEditingController _controller = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
-  final MobileScannerController _scannerController =
-      MobileScannerController(autoStart: false);
+  final MobileScannerController _scannerController = MobileScannerController(
+    autoStart: false,
+    formats: const <BarcodeFormat>[BarcodeFormat.qrCode],
+  );
 
   String? _error;
   XFile? _selectedPhoto;
@@ -383,17 +385,30 @@ class _ScanScreenState extends State<ScanScreen> {
     });
 
     try {
-      XFile fileToScan = photo;
+      // Step 1: Try decoding the ORIGINAL image first.
+      // This is the most accurate for high-density QR codes.
+      final originalCapture = await _scannerController.analyzeImage(photo.path);
+      final originalValue = originalCapture?.barcodes
+              .map((barcode) => barcode.rawValue?.trim() ?? "")
+              .firstWhere((value) => value.isNotEmpty, orElse: () => "") ??
+          "";
 
+      if (originalValue.isNotEmpty) {
+        _controller.text = originalValue;
+        _submit();
+        return;
+      }
+
+      // Step 2: Try with an OPTIMIZED compressed image if original analysis fails.
+      // Sometimes raw sensor noise interference blocks detection on ultra-res images.
+      XFile fileToScan = photo;
       try {
         final bytes = await photo.readAsBytes();
-        // Optimize image for QR detection: Downscale to a reasonable size if too large.
-        // This helps the detector focus on relevant features without noise from ultra-res sensors.
         final compressedBytes = await FlutterImageCompress.compressWithList(
           bytes,
           minWidth: 1024,
           minHeight: 1024,
-          quality: 85,
+          quality: 90,
           format: CompressFormat.jpeg,
         );
 
