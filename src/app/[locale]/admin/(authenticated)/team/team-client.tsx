@@ -421,7 +421,7 @@ export function TeamClient({
           <div key={member.id} className="rounded-md border p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-medium break-words">{member.name}</p>
+                <p className="font-medium wrap-break-word">{member.name}</p>
                 <p className="text-sm text-muted-foreground break-all mt-1">
                   {member.email}
                 </p>
@@ -497,7 +497,7 @@ export function TeamClient({
           <TableBody>
             {members.map((member) => (
               <TableRow key={member.id}>
-                <TableCell className="font-medium whitespace-normal break-words">
+                <TableCell className="font-medium whitespace-normal wrap-break-word">
                   {member.name}
                 </TableCell>
                 <TableCell className="whitespace-normal">
