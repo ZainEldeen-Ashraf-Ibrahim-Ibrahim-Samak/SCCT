@@ -122,7 +122,22 @@ export async function POST(
 ) {
   try {
     const { token } = await params;
-    const expectedFormVersion = normalizeVersion(request.headers.get("if-match-form-version"));
+    const {
+      createSubmissionSchema,
+      submitUseCase,
+      NotificationPublisher,
+      parseSecureJson,
+    } = await getSubmitDependencies();
+
+    const parsedBody = await parseSecureJson(request);
+    if (!parsedBody.success) {
+      return errorResponse(parsedBody.error, 400, parsedBody.code);
+    }
+    const body = parsedBody.data as any;
+
+    const expectedFormVersion =
+      normalizeVersion(request.headers.get("if-match-form-version")) ||
+      normalizeVersion(body.expectedFormVersion);
 
     if (expectedFormVersion) {
       const current = await viewUseCase.execute(token);
@@ -132,17 +147,6 @@ export async function POST(
       }
     }
 
-    const {
-      createSubmissionSchema,
-      submitUseCase,
-      NotificationPublisher,
-      parseSecureJson,
-    } = await getSubmitDependencies();
-    const parsedBody = await parseSecureJson(request);
-    if (!parsedBody.success) {
-      return errorResponse(parsedBody.error, 400, parsedBody.code);
-    }
-    const body = parsedBody.data;
     const parsed = createSubmissionSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -198,10 +202,25 @@ export async function POST(
 export async function PATCH(request: Request, { params }: { params: Promise<{ token: string }> }) {
   try {
     const { token } = await params;
-    const expectedFormVersion = normalizeVersion(request.headers.get("if-match-form-version"));
-    const expectedSubmissionUpdatedAt = normalizeVersion(
-      request.headers.get("if-match-submission-updated-at"),
-    );
+    const {
+      createSubmissionSchema,
+      submitUseCase,
+      NotificationPublisher,
+      parseSecureJson,
+    } = await getSubmitDependencies();
+
+    const parsedBody = await parseSecureJson(request);
+    if (!parsedBody.success) {
+      return errorResponse(parsedBody.error, 400, parsedBody.code);
+    }
+    const body = parsedBody.data as any;
+
+    const expectedFormVersion =
+      normalizeVersion(request.headers.get("if-match-form-version")) ||
+      normalizeVersion(body.expectedFormVersion);
+    const expectedSubmissionUpdatedAt =
+      normalizeVersion(request.headers.get("if-match-submission-updated-at")) ||
+      normalizeVersion(body.expectedSubmissionUpdatedAt);
 
     if (expectedFormVersion || expectedSubmissionUpdatedAt) {
       const current = await viewUseCase.execute(token);
@@ -228,17 +247,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ to
       }
     }
 
-    const {
-      createSubmissionSchema,
-      submitUseCase,
-      NotificationPublisher,
-      parseSecureJson,
-    } = await getSubmitDependencies();
-    const parsedBody = await parseSecureJson(request);
-    if (!parsedBody.success) {
-      return errorResponse(parsedBody.error, 400, parsedBody.code);
-    }
-    const body = parsedBody.data;
     const parsed = createSubmissionSchema.safeParse(body);
 
     if (!parsed.success) {
