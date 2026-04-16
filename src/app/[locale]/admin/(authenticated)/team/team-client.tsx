@@ -203,17 +203,17 @@ export function TeamClient({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger
             render={
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <UserPlus className="mr-2 h-4 w-4" />
                 {t("addUser")}
               </Button>
             }
           />
-          <DialogContent>
+          <DialogContent className="max-h-[85vh] overflow-y-auto">
             <form onSubmit={handleCreate}>
               <DialogHeader>
                 <DialogTitle>{t("addMember")}</DialogTitle>
@@ -325,7 +325,7 @@ export function TeamClient({
           }
         }}
       >
-        <DialogContent>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
           <form onSubmit={handleUpdate}>
             <DialogHeader>
               <DialogTitle>{t("editMember")}</DialogTitle>
@@ -416,7 +416,75 @@ export function TeamClient({
         </DialogContent>
       </Dialog>
 
-      <div className="rounded-md border">
+      <div className="space-y-3 md:hidden">
+        {members.map((member) => (
+          <div key={member.id} className="rounded-md border p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-medium break-words">{member.name}</p>
+                <p className="text-sm text-muted-foreground break-all mt-1">
+                  {member.email}
+                </p>
+                {member.phone && (
+                  <p className="text-xs text-muted-foreground mt-1" dir="ltr">
+                    {member.phone}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => openEditDialog(member)}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  disabled={
+                    member.id === currentUserId || isDeleting === member.id
+                  }
+                  onClick={() => handleDelete(member.id)}
+                >
+                  {isDeleting === member.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-3 space-y-1">
+              <Label className="text-xs text-muted-foreground">{t("role")}</Label>
+              <Select
+                value={member.role}
+                onValueChange={(val) =>
+                  handleRoleChange(member.id, (val as "admin" | "user") || "user")
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">{t("user")}</SelectItem>
+                  <SelectItem value="admin">{t("admin")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        ))}
+
+        {members.length === 0 && (
+          <div className="rounded-md border p-8 text-center text-muted-foreground">
+            {t("noMembers")}
+          </div>
+        )}
+      </div>
+
+      <div className="hidden rounded-md border md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -429,10 +497,16 @@ export function TeamClient({
           <TableBody>
             {members.map((member) => (
               <TableRow key={member.id}>
-                <TableCell className="font-medium">{member.name}</TableCell>
-                <TableCell>
-                  <div>{member.email}</div>
-                  {member.phone && <div className="text-xs text-muted-foreground mt-1" dir="ltr">{member.phone}</div>}
+                <TableCell className="font-medium whitespace-normal break-words">
+                  {member.name}
+                </TableCell>
+                <TableCell className="whitespace-normal">
+                  <div className="break-all">{member.email}</div>
+                  {member.phone && (
+                    <div className="text-xs text-muted-foreground mt-1" dir="ltr">
+                      {member.phone}
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell>
                   <Select
@@ -444,7 +518,7 @@ export function TeamClient({
                       )
                     }
                   >
-                    <SelectTrigger className="w-30">
+                    <SelectTrigger className="w-28 lg:w-32">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
