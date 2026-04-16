@@ -34,13 +34,23 @@ export function signUploadRequest(params: SignUploadParams): SignUploadResult {
   const timestamp = params.timestamp || Math.round(new Date().getTime() / 1000);
   const apiSecret = env.CLOUDINARY_API_SECRET;
   
-  if (!apiSecret) {
-    throw new Error("CLOUDINARY_API_SECRET is not configured");
+  // Sanitize params to remove undefined/null values which break signature verification
+  const cleanParams: Record<string, any> = { timestamp };
+  for (const [key, val] of Object.entries(params)) {
+    if (val !== undefined && val !== null && String(val).trim().length > 0) {
+      if (key !== "timestamp") { // Timestamp already handled
+         cleanParams[key] = val;
+      }
+    }
   }
 
-  // Ensure timestamp is in the signature params
+  if (!apiSecret) {
+    logger.error("CLOUDINARY_API_SECRET is missing from environment variables");
+    throw new Error("Cloudinary configuration incomplete: API Secret missing");
+  }
+
   const signature = cloudinary.utils.api_sign_request(
-    { ...params, timestamp },
+    cleanParams,
     apiSecret
   );
 

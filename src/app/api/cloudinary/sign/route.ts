@@ -39,17 +39,30 @@ export async function POST(request: Request) {
     };
 
     const result = signUploadRequest(params);
+    
+    // Provide all common variations of keys to satisfy different SDKs and client implementations (including Flutter)
     return successResponse({
       ...result,
       folder: policy.folder,
       eager: policy.eager ?? null,
       uploadPreset: policy.uploadPreset ?? null,
       resourceType: policy.resourceType,
+      
+      // Standardize key variations
+      api_key: result.apikey,
+      apiKey: result.apikey,
+      cloud_name: result.cloudname,
+      cloudName: result.cloudname,
+      
+      // Snake case variations
       upload_preset: policy.uploadPreset ?? null,
       resource_type: policy.resourceType,
     });
   } catch (error) {
-    logger.error("Failed to sign Cloudinary request", error);
+    logger.error("Failed to sign Cloudinary request", {
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined
+    });
     return errorResponse("Signature failed", 500);
   }
 }

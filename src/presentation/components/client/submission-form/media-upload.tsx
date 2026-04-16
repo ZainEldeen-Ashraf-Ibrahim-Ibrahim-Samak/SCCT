@@ -70,11 +70,18 @@ function SortableMediaItem({ item, type, disabled, onRemove }: SortableItemProps
           />
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center h-full p-2 text-center gap-2">
-          <File className="h-8 w-8 text-primary/60" />
-          <p className="text-[10px] font-medium truncate w-full px-1">
-            {item.url.split("/").pop()}
-          </p>
+        <div className="flex flex-col items-center justify-center h-full p-2 text-center gap-3 bg-muted/50">
+          <div className="p-3 rounded-full bg-background shadow-sm">
+            <File className="h-8 w-8 text-primary/70" />
+          </div>
+          <div className="w-full px-2">
+            <p className="text-[10px] font-bold truncate text-foreground leading-tight">
+              {item.url.split("/").pop()?.split("?")[0]}
+            </p>
+            <p className="text-[9px] text-muted-foreground mt-0.5">
+              {tc("viewDocument")}
+            </p>
+          </div>
         </div>
       )}
 
@@ -180,6 +187,10 @@ export function MediaUpload({
             fieldType: type,
             timestamp: Math.round(new Date().getTime() / 1000)
           }),
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
         });
 
         const signData = await signRes.json();
@@ -211,10 +222,11 @@ export function MediaUpload({
               ? upload_preset.trim()
               : "");
         const resolvedResourceType =
-          (typeof resourceType === "string" && resourceType.trim().toLowerCase() === "image") ||
-          (typeof resource_type === "string" && resource_type.trim().toLowerCase() === "image")
-            ? "image"
-            : "auto";
+          (typeof resourceType === "string" && resourceType.trim().length > 0)
+            ? resourceType.trim().toLowerCase()
+            : (typeof resource_type === "string" && resource_type.trim().length > 0)
+              ? resource_type.trim().toLowerCase()
+              : "auto";
         const resolvedEager = typeof eager === "string" ? eager.trim() : "";
 
         const formData = new FormData();
@@ -229,6 +241,7 @@ export function MediaUpload({
         if (resolvedEager.length > 0) {
           formData.append("eager", resolvedEager);
         }
+        formData.append("resource_type", resolvedResourceType);
 
         const cloudUrl = `https://api.cloudinary.com/v1_1/${cloudname}/${resolvedResourceType}/upload`;
 
@@ -244,18 +257,23 @@ export function MediaUpload({
             }
           };
           xhr.onload = () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              try {
-                resolve(JSON.parse(xhr.responseText));
-              } catch (e) {
-                resolve(xhr.responseText);
+            try {
+              if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                  resolve(JSON.parse(xhr.responseText));
+                } catch (e) {
+                  resolve(xhr.responseText);
+                }
+              } else {
+                try {
+                  const errorData = JSON.parse(xhr.responseText);
+                  reject(new Error(errorData.error?.message || `Cloudinary Error (${xhr.status})` ));
+                } catch {
+                  reject(new Error(`System Error: ${xhr.status} ${xhr.statusText}`));
+                }
               }
-            } else {
-              try {
-                reject(JSON.parse(xhr.responseText));
-              } catch (e) {
-                reject(new Error(xhr.responseText));
-              }
+            } catch (e) {
+              reject(e instanceof Error ? e : new Error("Fatal Upload Error"));
             }
           };
           xhr.onerror = () => reject(new Error("Network Error"));
@@ -288,7 +306,8 @@ export function MediaUpload({
       }
     } catch (err) {
       logger.error("Upload error", err);
-      toast.error(t("uploadError"));
+      const errorMessage = err instanceof Error ? err.message : t("uploadError");
+      toast.error(errorMessage);
     } finally {
       if (mountedRef.current) {
         setIsUploading(false);
@@ -425,13 +444,24 @@ export function MediaUpload({
             <Image src={currentUrl} alt="Upload" fill className="object-cover" sizes="(max-width: 768px) 100vw, 256px" />
           </div>
         ) : (
-          <div className="flex items-center gap-3 p-4 min-w-50">
-            <File className="h-8 w-8 text-primary" />
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium truncate">{currentUrl.split("/").pop()}</p>
-              <a href={currentUrl} className="text-xs text-primary hover:underline">
-                {tc("download")}
-              </a>
+          <div className="flex items-center gap-4 p-5 min-w-[280px] bg-muted/20">
+            <div className="p-3 rounded-xl bg-background shadow-sm border border-border/50">
+              <File className="h-8 w-8 text-primary" />
+            </div>
+            <div className="min-w-0 flex-1 space-y-1">
+              <p className="text-sm font-bold text-foreground truncate">
+                {currentUrl.split("/").pop()?.split("?")[0] || tc("file")}
+              </p>
+              <div className="flex items-center gap-2">
+                <a 
+                  href={currentUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+                >
+                  {tc("viewDocument")}
+                </a>
+              </div>
             </div>
           </div>
         )}
@@ -512,10 +542,21 @@ export function MediaUpload({
           </div>
         ) : (
           <>
-            {type === "image" ? <ImageIcon className="h-8 w-8 group-hover:scale-110 transition-transform" /> : <UploadCloud className="h-8 w-8 group-hover:scale-110 transition-transform" />}
-            <span className="text-sm font-medium">
-              {dragActive ? t("dropToUpload") : (type === "image" ? t("uploadImage") : t("uploadFile"))}
-            </span>
+            {type === "image" ? (
+              <ImageIcon className="h-10 w-10 group-hover:scale-110 transition-transform text-primary/60" />
+            ) : (
+              <File className="h-10 w-10 group-hover:scale-110 transition-transform text-primary/60" />
+            )}
+            <div className="text-center">
+              <span className="text-sm font-bold block text-foreground">
+                {dragActive ? t("dropToUpload") : (type === "image" ? t("uploadImage") : t("uploadFile"))}
+              </span>
+              {!dragActive && (
+                <span className="text-xs text-muted-foreground mt-1 block">
+                  {type === "image" ? "PNG, JPG, WEBP" : "PDF, DOCX, XLSX, ZIP"}
+                </span>
+              )}
+            </div>
           </>
         )}
       </div>
