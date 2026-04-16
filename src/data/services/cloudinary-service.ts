@@ -1,7 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import { env } from "@/env.mjs";
 import { logger } from "@/lib/dev-logger";
-import { type ApiResponse } from "cloudinary";
 
 // In-memory cache for verified presets to avoid hitting Admin API repeatedly
 const verifiedPresets = new Set<string>();
